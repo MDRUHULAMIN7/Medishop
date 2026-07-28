@@ -22,7 +22,6 @@ export function Footer() {
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
 
-  // Mobile accordion collapse state
   const [openSection, setOpenSection] = useState<string | null>(null);
 
   const toggleSection = (section: string) => {
@@ -40,14 +39,14 @@ export function Footer() {
     <footer className="border-t border-border bg-muted/40 text-foreground">
       {/* 1. Top Trust Badges Section */}
       <div className="border-b border-border bg-background py-8">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1700px] px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4">
             {MOCK_TRUST_BADGES.map((badge) => (
               <div
                 key={badge.id}
-                className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/20 p-3.5 transition-colors hover:bg-primary/5 hover:border-primary/30"
+                className="flex items-start gap-3.5 rounded-2xl border border-border/60 bg-muted/20 p-4 transition-all duration-200 hover:bg-primary/5 hover:border-primary/30"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10">
                   {TRUST_ICONS[badge.iconName] || (
                     <ShieldCheck className="h-6 w-6 text-primary" />
                   )}
@@ -67,13 +66,13 @@ export function Footer() {
       </div>
 
       {/* 2. Main Footer Navigation Links */}
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-12 lg:px-8">
+      <div className="mx-auto max-w-[1700px] px-4 py-8 sm:px-6 md:py-12 lg:px-8">
         {/* Desktop 4-Column Grid */}
         <div className="hidden grid-cols-1 gap-8 md:grid md:grid-cols-4">
           {/* Column 1: Brand Info */}
           <div className="flex flex-col gap-4">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white font-bold">
+            <Link href="/" className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white font-bold">
                 <Pill className="h-5 w-5" />
               </div>
               <span className="font-serif-title text-2xl font-bold text-primary">
@@ -159,7 +158,6 @@ export function Footer() {
 
         {/* Mobile Accordion View */}
         <div className="flex flex-col gap-4 md:hidden">
-          {/* Brand Brief */}
           <div className="mb-2 flex flex-col gap-2 text-center">
             <Link href="/" className="flex items-center justify-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white font-bold">
@@ -176,7 +174,7 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Accordion 1: About */}
+          {/* Accordions */}
           <div className="border-b border-border pb-3">
             <button
               onClick={() => toggleSection('about')}
@@ -202,63 +200,9 @@ export function Footer() {
               </ul>
             )}
           </div>
-
-          {/* Accordion 2: Categories */}
-          <div className="border-b border-border pb-3">
-            <button
-              onClick={() => toggleSection('categories')}
-              className="flex w-full items-center justify-between py-1 text-sm font-bold text-foreground"
-            >
-              <span>{isBn ? 'ক্যাটাগরি' : 'Categories'}</span>
-              <ChevronDown
-                className={cn(
-                  'h-4 w-4 transition-transform',
-                  openSection === 'categories' && 'rotate-180'
-                )}
-              />
-            </button>
-            {openSection === 'categories' && (
-              <ul className="mt-3 flex flex-col gap-2 pl-2 text-xs text-muted-foreground">
-                {MOCK_FOOTER_NAV.categories.map((link, idx) => (
-                  <li key={idx}>
-                    <Link href={link.href} className="hover:text-primary">
-                      {isBn ? link.labelBn : link.labelEn}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* Accordion 3: Support */}
-          <div className="border-b border-border pb-3">
-            <button
-              onClick={() => toggleSection('support')}
-              className="flex w-full items-center justify-between py-1 text-sm font-bold text-foreground"
-            >
-              <span>{isBn ? 'সাহায্য ও সাপোর্ট' : 'Support'}</span>
-              <ChevronDown
-                className={cn(
-                  'h-4 w-4 transition-transform',
-                  openSection === 'support' && 'rotate-180'
-                )}
-              />
-            </button>
-            {openSection === 'support' && (
-              <ul className="mt-3 flex flex-col gap-2 pl-2 text-xs text-muted-foreground">
-                {MOCK_FOOTER_NAV.support.map((link, idx) => (
-                  <li key={idx}>
-                    <Link href={link.href} className="hover:text-primary">
-                      {isBn ? link.labelBn : link.labelEn}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
         </div>
 
-        {/* 3. Payment Method Icons */}
+        {/* Payment Icons */}
         <div className="mt-8 border-t border-border pt-6 text-center">
           <p className="text-xs font-semibold text-muted-foreground">
             {isBn ? 'আমরা পেমেন্ট গ্রহণ করি' : 'We Accept Payment Methods'}
@@ -268,7 +212,7 @@ export function Footer() {
               (method, idx) => (
                 <span
                   key={idx}
-                  className="rounded-md border border-border bg-background px-3 py-1 text-[11px] font-bold text-foreground shadow-xs"
+                  className="rounded-xl border border-border bg-background px-3.5 py-1.5 text-[11px] font-bold text-foreground shadow-2xs"
                 >
                   {method}
                 </span>
@@ -278,9 +222,9 @@ export function Footer() {
         </div>
       </div>
 
-      {/* 4. Copyright Sub-Footer Bar */}
+      {/* Copyright Sub-Footer Bar */}
       <div className="border-t border-border bg-background py-4 text-center text-xs text-muted-foreground">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 sm:flex-row sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-[1700px] flex-col items-center justify-between gap-2 px-4 sm:px-6 lg:px-8">
           <p>© 2026 mediShop Ltd. All rights reserved.</p>
           <p className="flex items-center gap-1">
             {isBn ? 'ডিজাইন করা হয়েছে' : 'Built with'}{' '}

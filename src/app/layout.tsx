@@ -4,6 +4,7 @@ import { fontInter, fontRobotoSlab, fontNotoBengali } from '@/lib/fonts';
 import { AppProviders } from '@/components/providers';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import '@/app/globals.css';
 
 export const metadata: Metadata = {
@@ -68,13 +69,16 @@ export default function RootLayout({
           {/* Header Landmark */}
           <Navbar />
 
-          {/* Main Content Landmark */}
-          <main id="main-content" className="flex-1">
+          {/* Main Content Landmark with safe mobile bottom padding */}
+          <main id="main-content" className="flex-1 pb-16 md:pb-0">
             {children}
           </main>
 
           {/* Footer Landmark */}
           <Footer />
+
+          {/* Mobile Bottom Navigation Bar (Fixed for < 768px viewports) */}
+          <MobileBottomNav />
         </AppProviders>
       </body>
     </html>
