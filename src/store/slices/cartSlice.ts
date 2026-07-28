@@ -1,25 +1,34 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { CartItem } from '@/types';
+import { AppliedCoupon, CartItem, CartSummary } from '@/types/cart';
+import { PricingEngine } from '@/utils/pricing';
 
-interface CartState {
+export interface CartState {
   items: CartItem[];
+  appliedCoupon: AppliedCoupon | null;
   isDrawerOpen: boolean;
+  isHydrated: boolean;
 }
 
+const initialMockItem: CartItem = {
+  productId: 'p-101',
+  slug: 'napa-extra-500mg-65mg',
+  nameEn: 'Napa Extra 500mg/65mg Tablet',
+  nameBn: 'নাপা এক্সট্রা ৫০০ মি.গ্রা./৬৫ মি.গ্রা. ট্যাবলেট',
+  brand: 'Beximco Pharmaceuticals',
+  image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=600&auto=format&fit=crop',
+  unit: '10 Tablets Strip',
+  sellingPrice: 25,
+  mrp: 30,
+  prescriptionRequired: false,
+  stock: 150,
+  quantity: 2,
+};
+
 const initialState: CartState = {
-  items: [
-    // Initial mock item for demo / development verification
-    {
-      productId: 'p-1',
-      nameEn: 'Napa Extra 500mg/65mg Tablet',
-      nameBn: 'নাপা এক্সট্রা ৫০০ মি.গ্রা./৬৫ মি.গ্রা. ট্যাবলেট',
-      price: 25,
-      mrp: 30,
-      image: 'https://placehold.co/200x200/1D4ED8/FFFFFF?text=Napa+Extra',
-      quantity: 2,
-    },
-  ],
+  items: [initialMockItem],
+  appliedCoupon: null,
   isDrawerOpen: false,
+  isHydrated: false,
 };
 
 export const cartSlice = createSlice({
@@ -32,42 +41,74 @@ export const cartSlice = createSlice({
       );
 
       if (existingIndex > -1) {
-        state.items[existingIndex].quantity += action.payload.quantity || 1;
+        const currentQty = state.items[existingIndex].quantity;
+        const addQty = action.payload.quantity || 1;
+        const maxStock = action.payload.stock || state.items[existingIndex].stock || 999;
+        state.items[existingIndex].quantity = Math.min(currentQty + addQty, maxStock);
       } else {
-        state.items.push(action.payload);
+        state.items.push({
+          ...action.payload,
+          quantity: action.payload.quantity || 1,
+        });
       }
     },
+
     removeFromCart: (state, action: PayloadAction<string>) => {
-      state.items = state.items.filter(
-        (item) => item.productId !== action.payload
-      );
+      state.items = state.items.filter((item) => item.productId !== action.payload);
+      // Re-evaluate coupon applicability if cart becomes empty
+      if (state.items.length === 0) {
+        state.appliedCoupon = null;
+      }
     },
+
     updateQuantity: (
       state,
       action: PayloadAction<{ productId: string; quantity: number }>
     ) => {
-      const item = state.items.find(
-        (i) => i.productId === action.payload.productId
-      );
+      const item = state.items.find((i) => i.productId === action.payload.productId);
       if (item) {
         if (action.payload.quantity <= 0) {
-          state.items = state.items.filter(
-            (i) => i.productId !== action.payload.productId
-          );
+          state.items = state.items.filter((i) => i.productId !== action.payload.productId);
         } else {
-          item.quantity = action.payload.quantity;
+          const maxStock = item.stock || 999;
+          item.quantity = Math.min(action.payload.quantity, maxStock);
         }
       }
+      if (state.items.length === 0) {
+        state.appliedCoupon = null;
+      }
     },
+
+    applyCoupon: (state, action: PayloadAction<AppliedCoupon>) => {
+      state.appliedCoupon = action.payload;
+    },
+
+    removeCoupon: (state) => {
+      state.appliedCoupon = null;
+    },
+
     clearCart: (state) => {
       state.items = [];
+      state.appliedCoupon = null;
     },
+
+    hydrateCart: (
+      state,
+      action: PayloadAction<{ items: CartItem[]; appliedCoupon: AppliedCoupon | null }>
+    ) => {
+      state.items = action.payload.items;
+      state.appliedCoupon = action.payload.appliedCoupon;
+      state.isHydrated = true;
+    },
+
     toggleCartDrawer: (state) => {
       state.isDrawerOpen = !state.isDrawerOpen;
     },
+
     openCartDrawer: (state) => {
       state.isDrawerOpen = true;
     },
+
     closeCartDrawer: (state) => {
       state.isDrawerOpen = false;
     },
@@ -78,30 +119,75 @@ export const {
   addToCart,
   removeFromCart,
   updateQuantity,
+  applyCoupon,
+  removeCoupon,
   clearCart,
+  hydrateCart,
   toggleCartDrawer,
   openCartDrawer,
   closeCartDrawer,
 } = cartSlice.actions;
 
 // Selectors
+export const selectCartState = (state: { cart: CartState }) => state.cart;
 export const selectCartItems = (state: { cart: CartState }) => state.cart.items;
-export const selectIsCartDrawerOpen = (state: { cart: CartState }) =>
-  state.cart.isDrawerOpen;
+export const selectAppliedCoupon = (state: { cart: CartState }) => state.cart.appliedCoupon;
+export const selectIsCartDrawerOpen = (state: { cart: CartState }) => state.cart.isDrawerOpen;
+export const selectIsCartHydrated = (state: { cart: CartState }) => state.cart.isHydrated;
 
-export const selectTotalQuantity = createSelector([selectCartItems], (items) =>
-  items.reduce((acc, item) => acc + item.quantity, 0)
+/**
+ * Centralized memoized selector for full financial breakdown via PricingEngine.
+ */
+export const selectCartSummary = createSelector(
+  [selectCartItems, selectAppliedCoupon],
+  (items, coupon): CartSummary => {
+    return PricingEngine.calculateCartSummary(items, coupon);
+  }
 );
 
-export const selectSubtotal = createSelector([selectCartItems], (items) =>
-  items.reduce((acc, item) => acc + item.price * item.quantity, 0)
+export const selectTotalQuantity = createSelector(
+  [selectCartSummary],
+  (summary) => summary.totalQuantity
 );
 
-export const FREE_DELIVERY_THRESHOLD = 1000;
+export const selectSubtotal = createSelector(
+  [selectCartSummary],
+  (summary) => summary.subtotal
+);
 
-export const selectRemainingForFreeDelivery = createSelector(
-  [selectSubtotal],
-  (subtotal) => Math.max(0, FREE_DELIVERY_THRESHOLD - subtotal)
+export const selectMrpDiscount = createSelector(
+  [selectCartSummary],
+  (summary) => summary.mrpDiscount
+);
+
+export const selectCouponDiscount = createSelector(
+  [selectCartSummary],
+  (summary) => summary.couponDiscount
+);
+
+export const selectDeliveryCharge = createSelector(
+  [selectCartSummary],
+  (summary) => summary.deliveryCharge
+);
+
+export const selectGrandTotal = createSelector(
+  [selectCartSummary],
+  (summary) => summary.grandTotal
+);
+
+export const selectTotalSavings = createSelector(
+  [selectCartSummary],
+  (summary) => summary.totalSavings
+);
+
+export const selectFreeDeliveryProgress = createSelector(
+  [selectCartSummary],
+  (summary) => ({
+    isFree: summary.isFreeDelivery,
+    remaining: summary.remainingForFreeDelivery,
+    threshold: summary.freeDeliveryThreshold,
+    percentage: Math.min(100, Math.round((summary.subtotal / summary.freeDeliveryThreshold) * 100)),
+  })
 );
 
 export default cartSlice.reducer;

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.maateen.me/solaiman-lipi/font.css');
 
 @theme {
   --color-primary: #1D4ED8;
@@ -29,9 +30,9 @@
   --color-danger: #DC2626;
   --color-danger-light: #FEE2E2;
 
-  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-sans: var(--font-inter), 'SolaimanLipi', var(--font-noto-bengali), system-ui, sans-serif;
   --font-serif: var(--font-roboto-slab), Georgia, serif;
-  --font-bengali: var(--font-noto-bengali), var(--font-inter), sans-serif;
+  --font-bengali: 'SolaimanLipi', var(--font-noto-bengali), var(--font-inter), sans-serif;
 
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
@@ -52,7 +53,7 @@
 :root {
   --font-inter: 'Inter', sans-serif;
   --font-roboto-slab: 'Roboto Slab', serif;
-  --font-noto-bengali: 'Noto Sans Bengali', sans-serif;
+  --font-noto-bengali: 'SolaimanLipi', 'Noto Sans Bengali', sans-serif;
 }
 
 /* Base Reset & Accessibility Styles */

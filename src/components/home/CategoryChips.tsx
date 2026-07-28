@@ -54,13 +54,13 @@ export function CategoryChips() {
 
   return (
     <div className="lg:hidden w-full overflow-hidden">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+      <div className="flex items-center justify-between mb-2.5">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
           {isBn ? 'ক্যাটাগরি সমূহ' : 'Product Categories'}
         </h3>
         <Link
           href="/products"
-          className="text-xs font-bold text-primary hover:underline"
+          className="text-sm font-bold text-primary hover:underline"
         >
           {isBn ? 'সবগুলো দেখুন' : 'See All'}
         </Link>
@@ -71,10 +71,10 @@ export function CategoryChips() {
           <Link
             key={cat.id}
             href={`/category/${cat.slug}`}
-            className="flex shrink-0 items-center gap-2 rounded-full border border-border bg-background px-3.5 py-2 text-xs font-semibold text-foreground shadow-2xs transition-transform active:scale-95 hover:border-primary hover:bg-primary/5"
+            className="flex shrink-0 items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground shadow-2xs transition-transform active:scale-95 hover:border-primary hover:bg-primary/5"
           >
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10">
-              {CATEGORY_ICONS[cat.iconName] || <Pill className="h-3.5 w-3.5 text-primary" />}
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10">
+              {CATEGORY_ICONS[cat.iconName] || <Pill className="h-4 w-4 text-primary" />}
             </span>
             <span className="whitespace-nowrap">{isBn ? cat.nameBn : cat.nameEn}</span>
           </Link>

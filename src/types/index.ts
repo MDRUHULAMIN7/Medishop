@@ -10,16 +10,10 @@ export interface User {
   avatarUrl?: string;
 }
 
-export interface CartItem {
-  productId: string;
-  nameEn: string;
-  nameBn: string;
-  price: number;
-  mrp: number;
-  image: string;
-  quantity: number;
-  requiresRx?: boolean;
-}
+export * from './cart';
+export * from './address';
+export * from './checkout';
+export * from './order';
 
 export interface NavCategory {
   id: string;

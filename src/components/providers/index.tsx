@@ -7,6 +7,7 @@ import { Toaster } from 'sonner';
 import { store } from '@/store';
 import { getQueryClient } from '@/lib/queryClient';
 import { AuthModal } from '@/components/auth/AuthModal';
+import { CartDrawer } from '@/components/cart/CartDrawer';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -21,6 +22,9 @@ export function AppProviders({ children }: ProvidersProps) {
         {children}
         {/* Global Non-Navigating Authentication Modal */}
         <AuthModal />
+        
+        {/* Global Cart Slide-over Drawer */}
+        <CartDrawer />
         
         {/* Global Toast Notifications */}
         <Toaster

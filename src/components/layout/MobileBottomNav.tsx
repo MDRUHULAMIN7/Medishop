@@ -105,23 +105,17 @@ export function MobileBottomNav() {
           </span>
         </button>
 
-        {/* 5. Account */}
-        <button
-          onClick={handleAccountClick}
-          aria-label={isBn ? 'অ্যাাকাউন্ট' : 'Account'}
+        {/* 5. Account / Profile */}
+        <Link
+          href="/profile"
+          aria-label={isBn ? 'প্রোফাইল' : 'Profile'}
           className="flex flex-col items-center justify-center gap-1 text-muted-foreground transition-colors hover:text-primary active:scale-95"
         >
           <UserIcon className="h-5 w-5" />
           <span className="text-[10px] font-semibold">
-            {isAuthenticated
-              ? isBn
-                ? 'প্রোফাইল'
-                : 'Profile'
-              : isBn
-              ? 'অ্যাকাউন্ট'
-              : 'Account'}
+            {isBn ? 'প্রোফাইল' : 'Profile'}
           </span>
-        </button>
+        </Link>
       </div>
     </nav>
   );

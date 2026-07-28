@@ -201,7 +201,7 @@ export function MobileMenuDrawer() {
 
               {/* Categories Section */}
               <div className="mb-6">
-                <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-muted-foreground">
                   {isBn ? 'ওষুধের ক্যাটাগরি' : 'Medicine Categories'}
                 </h3>
                 <nav className="flex flex-col gap-1">
@@ -210,7 +210,7 @@ export function MobileMenuDrawer() {
                       key={cat.id}
                       href={`/category/${cat.slug}`}
                       onClick={handleClose}
-                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
                     >
                       {ICON_MAP[cat.iconName] || <Pill className="h-5 w-5 text-primary" />}
                       <span>{isBn ? cat.nameBn : cat.nameEn}</span>

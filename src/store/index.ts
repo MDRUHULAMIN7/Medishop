@@ -4,6 +4,8 @@ import authReducer from './slices/authSlice';
 import cartReducer from './slices/cartSlice';
 import uiReducer from './slices/uiSlice';
 import searchReducer from './slices/searchSlice';
+import checkoutReducer from './slices/checkoutSlice';
+import orderReducer from './slices/orderSlice';
 
 export const store = configureStore({
   reducer: {
@@ -11,6 +13,8 @@ export const store = configureStore({
     cart: cartReducer,
     ui: uiReducer,
     search: searchReducer,
+    checkout: checkoutReducer,
+    order: orderReducer,
   },
   devTools: process.env.NODE_ENV !== 'production',
 });

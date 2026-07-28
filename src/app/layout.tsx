@@ -64,7 +64,13 @@ export default function RootLayout({
       className={`${fontInter.variable} ${fontRobotoSlab.variable} ${fontNotoBengali.variable}`}
       suppressHydrationWarning
     >
-      <body className="flex min-h-screen flex-col bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary">
+      <head>
+        <link rel="stylesheet" href="https://fonts.maateen.me/solaiman-lipi/font.css" />
+      </head>
+      <body
+        className="flex min-h-screen flex-col bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary"
+        suppressHydrationWarning
+      >
         <AppProviders>
           {/* Header Landmark */}
           <Navbar />

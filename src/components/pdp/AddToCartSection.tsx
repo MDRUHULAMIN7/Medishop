@@ -23,13 +23,17 @@ export function AddToCartSection({ product, quantity }: AddToCartSectionProps) {
     dispatch(
       addToCart({
         productId: product.id,
+        slug: product.slug,
         nameEn: product.nameEn,
         nameBn: product.nameBn,
-        price: product.price,
+        brand: product.brand,
+        sellingPrice: product.price,
         mrp: product.mrp,
         image: product.image,
+        unit: product.unit,
         quantity,
-        requiresRx: product.requiresRx,
+        prescriptionRequired: product.requiresRx,
+        stock: product.stockCount,
       })
     );
 
