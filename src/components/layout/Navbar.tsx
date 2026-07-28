@@ -33,6 +33,7 @@ import { toggleCartDrawer, selectTotalQuantity } from '@/store/slices/cartSlice'
 import { useScrollPosition } from '@/hooks/useScrollPosition';
 import { MobileMenuDrawer } from './MobileMenuDrawer';
 import { MobileSearchOverlay } from './MobileSearchOverlay';
+import { SearchAutocomplete } from '@/components/search/SearchAutocomplete';
 import { HOTLINE_NUMBER, HOTLINE_TEL } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
@@ -47,6 +48,7 @@ export function Navbar() {
   const language = useAppSelector((state) => state.ui.language);
 
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const isBn = language === 'bn';
 
   const [badgeAnimate, setBadgeAnimate] = useState(false);
@@ -62,6 +64,7 @@ export function Navbar() {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      setIsSearchFocused(false);
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
@@ -131,7 +134,7 @@ export function Navbar() {
               </div>
             </Link>
 
-            {/* Mobile Header Right Actions (Language Toggle & Hotline Call) */}
+            {/* Mobile Header Right Actions */}
             <div className="flex items-center gap-2 md:hidden">
               <button
                 onClick={() => dispatch(setLanguage(isBn ? 'en' : 'bn'))}
@@ -152,13 +155,14 @@ export function Navbar() {
             </div>
           </div>
 
-          {/* Mobile Clean Search Bar (Sleek Single Border, Integrated Left Icon) */}
-          <div className="pb-3 md:hidden w-full">
+          {/* Mobile Search Bar with Autocomplete */}
+          <div className="pb-3 md:hidden w-full relative">
             <form onSubmit={handleSearchSubmit} className="relative flex items-center">
               <Search className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
               <input
                 type="search"
                 value={searchQuery}
+                onFocus={() => setIsSearchFocused(true)}
                 onChange={(e) => dispatch(setSearchQuery(e.target.value))}
                 placeholder={
                   isBn
@@ -178,15 +182,23 @@ export function Navbar() {
                 </button>
               )}
             </form>
+
+            {/* Search Autocomplete Overlay */}
+            <SearchAutocomplete
+              query={searchQuery}
+              isOpen={isSearchFocused}
+              onClose={() => setIsSearchFocused(false)}
+            />
           </div>
 
-          {/* Desktop Search Bar */}
-          <div className="hidden flex-1 max-w-2xl mx-8 md:block my-auto">
+          {/* Desktop Search Bar with Autocomplete */}
+          <div className="hidden flex-1 max-w-2xl mx-8 md:block my-auto relative">
             <form onSubmit={handleSearchSubmit} className="relative flex items-center">
               <Search className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
               <input
                 type="search"
                 value={searchQuery}
+                onFocus={() => setIsSearchFocused(true)}
                 onChange={(e) => dispatch(setSearchQuery(e.target.value))}
                 placeholder={
                   isBn
@@ -202,10 +214,17 @@ export function Navbar() {
                   aria-label={isBn ? 'মুছে ফেলুন' : 'Clear search'}
                   className="absolute right-3 rounded-full p-1 text-muted-foreground hover:text-foreground"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </form>
+
+            {/* Search Autocomplete Overlay */}
+            <SearchAutocomplete
+              query={searchQuery}
+              isOpen={isSearchFocused}
+              onClose={() => setIsSearchFocused(false)}
+            />
           </div>
 
           {/* Desktop Right Actions (Rx Upload, Cart, Auth) */}

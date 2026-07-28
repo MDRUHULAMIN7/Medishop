@@ -1,7 +1,7 @@
 import { Product } from '@/types/home';
 
 export const MOCK_PRODUCTS: Product[] = [
-  // 1. Exclusive Deals
+  // 1. Exclusive Deals & Fast Moving OTC
   {
     id: 'p-101',
     slug: 'napa-extra-500mg-65mg',
@@ -12,7 +12,7 @@ export const MOCK_PRODUCTS: Product[] = [
     price: 25,
     mrp: 30,
     discountPercent: 16,
-    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=400&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=600&auto=format&fit=crop',
     requiresRx: false,
     inStock: true,
     stockCount: 150,
@@ -31,7 +31,7 @@ export const MOCK_PRODUCTS: Product[] = [
     price: 70,
     mrp: 80,
     discountPercent: 12,
-    image: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?q=80&w=400&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?q=80&w=600&auto=format&fit=crop',
     requiresRx: true,
     inStock: true,
     stockCount: 200,
@@ -50,7 +50,7 @@ export const MOCK_PRODUCTS: Product[] = [
     price: 350,
     mrp: 400,
     discountPercent: 12,
-    image: 'https://images.unsplash.com/photo-1576602976047-174e57a47881?q=80&w=400&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1576602976047-174e57a47881?q=80&w=600&auto=format&fit=crop',
     requiresRx: true,
     inStock: true,
     stockCount: 85,
@@ -69,7 +69,7 @@ export const MOCK_PRODUCTS: Product[] = [
     price: 1450,
     mrp: 1700,
     discountPercent: 15,
-    image: 'https://images.unsplash.com/photo-1628771065518-0d82f1938462?q=80&w=400&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1628771065518-0d82f1938462?q=80&w=600&auto=format&fit=crop',
     requiresRx: false,
     inStock: true,
     stockCount: 45,
@@ -78,8 +78,6 @@ export const MOCK_PRODUCTS: Product[] = [
     unit: '50 Strips Pack',
     tags: ['exclusive-deals', 'diabetic-care'],
   },
-
-  // 2. Fast Moving OTC
   {
     id: 'p-105',
     slug: 'eno-fruit-salt-lemon',
@@ -90,7 +88,7 @@ export const MOCK_PRODUCTS: Product[] = [
     price: 15,
     mrp: 18,
     discountPercent: 16,
-    image: 'https://images.unsplash.com/photo-1550572017-edd951aa8f72?q=80&w=400&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=600&auto=format&fit=crop',
     requiresRx: false,
     inStock: true,
     stockCount: 500,
@@ -109,7 +107,7 @@ export const MOCK_PRODUCTS: Product[] = [
     price: 180,
     mrp: 200,
     discountPercent: 10,
-    image: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?q=80&w=400&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?q=80&w=600&auto=format&fit=crop',
     requiresRx: false,
     inStock: true,
     stockCount: 120,
@@ -128,7 +126,7 @@ export const MOCK_PRODUCTS: Product[] = [
     price: 60,
     mrp: 70,
     discountPercent: 14,
-    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=400&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?q=80&w=600&auto=format&fit=crop',
     requiresRx: true,
     inStock: true,
     stockCount: 300,
@@ -138,7 +136,7 @@ export const MOCK_PRODUCTS: Product[] = [
     tags: ['fast-moving-otc'],
   },
 
-  // 3. Diabetic Care
+  // 2. Diabetic Care & Health Devices
   {
     id: 'p-108',
     slug: 'accu-chek-active-glucometer-kit',
@@ -149,14 +147,14 @@ export const MOCK_PRODUCTS: Product[] = [
     price: 2150,
     mrp: 2400,
     discountPercent: 10,
-    image: 'https://images.unsplash.com/photo-1628771065518-0d82f1938462?q=80&w=400&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1628771065518-0d82f1938462?q=80&w=600&auto=format&fit=crop',
     requiresRx: false,
     inStock: true,
     stockCount: 30,
     rating: 4.9,
     reviewCount: 110,
     unit: '1 Complete Kit',
-    tags: ['diabetic-care'],
+    tags: ['diabetic-care', 'devices'],
   },
   {
     id: 'p-109',
@@ -168,7 +166,7 @@ export const MOCK_PRODUCTS: Product[] = [
     price: 45,
     mrp: 50,
     discountPercent: 10,
-    image: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?q=80&w=400&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=600&auto=format&fit=crop',
     requiresRx: true,
     inStock: true,
     stockCount: 180,
@@ -178,7 +176,7 @@ export const MOCK_PRODUCTS: Product[] = [
     tags: ['diabetic-care'],
   },
 
-  // 4. Women's Choice
+  // 3. Women's Choice & Baby Care
   {
     id: 'p-110',
     slug: 'whisper-choice-sanitary-pads-8s',
@@ -189,7 +187,7 @@ export const MOCK_PRODUCTS: Product[] = [
     price: 95,
     mrp: 110,
     discountPercent: 13,
-    image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=400&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&auto=format&fit=crop',
     requiresRx: false,
     inStock: true,
     stockCount: 220,
@@ -208,7 +206,7 @@ export const MOCK_PRODUCTS: Product[] = [
     price: 35,
     mrp: 40,
     discountPercent: 12,
-    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=400&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?q=80&w=600&auto=format&fit=crop',
     requiresRx: false,
     inStock: true,
     stockCount: 400,
@@ -217,8 +215,6 @@ export const MOCK_PRODUCTS: Product[] = [
     unit: '1 Cycle Pack',
     tags: ['women-choice'],
   },
-
-  // 5. Baby Care
   {
     id: 'p-112',
     slug: 'pampers-baby-dry-pants-l-34s',
@@ -229,7 +225,7 @@ export const MOCK_PRODUCTS: Product[] = [
     price: 1250,
     mrp: 1450,
     discountPercent: 14,
-    image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?q=80&w=400&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?q=80&w=600&auto=format&fit=crop',
     requiresRx: false,
     inStock: true,
     stockCount: 60,
@@ -248,7 +244,7 @@ export const MOCK_PRODUCTS: Product[] = [
     price: 340,
     mrp: 380,
     discountPercent: 10,
-    image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=400&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&auto=format&fit=crop',
     requiresRx: false,
     inStock: true,
     stockCount: 90,
