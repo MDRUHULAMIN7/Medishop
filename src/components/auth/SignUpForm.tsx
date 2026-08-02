@@ -4,15 +4,14 @@ import React from 'react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User as UserIcon, Mail, Phone, Loader2, Pill, ArrowLeft } from 'lucide-react';
+import { Pill, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppSelector } from '@/store';
 import { createSignUpSchema, SignUpSchemaType } from '@/validators/signup.schema';
-import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export function SignUpForm() {
-  const { register: registerAuth, isLoading, setView } = useAuth();
+  const { sendOtp, isLoading } = useAuth();
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
 
@@ -21,182 +20,118 @@ export function SignUpForm() {
   const {
     register,
     handleSubmit,
-    watch,
-    setValue,
     formState: { errors },
   } = useForm<SignUpSchemaType>({
     resolver: zodResolver(schema),
     defaultValues: {
       fullName: '',
-      identifierType: 'phone',
-      email: '',
       phone: '',
-      password: '',
-      confirmPassword: '',
       agreeToTerms: true,
     },
   });
 
-  const identifierType = watch('identifierType');
-
   const onSubmit = async (data: SignUpSchemaType) => {
-    await registerAuth(data);
+    if (!data.phone || data.phone.trim().length < 6) {
+      toast.error(isBn ? 'সঠিক মোবাইল নম্বর প্রদান করুন' : 'Please enter a valid mobile number');
+      return;
+    }
+    sendOtp(data.phone);
   };
 
   return (
-    <div className="flex flex-col items-center text-center text-white w-full space-y-3">
+    <div className="flex flex-col items-center text-center text-white w-full max-w-sm mx-auto space-y-4">
       {/* Brand Header */}
-      <div className="flex flex-col items-center space-y-0.5">
+      <div className="flex flex-col items-center space-y-2">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-white text-primary font-extrabold shadow-sm">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-primary font-black shadow-xs">
             <Pill className="h-4 w-4" />
           </div>
-          <span className="font-serif-title text-xl font-black text-white">
+          <span className="font-serif-title text-2xl font-black tracking-tight text-white">
             mediShop
           </span>
         </div>
-        <h2 className="text-xs font-extrabold tracking-wider text-white/90 uppercase pt-1">
+        <h2 className="text-sm font-black tracking-wider text-white uppercase">
           {isBn ? 'নতুন অ্যাকাউন্ট খুলুন' : 'CREATE ACCOUNT'}
         </h2>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-2.5 w-full text-left">
-        {/* Full Name */}
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3 w-full text-left">
+        {/* Full Name Input */}
         <div className="flex flex-col gap-1 w-full">
-          <div className="relative flex items-center">
-            <UserIcon className="absolute left-3.5 h-4 w-4 text-white/70" />
-            <input
-              type="text"
-              placeholder={isBn ? 'আপনার পূর্ণ নাম' : 'Full Name'}
-              className="w-full rounded-xl bg-white/20 border border-white/40 py-2.5 pl-10 pr-3.5 text-xs text-white placeholder:text-white/70 focus:outline-hidden focus:bg-white/30"
-              {...register('fullName')}
-            />
-          </div>
+          <input
+            type="text"
+            placeholder={isBn ? 'আপনার পূর্ণ নাম' : 'Your Full Name'}
+            className="w-full rounded-2xl bg-white/20 border border-white/30 px-4 py-3 text-sm font-medium text-white placeholder:text-white/80 focus:outline-hidden focus:bg-white/30"
+            {...register('fullName')}
+          />
           {errors.fullName && (
-            <span className="text-[10px] font-semibold text-rose-200">
+            <span className="text-[11px] font-semibold text-rose-200 px-1">
               {errors.fullName.message}
             </span>
           )}
         </div>
 
-        {/* Mobile / Email Selection */}
+        {/* Contact Number Input with +88 */}
         <div className="flex flex-col gap-1 w-full">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-white">
-              {identifierType === 'phone' ? (isBn ? 'মোবাইল নম্বর' : 'Mobile Number') : (isBn ? 'ইমেইল এড্রেস' : 'Email Address')}
-            </span>
-            <div className="flex rounded-lg bg-white/20 p-0.5 text-[10px] font-bold">
-              <button
-                type="button"
-                onClick={() => setValue('identifierType', 'phone')}
-                className={cn(
-                  'rounded-md px-2 py-0.5 transition-colors',
-                  identifierType === 'phone'
-                    ? 'bg-white text-primary'
-                    : 'text-white'
-                )}
-              >
-                {isBn ? 'ফোন' : 'Phone'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setValue('identifierType', 'email')}
-                className={cn(
-                  'rounded-md px-2 py-0.5 transition-colors',
-                  identifierType === 'email'
-                    ? 'bg-white text-primary'
-                    : 'text-white'
-                )}
-              >
-                {isBn ? 'ইমেইল' : 'Email'}
-              </button>
+          <div className="flex items-center rounded-2xl bg-white/20 border border-white/30 p-1 focus-within:border-white focus-within:bg-white/30 transition-all">
+            <div className="bg-white text-primary font-black px-3.5 py-2.5 rounded-xl text-sm shadow-xs flex items-center justify-center shrink-0">
+              +88
             </div>
+            <input
+              type="tel"
+              placeholder={isBn ? 'আপনার মোবাইল নম্বর' : 'Your Contact Number'}
+              className="w-full bg-transparent border-none px-3.5 py-2.5 text-sm font-medium text-white placeholder:text-white/80 focus:outline-hidden"
+              {...register('phone')}
+            />
           </div>
-
-          <div className="relative flex items-center">
-            {identifierType === 'phone' ? (
-              <Phone className="absolute left-3.5 h-4 w-4 text-white/70" />
-            ) : (
-              <Mail className="absolute left-3.5 h-4 w-4 text-white/70" />
-            )}
-
-            {identifierType === 'phone' ? (
-              <input
-                type="tel"
-                placeholder="01700000000"
-                className="w-full rounded-xl bg-white/20 border border-white/40 py-2.5 pl-10 pr-3.5 text-xs text-white placeholder:text-white/70 focus:outline-hidden focus:bg-white/30"
-                {...register('phone')}
-              />
-            ) : (
-              <input
-                type="email"
-                placeholder="name@example.com"
-                className="w-full rounded-xl bg-white/20 border border-white/40 py-2.5 pl-10 pr-3.5 text-xs text-white placeholder:text-white/70 focus:outline-hidden focus:bg-white/30"
-                {...register('email')}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Password */}
-        <div className="flex flex-col gap-1 w-full">
-          <input
-            type="password"
-            placeholder={isBn ? 'পাসওয়ার্ড (কমপক্ষে ৮ অক্ষর)' : 'Password (min 8 chars)'}
-            className="w-full rounded-xl bg-white/20 border border-white/40 py-2.5 px-3.5 text-xs text-white placeholder:text-white/70 focus:outline-hidden focus:bg-white/30"
-            {...register('password')}
-          />
+          {errors.phone && (
+            <span className="text-[11px] font-semibold text-rose-200 px-1">
+              {errors.phone.message}
+            </span>
+          )}
         </div>
 
         {/* Legal Disclaimer */}
-        <p className="text-[10px] text-center text-white/80 leading-snug">
-          {isBn ? 'এগিয়ে যাওয়ার মাধ্যমে আপনি ' : 'By continuing you agree to '}
+        <p className="text-[11px] text-center text-white/90 leading-relaxed px-1 font-normal">
+          {isBn ? 'এগিয়ে যাওয়ার মাধ্যমে আপনি মেডিশপের ' : 'By continuing you agree to '}
           <Link href="/terms" className="underline hover:text-white font-semibold">
-            {isBn ? 'শর্তাবলী' : 'Terms'}
+            {isBn ? 'ব্যবহারের শর্তাবলী' : 'Terms & Conditions'}
           </Link>
-          {' & '}
+          {', '}
           <Link href="/privacy" className="underline hover:text-white font-semibold">
             {isBn ? 'গোপনীয়তা নীতি' : 'Privacy Policy'}
           </Link>
+          {' & '}
+          <Link href="/refund-policy" className="underline hover:text-white font-semibold">
+            {isBn ? 'রিফান্ড নীতি' : 'Refund-Return Policy'}
+          </Link>
         </p>
 
-        {/* Create Account Primary Button */}
+        {/* Action Button */}
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full rounded-2xl bg-white py-3 px-4 text-xs sm:text-sm font-extrabold text-primary shadow-lg hover:bg-slate-50 transition-all active:scale-98 flex items-center justify-center gap-2 mt-1 disabled:opacity-80"
+          className="w-full rounded-2xl bg-white py-3.5 px-4 text-sm font-black text-primary shadow-lg hover:bg-slate-50 transition-all active:scale-98 flex items-center justify-center gap-2 disabled:opacity-80"
         >
           {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
           ) : (
-            <span>{isBn ? 'অ্যাকাউন্ট খুলুন' : 'Create Account'}</span>
+            <span>{isBn ? 'ওটিপি পাঠান' : 'Send OTP'}</span>
           )}
         </button>
-
-        {/* Back to Sign In */}
-        <div className="text-center text-xs text-white/90 pt-0.5">
-          <span>{isBn ? 'ইতিমধ্যে অ্যাকাউন্ট আছে? ' : 'Already have an account? '}</span>
-          <button
-            type="button"
-            onClick={() => setView('signin')}
-            className="font-extrabold text-white underline hover:text-amber-200"
-          >
-            {isBn ? 'লগইন করুন' : 'Sign In'}
-          </button>
-        </div>
       </form>
 
       {/* Social Login Divider & Buttons */}
       <div className="w-full space-y-2 pt-1">
-        <p className="text-[11px] text-white/80 font-medium">
-          {isBn ? 'অথবা সামাজিক মাধ্যমে রেজিস্ট্রেশন করুন' : 'or register with'}
+        <p className="text-[12px] text-white/90 font-medium">
+          {isBn ? 'অথবা' : 'or continue with'}
         </p>
         <div className="flex items-center justify-center gap-3">
           {/* Facebook */}
           <button
             type="button"
             onClick={() => toast.info(isBn ? 'ফেসবুক রেজিস্ট্রেশন পরবর্তী ফেজে যুক্ত করা হবে' : 'Facebook signup coming soon')}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#1877F2] font-black text-base shadow-md hover:scale-110 active:scale-95 transition-all"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#1877F2] font-black text-lg shadow-md hover:scale-110 active:scale-95 transition-all"
             title="Facebook"
           >
             f
@@ -206,10 +141,10 @@ export function SignUpForm() {
           <button
             type="button"
             onClick={() => toast.info(isBn ? 'গুগল রেজিস্ট্রেশন পরবর্তী ফেজে যুক্ত করা হবে' : 'Google signup coming soon')}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-md hover:scale-110 active:scale-95 transition-all"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md hover:scale-110 active:scale-95 transition-all"
             title="Google"
           >
-            <svg className="h-4.5 w-4.5" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />

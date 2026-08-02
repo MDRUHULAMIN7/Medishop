@@ -158,14 +158,14 @@ export function AuthModal() {
               </div>
             </div>
 
-            {/* Right Side: Vibrant Primary Sign-In Box (Col 5) */}
-            <div className="col-span-12 md:col-span-5 relative bg-gradient-to-b from-primary to-primary-dark p-6 sm:p-8 flex flex-col justify-between text-white">
+            {/* Right Side: Primary Sign-In Box (Col 5) */}
+            <div className="col-span-12 md:col-span-5 relative bg-gradient-to-b from-primary to-primary-dark p-6 sm:p-8 flex flex-col justify-center text-white">
               {/* Close Button Top Right */}
               <button
                 type="button"
                 onClick={closeModal}
                 aria-label={isBn ? 'বন্ধ করুন' : 'Close Modal'}
-                className="absolute top-4 right-4 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white text-primary shadow-md transition-transform hover:scale-110 active:scale-95"
+                className="absolute top-4 right-4 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white hover:text-primary transition-all active:scale-95 shadow-md"
               >
                 <X className="h-4 w-4 stroke-[3]" />
               </button>
