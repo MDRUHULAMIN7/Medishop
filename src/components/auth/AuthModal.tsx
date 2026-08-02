@@ -63,20 +63,20 @@ export function AuthModal() {
             className="relative z-10 w-full max-w-4xl overflow-hidden rounded-3xl border border-white/20 bg-background shadow-2xl grid grid-cols-1 md:grid-cols-12 min-h-[520px]"
           >
             {/* Left Side: Hero Banner & Phone Graphic Mockup (Desktop / Tablet) */}
-            <div className="hidden md:flex md:col-span-7 flex-col justify-between p-6 lg:p-8 bg-gradient-to-br from-sky-50 via-teal-50/80 to-cyan-100 border-r border-teal-100/60 relative overflow-hidden">
+            <div className="hidden md:flex md:col-span-7 flex-col justify-between p-6 lg:p-8 bg-gradient-to-br from-primary-soft via-muted/50 to-primary-soft/80 border-r border-border relative overflow-hidden">
               {/* Decorative Background Glow Circles */}
-              <div className="absolute -top-16 -left-16 w-56 h-56 rounded-full bg-cyan-200/40 blur-3xl" />
-              <div className="absolute -bottom-16 -right-16 w-56 h-56 rounded-full bg-teal-200/40 blur-3xl" />
+              <div className="absolute -top-16 -left-16 w-56 h-56 rounded-full bg-primary/10 blur-3xl" />
+              <div className="absolute -bottom-16 -right-16 w-56 h-56 rounded-full bg-primary/15 blur-3xl" />
 
               {/* Top Badge */}
               <div className="relative z-10 flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-primary text-white font-bold shadow-xs">
-                  <Pill className="h-4 w-4" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-white font-bold shadow-xs">
+                  <Pill className="h-4.5 w-4.5" />
                 </div>
-                <span className="font-serif-title text-lg font-extrabold text-primary">
+                <span className="font-serif-title text-xl font-extrabold text-primary">
                   mediShop
                 </span>
-                <span className="rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[10px] font-bold text-primary ml-auto">
+                <span className="rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-bold text-primary ml-auto">
                   {isBn ? 'ডিজিডিএ অনুমোদিত' : 'DGDA Certified'}
                 </span>
               </div>
@@ -105,7 +105,7 @@ export function AuthModal() {
                     {/* Quick Services Icons */}
                     <div className="grid grid-cols-3 gap-1 p-2 bg-muted/30 text-center text-[7px] font-bold text-foreground">
                       <div className="flex flex-col items-center p-1 rounded-lg bg-background shadow-2xs">
-                        <Video className="h-3 w-3 text-cyan-600 mb-0.5" />
+                        <Video className="h-3 w-3 text-primary mb-0.5" />
                         <span>{isBn ? 'ডাক্তার' : 'Doctor'}</span>
                       </div>
                       <div className="flex flex-col items-center p-1 rounded-lg bg-background shadow-2xs">
@@ -113,7 +113,7 @@ export function AuthModal() {
                         <span>{isBn ? 'আপলোড' : 'Rx Upload'}</span>
                       </div>
                       <div className="flex flex-col items-center p-1 rounded-lg bg-background shadow-2xs">
-                        <MessageSquare className="h-3 w-3 text-emerald-600 mb-0.5" />
+                        <MessageSquare className="h-3 w-3 text-success mb-0.5" />
                         <span>{isBn ? 'চ্যাট' : 'Chat'}</span>
                       </div>
                     </div>
@@ -126,12 +126,12 @@ export function AuthModal() {
                       </div>
                       <div className="grid grid-cols-2 gap-1">
                         <div className="rounded-md border border-border p-1 bg-background space-y-0.5">
-                          <div className="h-10 w-full rounded bg-sky-100 flex items-center justify-center font-bold text-primary text-[8px]">Rx</div>
+                          <div className="h-10 w-full rounded bg-primary-soft flex items-center justify-center font-bold text-primary text-[8px]">Rx</div>
                           <p className="font-bold text-[8px] truncate">Napa Extra</p>
                           <p className="text-[7px] font-bold text-primary">৳25</p>
                         </div>
                         <div className="rounded-md border border-border p-1 bg-background space-y-0.5">
-                          <div className="h-10 w-full rounded bg-amber-100 flex items-center justify-center font-bold text-amber-700 text-[8px]">OTC</div>
+                          <div className="h-10 w-full rounded bg-accent-light flex items-center justify-center font-bold text-accent-dark text-[8px]">OTC</div>
                           <p className="font-bold text-[8px] truncate">Sergel 20mg</p>
                           <p className="text-[7px] font-bold text-primary">৳70</p>
                         </div>
@@ -141,31 +141,31 @@ export function AuthModal() {
                 </div>
 
                 {/* Slogan Text Beside Phone */}
-                <div className="space-y-3 max-w-[200px]">
+                <div className="space-y-4 max-w-[280px]">
                   <div>
-                    <h3 className="text-2xl font-black leading-tight bg-gradient-to-r from-[#00A3DA] via-primary to-teal-700 bg-clip-text text-transparent">
+                    <h3 className="text-4xl lg:text-5xl font-black leading-none text-primary tracking-tight">
                       {isBn ? 'দেশের সেরা' : 'Best in BD'}
                     </h3>
-                    <p className="text-xs font-extrabold text-foreground leading-snug mt-0.5">
+                    <p className="text-base lg:text-lg font-bold text-foreground leading-snug mt-2">
                       {isBn ? 'ও সবচেয়ে নির্ভরযোগ্য ডিজিটাল হেলথ প্ল্যাটফর্ম' : 'Most Trusted Digital Health Platform'}
                     </p>
                   </div>
 
-                  <div className="inline-block rounded-full bg-[#00A3DA]/10 border border-[#00A3DA]/30 px-3 py-1 text-[11px] font-extrabold text-[#00A3DA]">
+                  <div className="inline-block rounded-full bg-primary/10 border border-primary/30 px-4 py-2 text-sm lg:text-base font-black text-primary">
                     {isBn ? 'এক অ্যাপেই পাবেন সব সমাধান' : 'All Solutions in One App'}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Right Side: Vibrant Cyan Sign-In Box (Col 5) */}
-            <div className="col-span-12 md:col-span-5 relative bg-gradient-to-b from-[#00A3DA] to-[#008BBF] p-6 sm:p-8 flex flex-col justify-between text-white">
-              {/* Red Close Button Top Right */}
+            {/* Right Side: Vibrant Primary Sign-In Box (Col 5) */}
+            <div className="col-span-12 md:col-span-5 relative bg-gradient-to-b from-primary to-primary-dark p-6 sm:p-8 flex flex-col justify-between text-white">
+              {/* Close Button Top Right */}
               <button
                 type="button"
                 onClick={closeModal}
                 aria-label={isBn ? 'বন্ধ করুন' : 'Close Modal'}
-                className="absolute top-4 right-4 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white text-red-600 shadow-md transition-transform hover:scale-110 active:scale-95"
+                className="absolute top-4 right-4 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white text-primary shadow-md transition-transform hover:scale-110 active:scale-95"
               >
                 <X className="h-4 w-4 stroke-[3]" />
               </button>

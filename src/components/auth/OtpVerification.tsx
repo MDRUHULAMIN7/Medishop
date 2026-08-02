@@ -97,7 +97,7 @@ export function OtpVerification() {
       {/* Brand Header */}
       <div className="flex flex-col items-center space-y-1">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-[#00A3DA] font-extrabold shadow-sm">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-primary font-extrabold shadow-sm">
             <Pill className="h-4 w-4" />
           </div>
           <span className="font-serif-title text-2xl font-black text-white">
@@ -127,7 +127,7 @@ export function OtpVerification() {
             onChange={(e) => handleChange(idx, e.target.value)}
             onKeyDown={(e) => handleKeyDown(idx, e)}
             onPaste={handlePaste}
-            className="h-12 w-full rounded-xl bg-cyan-700/50 border border-cyan-300/60 text-center font-serif-title text-xl font-bold text-white focus:bg-cyan-600 focus:border-white focus:outline-hidden shadow-inner"
+            className="h-12 w-full rounded-xl bg-white/20 border border-white/40 text-center font-serif-title text-xl font-bold text-white focus:bg-white/30 focus:border-white focus:outline-hidden shadow-inner"
           />
         ))}
       </div>
@@ -151,14 +151,14 @@ export function OtpVerification() {
       {/* Action Row: Timer Box + Verify OTP Button (Matches Image 2) */}
       <div className="flex items-center gap-3 w-full">
         {/* Timer / Resend Container */}
-        <div className="bg-white text-[#00A3DA] font-extrabold text-xs px-3.5 py-3 rounded-2xl shadow-md min-w-[85px] shrink-0 flex items-center justify-center">
+        <div className="bg-white text-primary font-extrabold text-xs px-3.5 py-3 rounded-2xl shadow-md min-w-[85px] shrink-0 flex items-center justify-center">
           {isActive ? (
             <span>{formattedTimer}</span>
           ) : (
             <button
               type="button"
               onClick={handleResend}
-              className="text-[#00A3DA] underline hover:text-cyan-800"
+              className="text-primary underline hover:text-primary-dark"
             >
               {isBn ? 'পুনরায়' : 'Resend'}
             </button>
@@ -170,10 +170,10 @@ export function OtpVerification() {
           type="button"
           onClick={() => handleVerify()}
           disabled={isLoading || otp.join('').length < 6}
-          className="flex-1 rounded-2xl bg-white py-3 px-4 text-xs sm:text-sm font-extrabold text-[#00A3DA] shadow-lg hover:bg-slate-50 transition-all active:scale-98 flex items-center justify-center gap-2 disabled:opacity-70"
+          className="flex-1 rounded-2xl bg-white py-3 px-4 text-xs sm:text-sm font-extrabold text-primary shadow-lg hover:bg-slate-50 transition-all active:scale-98 flex items-center justify-center gap-2 disabled:opacity-70"
         >
           {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin text-[#00A3DA]" />
+            <Loader2 className="h-4 w-4 animate-spin text-primary" />
           ) : (
             <span>{isBn ? 'ওটিপি ভেরিফাই' : 'Verify OTP'}</span>
           )}

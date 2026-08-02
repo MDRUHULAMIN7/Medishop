@@ -59,7 +59,7 @@ export function SignInForm() {
       {/* Brand Header */}
       <div className="flex flex-col items-center space-y-1">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-[#00A3DA] font-extrabold shadow-sm">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-primary font-extrabold shadow-sm">
             <Pill className="h-4 w-4" />
           </div>
           <span className="font-serif-title text-2xl font-black text-white">
@@ -77,7 +77,7 @@ export function SignInForm() {
           {/* Phone Input Box with +88 Prefix */}
           <div className="flex flex-col gap-1 w-full">
             <div className="flex items-center rounded-2xl bg-white/20 border border-white/40 p-1 focus-within:border-white focus-within:bg-white/30 transition-all">
-              <div className="bg-white text-[#00A3DA] font-extrabold px-3 py-2.5 rounded-xl text-sm shadow-xs flex items-center justify-center shrink-0">
+              <div className="bg-white text-primary font-extrabold px-3 py-2.5 rounded-xl text-sm shadow-xs flex items-center justify-center shrink-0">
                 +88
               </div>
               <input
@@ -114,11 +114,11 @@ export function SignInForm() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full rounded-2xl bg-white py-3.5 px-4 text-sm font-extrabold text-[#00A3DA] shadow-lg hover:bg-slate-50 transition-all active:scale-98 flex items-center justify-center gap-2 disabled:opacity-80"
+            className="w-full rounded-2xl bg-white py-3.5 px-4 text-sm font-extrabold text-primary shadow-lg hover:bg-slate-50 transition-all active:scale-98 flex items-center justify-center gap-2 disabled:opacity-80"
           >
             {isLoading ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin text-[#00A3DA]" />
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
                 <span>{isBn ? 'কোড পাঠানো হচ্ছে...' : 'Sending OTP...'}</span>
               </>
             ) : (
@@ -182,10 +182,10 @@ export function SignInForm() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full rounded-2xl bg-white py-3.5 px-4 text-sm font-extrabold text-[#00A3DA] shadow-lg hover:bg-slate-50 transition-all active:scale-98 flex items-center justify-center gap-2 mt-1"
+            className="w-full rounded-2xl bg-white py-3.5 px-4 text-sm font-extrabold text-primary shadow-lg hover:bg-slate-50 transition-all active:scale-98 flex items-center justify-center gap-2 mt-1"
           >
             {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin text-[#00A3DA]" />
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
             ) : (
               <span>{isBn ? 'লগইন করুন' : 'Sign In'}</span>
             )}

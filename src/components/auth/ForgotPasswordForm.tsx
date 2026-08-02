@@ -37,7 +37,7 @@ export function ForgotPasswordForm() {
       {/* Brand Header */}
       <div className="flex flex-col items-center space-y-1">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-[#00A3DA] font-extrabold shadow-sm">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-primary font-extrabold shadow-sm">
             <Pill className="h-4 w-4" />
           </div>
           <span className="font-serif-title text-2xl font-black text-white">
@@ -81,11 +81,11 @@ export function ForgotPasswordForm() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full rounded-2xl bg-white py-3.5 px-4 text-sm font-extrabold text-[#00A3DA] shadow-lg hover:bg-slate-50 transition-all active:scale-98 flex items-center justify-center gap-2 mt-1 disabled:opacity-80"
+          className="w-full rounded-2xl bg-white py-3.5 px-4 text-sm font-extrabold text-primary shadow-lg hover:bg-slate-50 transition-all active:scale-98 flex items-center justify-center gap-2 mt-1 disabled:opacity-80"
         >
           {isLoading ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin text-[#00A3DA]" />
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
               <span>{isBn ? 'পাঠানো হচ্ছে...' : 'Sending Link...'}</span>
             </>
           ) : (
