@@ -170,7 +170,7 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
               e.preventDefault();
               toast.info(isBn ? 'উইশলিস্টে সেভ হয়েছে' : 'Saved to wishlist');
             }}
-            className="absolute bottom-2 right-2 rounded-full bg-white/80 p-1.5 text-muted-foreground opacity-0 backdrop-blur-xs transition-all hover:bg-white hover:text-rose-500 group-hover:opacity-100"
+            className="absolute bottom-2 right-2 cursor-pointer rounded-full bg-white/80 p-1.5 text-muted-foreground opacity-0 backdrop-blur-xs transition-all hover:bg-white hover:text-rose-500 group-hover:opacity-100"
           >
             <Heart className="h-4 w-4" />
           </button>
@@ -212,37 +212,44 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
               transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
               className="relative"
             >
-              <div className="flex items-stretch overflow-hidden rounded-lg border border-primary/35 bg-transparent text-xs">
-                <div className="flex items-center border-r border-primary/35 bg-primary/5 px-2 py-1 text-[11px] font-bold text-primary">
-                  <span>{unitLabel(currentUnit)}</span>
-                </div>
-
-                <div className="flex flex-1 items-center justify-center gap-1.5 px-2">
+              {/* Mobile-friendly quantity control */}
+              <div className="flex w-full items-center gap-2">
+                <div className="flex flex-1 items-center justify-between overflow-hidden rounded-xl border border-primary/30 bg-primary/5">
                   <button
                     type="button"
                     onClick={handleDecrease}
-                    className="rounded px-1 font-bold text-primary hover:bg-primary/10"
+                    aria-label={isBn ? 'কমান' : 'Decrease'}
+                    className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center text-primary transition-colors active:bg-primary/15 hover:bg-primary/10"
                   >
-                    <Minus className="h-3 w-3 stroke-[3]" />
+                    <Minus className="h-4 w-4 stroke-[2.5]" />
                   </button>
-                  <span className="min-w-[14px] text-center text-xs font-extrabold text-foreground">
-                    {quantityInCart}
-                  </span>
+
+                  <div className="flex min-w-0 flex-1 flex-col items-center justify-center px-1">
+                    <span className="text-sm font-extrabold leading-none text-foreground">
+                      {quantityInCart}
+                    </span>
+                    <span className="mt-0.5 truncate text-[10px] font-medium text-primary/80">
+                      {unitLabel(currentUnit)}
+                    </span>
+                  </div>
+
                   <button
                     type="button"
                     onClick={handleIncrease}
-                    className="rounded px-1 font-bold text-primary hover:bg-primary/10"
+                    aria-label={isBn ? 'বাড়ান' : 'Increase'}
+                    className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center text-primary transition-colors active:bg-primary/15 hover:bg-primary/10"
                   >
-                    <Plus className="h-3 w-3 stroke-[3]" />
+                    <Plus className="h-4 w-4 stroke-[2.5]" />
                   </button>
                 </div>
 
                 <button
                   type="button"
                   onClick={handleIncrease}
-                  className="flex items-center gap-1 bg-primary px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
+                  className="flex h-10 shrink-0 cursor-pointer items-center gap-1.5 rounded-xl bg-primary px-3 text-xs font-semibold text-white shadow-sm transition-colors active:scale-95 hover:bg-primary-dark sm:px-4 sm:text-sm"
                 >
-                  <span>{isBn ? 'যোগ হয়েছে' : 'Added'}</span>
+                  <Check className="h-3.5 w-3.5 shrink-0" />
+                  <span className="whitespace-nowrap">{isBn ? 'যোগ হয়েছে' : 'Added'}</span>
                 </button>
               </div>
             </motion.div>
@@ -260,10 +267,10 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
                     <button
                       type="button"
                       onClick={() => setIsUnitMenuOpen((open) => !open)}
-                      className="flex w-full items-center justify-between rounded-lg border border-primary/25 bg-background px-3 py-2 text-left text-sm font-semibold text-primary"
+                      className="flex w-full cursor-pointer items-center justify-between rounded-xl border border-primary/25 bg-background px-3 py-2.5 text-left text-sm font-semibold text-primary transition-colors hover:bg-primary/5"
                     >
                       <span>{unitLabel(selectedUnit)}</span>
-                      <ChevronDown className="h-4 w-4" />
+                      <ChevronDown className={cn('h-4 w-4 transition-transform', isUnitMenuOpen && 'rotate-180')} />
                     </button>
 
                     <AnimatePresence>
@@ -273,7 +280,7 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -4 }}
                           transition={{ duration: 0.15 }}
-                          className="mt-2 grid grid-cols-3 gap-2"
+                          className="grid grid-cols-3 gap-2"
                         >
                           {UNIT_OPTIONS.map((option) => {
                             const isSelected = selectedUnit === option.value;
@@ -284,7 +291,7 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
                                 type="button"
                                 onClick={() => handleSelectUnit(option.value)}
                                 className={cn(
-                                  'flex flex-col items-center justify-center rounded-lg border px-2 py-2 text-center transition-all',
+                                  'flex cursor-pointer flex-col items-center justify-center rounded-xl border px-2 py-2.5 text-center transition-all active:scale-95',
                                   isSelected
                                     ? 'border-primary bg-primary/10 text-primary'
                                     : 'border-border bg-muted/20 text-foreground hover:border-primary/40 hover:bg-primary/5'
@@ -307,38 +314,43 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
                       )}
                     </AnimatePresence>
 
-                    <div className="flex items-stretch overflow-hidden rounded-lg border border-primary/35 bg-background text-xs shadow-xs">
-                      <div className="flex items-center border-r border-primary/35 bg-primary/5 px-2 py-1 text-[11px] font-bold text-primary">
-                        <span>{unitLabel(selectedUnit)}</span>
-                      </div>
-
-                      <div className="flex flex-1 items-center justify-center gap-1.5 px-2">
+                    <div className="flex w-full items-center gap-2">
+                      <div className="flex flex-1 items-center justify-between overflow-hidden rounded-xl border border-primary/30 bg-background">
                         <button
                           type="button"
                           onClick={() => setPendingQuantity((qty) => Math.max(1, qty - 1))}
-                          className="rounded px-1 font-bold text-primary hover:bg-primary/10"
+                          aria-label={isBn ? 'কমান' : 'Decrease'}
+                          className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center text-primary transition-colors active:bg-primary/15 hover:bg-primary/10"
                         >
-                          <Minus className="h-3 w-3 stroke-[3]" />
+                          <Minus className="h-4 w-4 stroke-[2.5]" />
                         </button>
-                        <span className="min-w-[14px] text-center text-xs font-extrabold text-foreground">
-                          {pendingQuantity}
-                        </span>
+
+                        <div className="flex min-w-0 flex-1 flex-col items-center justify-center px-1">
+                          <span className="text-sm font-extrabold leading-none text-foreground">
+                            {pendingQuantity}
+                          </span>
+                          <span className="mt-0.5 truncate text-[10px] font-medium text-primary/80">
+                            {unitLabel(selectedUnit)}
+                          </span>
+                        </div>
+
                         <button
                           type="button"
                           onClick={() => setPendingQuantity((qty) => qty + 1)}
-                          className="rounded px-1 font-bold text-primary hover:bg-primary/10"
+                          aria-label={isBn ? 'বাড়ান' : 'Increase'}
+                          className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center text-primary transition-colors active:bg-primary/15 hover:bg-primary/10"
                         >
-                          <Plus className="h-3 w-3 stroke-[3]" />
+                          <Plus className="h-4 w-4 stroke-[2.5]" />
                         </button>
                       </div>
 
                       <button
                         type="button"
                         onClick={handleAddToCart}
-                        className="flex items-center gap-1 bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
+                        className="flex h-10 shrink-0 cursor-pointer items-center gap-1.5 rounded-xl bg-primary px-3 text-xs font-semibold text-white shadow-sm transition-colors active:scale-95 hover:bg-primary-dark sm:px-4 sm:text-sm"
                       >
-                        <ShoppingCart className="h-4 w-4" />
-                        <span>{isBn ? 'যোগ করুন' : 'Add'}</span>
+                        <ShoppingCart className="h-3.5 w-3.5 shrink-0" />
+                        <span className="whitespace-nowrap">{isBn ? 'যোগ করুন' : 'Add'}</span>
                       </button>
                     </div>
                   </motion.div>
@@ -353,11 +365,11 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.98 }}
                   transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-white px-4 py-3 text-sm font-semibold text-primary shadow-xs transition-all duration-200 hover:bg-primary hover:text-white active:scale-95"
+                  className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-primary/30 bg-white px-3 text-sm font-semibold text-primary shadow-xs transition-all duration-200 hover:bg-primary hover:text-white active:scale-[0.98] sm:h-12 sm:px-4"
                 >
-                  <ShoppingCart className="h-4 w-4" />
-                  <span>{isBn ? 'কার্টে যোগ করুন' : 'Add to Bag'}</span>
-                  <ChevronDown className="h-4 w-4" />
+                  <ShoppingCart className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{isBn ? 'কার্টে যোগ করুন' : 'Add to Bag'}</span>
+                  <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
                 </motion.button>
               )}
             </div>
