@@ -4,9 +4,11 @@ import React from 'react';
 import { HeroSlider } from '@/components/home/HeroSlider';
 import { CategorySidebar } from '@/components/home/CategorySidebar';
 import { CategoryChips } from '@/components/home/CategoryChips';
-import { TrustBadges } from '@/components/home/TrustBadges';
+import { ShopByCategory } from '@/components/home/ShopByCategory';
 import { PrescriptionCTA } from '@/components/home/PrescriptionCTA';
 import { ProductSection } from '@/components/home/ProductSection';
+import { WhyMediShop } from '@/components/home/WhyMediShop';
+import { HowToOrder } from '@/components/home/HowToOrder';
 import { useExclusiveDeals } from '@/hooks/useExclusiveDeals';
 import { useFastMoving } from '@/hooks/useFastMoving';
 import { useDiabeticProducts } from '@/hooks/useDiabeticProducts';
@@ -22,7 +24,7 @@ export default function HomePage() {
   const babyQuery = useBabyProducts();
 
   return (
-    <div className="mx-auto max-w-[1700px] px-3 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col gap-6">
+    <div className="mx-auto max-w-[1700px] px-3 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col gap-8">
       {/* Mobile Horizontal Category Chips */}
       <CategoryChips />
 
@@ -32,12 +34,12 @@ export default function HomePage() {
         <CategorySidebar />
 
         {/* Right Main Content Feed */}
-        <div className="flex-1 min-w-0 flex flex-col gap-6">
+        <div className="flex-1 min-w-0 flex flex-col gap-8">
           {/* Hero Slider */}
           <HeroSlider />
 
-          {/* Trust Signals Row */}
-          <TrustBadges />
+          {/* Featured Shop By Category Carousel Section */}
+          <ShopByCategory />
 
           {/* Prescription Upload & Direct Ordering CTA */}
           <PrescriptionCTA />
@@ -96,6 +98,12 @@ export default function HomePage() {
             queryResult={babyQuery}
             icon={<Baby className="h-5 w-5 text-teal-500" />}
           />
+
+          {/* Feature Section 1: Why mediShop Is Bangladesh's Best Online Medicine Shop */}
+          <WhyMediShop />
+
+          {/* Feature Section 2: How To Order From mediShop */}
+          <HowToOrder />
         </div>
       </div>
     </div>

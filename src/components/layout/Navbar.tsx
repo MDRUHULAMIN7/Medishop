@@ -94,22 +94,22 @@ export function Navbar() {
       <header
         className={cn(
           'sticky top-0 z-40 w-full bg-background/98 backdrop-blur-md transition-all duration-200 border-b border-border',
-          isScrolled ? 'shadow-md py-1' : 'shadow-xs'
+          isScrolled ? 'shadow-md py-0.5' : 'shadow-xs'
         )}
       >
-        <div className="mx-auto flex flex-col md:flex-row max-w-[1700px] justify-between px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex flex-col md:flex-row md:items-center justify-between max-w-[1700px] px-4 sm:px-6 lg:px-8 h-auto md:h-[72px]">
           {/* Mobile Top Row: Logo & Language Toggle + Call Button */}
-          <div className="flex h-14 md:h-[76px] items-center justify-between w-full md:w-auto">
+          <div className="flex h-14 md:h-full items-center justify-between w-full md:w-auto shrink-0">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-2xl bg-primary text-white font-bold shadow-md transition-transform group-hover:scale-105">
-                <Pill className="h-5 w-5 md:h-6 md:w-6" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-white font-bold shadow-md transition-transform group-hover:scale-105">
+                <Pill className="h-5.5 w-5.5" />
               </div>
-              <div className="flex flex-col">
-                <span className="font-serif-title text-xl font-extrabold tracking-tight text-primary md:text-3xl">
+              <div className="flex flex-col justify-center">
+                <span className="font-serif-title text-2xl md:text-3xl font-extrabold tracking-tight text-primary leading-none">
                   mediShop
                 </span>
-                <span className="hidden text-[10px] font-semibold tracking-wider uppercase text-muted-foreground sm:inline-block">
+                <span className="hidden text-[10px] font-bold tracking-wider uppercase text-muted-foreground sm:inline-block mt-0.5">
                   {isBn ? 'অনলাইন ফার্মেসি ও হেলথকেয়ার' : 'Online Pharmacy BD'}
                 </span>
               </div>
@@ -150,7 +150,7 @@ export function Navbar() {
                     ? 'ওষুধ খুঁজুন (যেমন: Napa, Sergel)...'
                     : 'Search medicine (e.g. Napa, Sergel)...'
                 }
-                className="w-full rounded-full border border-border bg-muted/40 py-2 pl-10 pr-9 text-xs font-medium text-foreground placeholder:text-muted-foreground transition-colors focus:border-primary focus:bg-background focus:ring-2 focus:ring-primary/20 focus:outline-hidden"
+                className="w-full rounded-full border border-border bg-muted/40 py-2 pl-10 pr-9 text-xs font-medium text-foreground placeholder:text-muted-foreground transition-colors focus:border-primary focus:bg-background focus:ring-0 focus:outline-none"
               />
               {searchQuery && (
                 <button
@@ -172,10 +172,10 @@ export function Navbar() {
             />
           </div>
 
-          {/* Desktop Search Bar with Autocomplete */}
-          <div className="hidden flex-1 max-w-2xl mx-8 md:block my-auto relative">
-            <form onSubmit={handleSearchSubmit} className="relative flex items-center">
-              <Search className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
+          {/* Desktop Search Bar with Autocomplete (Unified Height h-11) */}
+          <div className="hidden flex-1 max-w-2xl mx-6 lg:mx-8 md:flex items-center relative my-auto">
+            <form onSubmit={handleSearchSubmit} className="relative flex items-center w-full">
+              <Search className="absolute left-4 h-4.5 w-4.5 text-muted-foreground" />
               <input
                 type="search"
                 value={searchQuery}
@@ -186,16 +186,16 @@ export function Navbar() {
                     ? 'ওষুধ বা স্বাস্থ্য সামগ্রী খুঁজুন (যেমন: Napa, Sergel)...'
                     : 'Search medicines or healthcare items (Ex: Napa, Sergel)...'
                 }
-                className="w-full rounded-2xl border border-border bg-muted/30 py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground transition-all focus:border-primary focus:bg-background focus:ring-2 focus:ring-primary/20 focus:outline-hidden"
+                className="h-11 w-full rounded-2xl border border-border bg-muted/30 pl-11 pr-10 text-xs sm:text-sm font-medium text-foreground placeholder:text-muted-foreground transition-all focus:border-primary focus:bg-background focus:ring-0 focus:outline-none"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => dispatch(setSearchQuery(''))}
                   aria-label={isBn ? 'মুছে ফেলুন' : 'Clear search'}
-                  className="absolute right-3 rounded-full p-1 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3.5 rounded-full p-1 text-muted-foreground hover:text-foreground"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-4 w-4" />
                 </button>
               )}
             </form>
@@ -208,14 +208,14 @@ export function Navbar() {
             />
           </div>
 
-          {/* Desktop Right Actions (Rx Upload, Cart, Auth) */}
-          <div className="hidden md:flex items-center gap-3 my-auto">
+          {/* Desktop Right Actions (Unified Height h-11) */}
+          <div className="hidden md:flex items-center gap-3 shrink-0 my-auto">
             {/* Upload Prescription Button */}
             <Link
               href="/upload-prescription"
-              className="flex items-center gap-2 rounded-xl bg-primary/10 border border-primary/20 px-4 py-2 text-xs font-bold text-primary transition-all hover:bg-primary hover:text-white shadow-2xs"
+              className="flex h-11 items-center gap-2 rounded-2xl bg-primary/10 border border-primary/20 px-4 text-xs sm:text-sm font-bold text-primary transition-all hover:bg-primary hover:text-white shadow-2xs shrink-0"
             >
-              <Upload className="h-4 w-4" />
+              <Upload className="h-4.5 w-4.5" />
               <span>{isBn ? 'প্রেসক্রিপশন আপলোড' : 'Upload Prescription'}</span>
             </Link>
 
@@ -226,9 +226,9 @@ export function Navbar() {
                   onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
                   aria-expanded={isAccountDropdownOpen}
                   aria-label={isBn ? 'ইউজার একাউন্ট মেনু' : 'User Account Menu'}
-                  className="flex items-center gap-2 rounded-xl border border-border p-1.5 pr-2.5 transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary"
+                  className="flex h-11 items-center gap-2 rounded-2xl border border-border p-1.5 pr-3 transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary shrink-0"
                 >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-bold text-xs text-white">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary font-bold text-xs text-white">
                     {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                   </div>
                   <span className="hidden max-w-[100px] truncate text-xs font-bold text-foreground md:inline-block">
@@ -284,9 +284,9 @@ export function Navbar() {
             ) : (
               <button
                 onClick={() => dispatch(openAuthModal('signin'))}
-                className="flex items-center gap-2 rounded-xl bg-primary py-2.5 px-4 text-xs sm:text-sm font-bold text-white shadow-sm transition-all hover:bg-primary-dark active:scale-98"
+                className="flex h-11 items-center gap-2 rounded-2xl bg-primary px-5 text-xs sm:text-sm font-bold text-white shadow-md transition-all hover:bg-primary-dark active:scale-98 shrink-0"
               >
-                <UserIcon className="h-4 w-4" />
+                <UserIcon className="h-4.5 w-4.5" />
                 <span>{isBn ? 'সাইন ইন' : 'Sign In'}</span>
               </button>
             )}

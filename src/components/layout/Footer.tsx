@@ -13,6 +13,7 @@ import {
   Mail,
   MapPin,
   Heart,
+  Banknote,
 } from 'lucide-react';
 import { useAppSelector } from '@/store';
 import { MOCK_FOOTER_NAV, MOCK_TRUST_BADGES } from '@/mocks';
@@ -79,7 +80,7 @@ export function Footer() {
       </div>
 
       {/* 2. Main Footer Navigation Links */}
-      <div className="mx-auto max-w-[1700px] px-4 py-8 sm:px-6 md:py-12 lg:px-8">
+      <div className="mx-auto max-w-[1700px] px-4 py-6 sm:px-6 md:py-8 lg:px-8">
         {/* Desktop 4-Column Grid */}
         <div className="hidden grid-cols-1 gap-8 md:grid md:grid-cols-4">
           {/* Column 1: Brand Info */}
@@ -278,34 +279,72 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Payment Icons */}
-        <div className="mt-8 border-t border-border pt-6 text-center">
-          <p className="text-xs font-semibold text-muted-foreground">
-            {isBn ? 'আমরা পেমেন্ট গ্রহণ করি' : 'We Accept Payment Methods'}
-          </p>
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-            {['bKash', 'Nagad', 'Rocket', 'Visa', 'Mastercard', 'Cash on Delivery'].map(
-              (method, idx) => (
-                <span
-                  key={idx}
-                  className="rounded-xl border border-border bg-background px-3.5 py-1.5 text-[11px] font-bold text-foreground shadow-2xs"
-                >
-                  {method}
-                </span>
-              )
-            )}
+        {/* Payment Icons & Developer Attribution Row */}
+        <div className="mt-4 border-t border-border pt-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          {/* Left Side: Payment Methods */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 justify-start">
+            {/* bKash */}
+            <span className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-bold text-foreground shadow-2xs hover:border-primary/40 transition-colors">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#E2136E] text-white text-[9px] font-black">b</span>
+              <span>{isBn ? 'বিকাশ' : 'bKash'}</span>
+            </span>
+
+            {/* Nagad */}
+            <span className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-bold text-foreground shadow-2xs hover:border-primary/40 transition-colors">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#F7921E] text-white text-[9px] font-black">ন</span>
+              <span>{isBn ? 'নগদ' : 'Nagad'}</span>
+            </span>
+
+            {/* Rocket */}
+            <span className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-bold text-foreground shadow-2xs hover:border-primary/40 transition-colors">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#8C3494] text-white text-[9px] font-black">R</span>
+              <span>{isBn ? 'রকেট' : 'Rocket'}</span>
+            </span>
+
+            {/* Visa */}
+            <span className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-bold text-foreground shadow-2xs hover:border-primary/40 transition-colors">
+              <svg className="h-4 w-4 text-[#1A1F71]" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16.5l.9-5.7h1.6l-.9 5.7H9zm7.3-5.6c-.3-.1-.8-.2-1.3-.2-1.5 0-2.6.8-2.6 1.9 0 .8.8 1.3 1.3 1.6.6.3.8.5.8.8 0 .5-.6.7-1.1.7-.8 0-1.2-.1-1.8-.4l-.3-.1-.3 1.7c.5.2 1.3.4 2.1.4 1.6 0 2.7-.8 2.7-2 0-.7-.4-1.2-1.4-1.6-.6-.3-.9-.5-.9-.8 0-.3.3-.6 1-.6.6 0 1 .1 1.4.3l.2.1.3-1.8zm3.6-0.1h-1.3c-.4 0-.7.1-.9.5l-2.5 5.9h1.7l.3-.9h2.1l.2.9h1.5l-1.1-6.4zm-1.8 4.2l.7-1.9.4 1.9h-1.1zM7.2 10.8L5.6 15c-.1.3-.3.4-.6.4H2.4l-.1.3 3.3.7c.6.1 1.1-.3 1.3-1l1.3-4.6H7.2z" />
+              </svg>
+              <span>{isBn ? 'ভিসা' : 'Visa'}</span>
+            </span>
+
+            {/* Mastercard */}
+            <span className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-bold text-foreground shadow-2xs hover:border-primary/40 transition-colors">
+              <svg className="h-4 w-4" viewBox="0 0 24 24">
+                <circle cx="9" cy="12" r="6" fill="#EB001B" />
+                <circle cx="15" cy="12" r="6" fill="#F79E1B" fillOpacity="0.8" />
+              </svg>
+              <span>{isBn ? 'মাষ্টারকার্ড' : 'Mastercard'}</span>
+            </span>
+
+            {/* Cash on Delivery */}
+            <span className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-bold text-foreground shadow-2xs hover:border-primary/40 transition-colors">
+              <Banknote className="h-4 w-4 text-success shrink-0" />
+              <span>{isBn ? 'ক্যাশ অন ডেলিভারি' : 'Cash on Delivery'}</span>
+            </span>
+          </div>
+
+          {/* Right Side: Developed by CodeClub IT Solutions */}
+          <div className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-foreground shrink-0">
+            <span className="text-muted-foreground">{isBn ? 'ডেভেলপমেন্টে:' : 'Developed by'}</span>
+            <a
+              href="https://codeclubitsolutions.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-extrabold text-primary hover:underline transition-colors"
+            >
+              CodeClub IT Solutions
+            </a>
           </div>
         </div>
       </div>
 
-      {/* Copyright Sub-Footer Bar */}
-      <div className="border-t border-border bg-background py-4 text-center text-xs text-muted-foreground">
-        <div className="mx-auto flex max-w-[1700px] flex-col items-center justify-between gap-2 px-4 sm:px-6 lg:px-8">
-          <p>© 2026 mediShop Ltd. All rights reserved.</p>
-          <p className="flex items-center gap-1">
-            {isBn ? 'ডিজাইন করা হয়েছে' : 'Built with'}{' '}
-            <Heart className="h-3.5 w-3.5 fill-danger text-danger inline" />{' '}
-            {isBn ? 'বাংলাদেশের স্বাস্থ্য সেবায়' : 'for Healthcare in BD'}
+      {/* Centered Bottom Copyright Sub-Footer Bar (Compact Padding) */}
+      <div className="border-t border-border bg-background py-2.5 text-center text-xs text-muted-foreground">
+        <div className="mx-auto max-w-[1700px] px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-xs font-medium text-muted-foreground">
+            © 2026 mediShop Ltd. All rights reserved.
           </p>
         </div>
       </div>

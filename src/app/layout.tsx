@@ -5,6 +5,7 @@ import { AppProviders } from '@/components/providers';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
+import { WhatsAppButton } from '@/components/layout/WhatsAppButton';
 import '@/app/globals.css';
 
 export const metadata: Metadata = {
@@ -83,8 +84,11 @@ export default function RootLayout({
           {/* Footer Landmark */}
           <Footer />
 
-          {/* Mobile Bottom Navigation Bar (Fixed for < 768px viewports) */}
+          {/* Mobile Bottom Navigation Bar */}
           <MobileBottomNav />
+
+          {/* Floating WhatsApp Quick Action Button */}
+          <WhatsAppButton />
         </AppProviders>
       </body>
     </html>
