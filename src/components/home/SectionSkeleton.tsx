@@ -11,7 +11,7 @@ export function SectionSkeleton() {
         </div>
         <div className="h-4 w-20 rounded-md bg-slate-200 dark:bg-slate-800 animate-pulse" />
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
         {Array.from({ length: 5 }).map((_, idx) => (
           <ProductCardSkeleton key={idx} />
         ))}

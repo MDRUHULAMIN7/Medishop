@@ -18,6 +18,19 @@ import { useAppSelector } from '@/store';
 import { MOCK_FOOTER_NAV, MOCK_TRUST_BADGES } from '@/mocks';
 import { cn } from '@/lib/utils';
 
+import {
+  HOTLINE_NUMBER,
+  PHONE_SECONDARY,
+  HOTLINE_TEL,
+  PHONE_SECONDARY_TEL,
+  COMPANY_EMAIL_PRIMARY,
+  COMPANY_EMAIL_SECONDARY,
+  COMPANY_ADDRESS_EN,
+  COMPANY_ADDRESS_BN,
+  COMPANY_OFFICE_TITLE_EN,
+  COMPANY_OFFICE_TITLE_BN,
+} from '@/lib/constants';
+
 export function Footer() {
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
@@ -109,13 +122,13 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Column 3: Popular Categories */}
+          {/* Column 3: Customer Support & Policies */}
           <div>
             <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">
-              {isBn ? 'জনপ্রিয় ক্যাটাগরি' : 'Popular Categories'}
+              {isBn ? 'গ্রাহক সহায়তা ও নীতিমালা' : 'Customer Support'}
             </h3>
             <ul className="mt-4 flex flex-col gap-2.5 text-xs text-muted-foreground">
-              {MOCK_FOOTER_NAV.categories.map((link, idx) => (
+              {MOCK_FOOTER_NAV.support.map((link, idx) => (
                 <li key={idx}>
                   <Link
                     href={link.href}
@@ -131,26 +144,39 @@ export function Footer() {
           {/* Column 4: Contact Info & Hotline */}
           <div>
             <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">
-              {isBn ? 'যোগাযোগ ও সহায়তা' : 'Contact & Support'}
+              {isBn ? 'যোগাযোগ ও সরাসরি অফিস' : 'Contact & Head Office'}
             </h3>
             <ul className="mt-4 flex flex-col gap-3 text-xs text-muted-foreground">
-              <li className="flex items-center gap-2.5">
-                <Phone className="h-4 w-4 text-primary shrink-0" />
-                <span className="font-semibold text-foreground">
-                  09610-000000 (24/7)
-                </span>
+              <li className="flex items-start gap-2.5">
+                <Phone className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <div className="flex flex-col gap-0.5">
+                  <a href={HOTLINE_TEL} className="font-semibold text-foreground hover:text-primary transition-colors">
+                    {HOTLINE_NUMBER}
+                  </a>
+                  <a href={PHONE_SECONDARY_TEL} className="font-semibold text-foreground hover:text-primary transition-colors">
+                    {PHONE_SECONDARY}
+                  </a>
+                </div>
               </li>
-              <li className="flex items-center gap-2.5">
-                <Mail className="h-4 w-4 text-primary shrink-0" />
-                <span>support@medishop.com.bd</span>
+              <li className="flex items-start gap-2.5">
+                <Mail className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <div className="flex flex-col gap-0.5">
+                  <a href={`mailto:${COMPANY_EMAIL_PRIMARY}`} className="hover:text-primary transition-colors">
+                    {COMPANY_EMAIL_PRIMARY}
+                  </a>
+                  <a href={`mailto:${COMPANY_EMAIL_SECONDARY}`} className="hover:text-primary transition-colors">
+                    {COMPANY_EMAIL_SECONDARY}
+                  </a>
+                </div>
               </li>
               <li className="flex items-start gap-2.5">
                 <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                <span>
-                  {isBn
-                    ? 'লেভেল ৪, গুলশান ২, ঢাকা-১২১২, বাংলাদেশ'
-                    : 'Level 4, Gulshan 2, Dhaka-1212, Bangladesh'}
-                </span>
+                <div>
+                  <span className="font-bold text-foreground block">
+                    {isBn ? COMPANY_OFFICE_TITLE_BN : COMPANY_OFFICE_TITLE_EN}
+                  </span>
+                  <span>{isBn ? COMPANY_ADDRESS_BN : COMPANY_ADDRESS_EN}</span>
+                </div>
               </li>
             </ul>
           </div>
@@ -174,7 +200,7 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Accordions */}
+          {/* Accordion 1: About */}
           <div className="border-b border-border pb-3">
             <button
               onClick={() => toggleSection('about')}
@@ -198,6 +224,56 @@ export function Footer() {
                   </li>
                 ))}
               </ul>
+            )}
+          </div>
+
+          {/* Accordion 2: Support & Policies */}
+          <div className="border-b border-border pb-3">
+            <button
+              onClick={() => toggleSection('support')}
+              className="flex w-full items-center justify-between py-1 text-sm font-bold text-foreground"
+            >
+              <span>{isBn ? 'গ্রাহক সহায়তা ও নীতি' : 'Customer Support & Policies'}</span>
+              <ChevronDown
+                className={cn(
+                  'h-4 w-4 transition-transform',
+                  openSection === 'support' && 'rotate-180'
+                )}
+              />
+            </button>
+            {openSection === 'support' && (
+              <ul className="mt-3 flex flex-col gap-2 pl-2 text-xs text-muted-foreground">
+                {MOCK_FOOTER_NAV.support.map((link, idx) => (
+                  <li key={idx}>
+                    <Link href={link.href} className="hover:text-primary">
+                      {isBn ? link.labelBn : link.labelEn}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Accordion 3: Contact */}
+          <div className="border-b border-border pb-3">
+            <button
+              onClick={() => toggleSection('contact')}
+              className="flex w-full items-center justify-between py-1 text-sm font-bold text-foreground"
+            >
+              <span>{isBn ? 'যোগাযোগ ঠিকানা' : 'Contact Information'}</span>
+              <ChevronDown
+                className={cn(
+                  'h-4 w-4 transition-transform',
+                  openSection === 'contact' && 'rotate-180'
+                )}
+              />
+            </button>
+            {openSection === 'contact' && (
+              <div className="mt-3 flex flex-col gap-2.5 pl-2 text-xs text-muted-foreground">
+                <p className="font-semibold text-foreground">{HOTLINE_NUMBER} / {PHONE_SECONDARY}</p>
+                <p>{COMPANY_EMAIL_PRIMARY}</p>
+                <p>{isBn ? COMPANY_ADDRESS_BN : COMPANY_ADDRESS_EN}</p>
+              </div>
             )}
           </div>
         </div>

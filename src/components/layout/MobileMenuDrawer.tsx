@@ -197,6 +197,23 @@ export function MobileMenuDrawer() {
                   <Upload className="h-5 w-5" />
                   {isBn ? 'প্রেসক্রিপশন আপলোড করুন' : 'Upload Prescription'}
                 </Link>
+
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <Link
+                    href="/about"
+                    onClick={handleClose}
+                    className="flex items-center justify-center gap-1.5 rounded-lg border border-border p-2 text-xs font-semibold text-foreground hover:bg-muted"
+                  >
+                    <span>{isBn ? 'আমাদের সম্পর্কে' : 'About Us'}</span>
+                  </Link>
+                  <Link
+                    href="/contact"
+                    onClick={handleClose}
+                    className="flex items-center justify-center gap-1.5 rounded-lg border border-border p-2 text-xs font-semibold text-foreground hover:bg-muted"
+                  >
+                    <span>{isBn ? 'যোগাযোগ' : 'Contact Us'}</span>
+                  </Link>
+                </div>
               </div>
 
               {/* Categories Section */}
@@ -219,26 +236,50 @@ export function MobileMenuDrawer() {
                 </nav>
               </div>
 
+              {/* General Pages & Information */}
+              <div className="mb-6 border-t border-border pt-4">
+                <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  {isBn ? 'অন্যান্য তথ্য' : 'Information & Support'}
+                </h3>
+                <nav className="flex flex-col gap-1.5 text-xs text-foreground">
+                  <Link href="/faq" onClick={handleClose} className="hover:text-primary py-1">
+                    {isBn ? 'সাহায্য ও প্রশ্ন (FAQ)' : 'Help & FAQs'}
+                  </Link>
+                  <Link href="/delivery-policy" onClick={handleClose} className="hover:text-primary py-1">
+                    {isBn ? 'ডেলিভারি নীতি' : 'Delivery Policy'}
+                  </Link>
+                  <Link href="/refund-policy" onClick={handleClose} className="hover:text-primary py-1">
+                    {isBn ? 'ফেরত ও রিফান্ড নীতি' : 'Return & Refund Policy'}
+                  </Link>
+                  <Link href="/privacy" onClick={handleClose} className="hover:text-primary py-1">
+                    {isBn ? 'গোপনীয়তা নীতি' : 'Privacy Policy'}
+                  </Link>
+                  <Link href="/terms" onClick={handleClose} className="hover:text-primary py-1">
+                    {isBn ? 'ব্যবহারের শর্তাবলী' : 'Terms & Conditions'}
+                  </Link>
+                </nav>
+              </div>
+
               {/* Quick Hotline Contact */}
-              <div className="mt-8 border-t border-border pt-4">
+              <div className="mt-4 border-t border-border pt-4">
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   {isBn ? 'জরুরি অর্ডার ও সহায়তা' : 'Emergency Order & Support'}
                 </p>
                 <div className="mt-3 flex flex-col gap-2">
                   <a
-                    href="tel:09610000000"
-                    className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2 text-sm font-semibold text-foreground hover:bg-muted/80"
+                    href="tel:+8801742643763"
+                    className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-muted/80"
                   >
-                    <Phone className="h-4 w-4 text-primary" />
-                    <span>09610-000000</span>
+                    <Phone className="h-4 w-4 text-primary shrink-0" />
+                    <span>+880 1742-643763</span>
                   </a>
                   <a
-                    href="https://wa.me/8801700000000"
+                    href="https://wa.me/8801742643763"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
+                    className="flex items-center gap-3 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100"
                   >
-                    <MessageSquare className="h-4 w-4 text-emerald-600" />
+                    <MessageSquare className="h-4 w-4 text-emerald-600 shrink-0" />
                     <span>WhatsApp Order</span>
                   </a>
                 </div>

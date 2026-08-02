@@ -113,6 +113,21 @@ export function useAuth() {
     toast.info(isBn ? 'লগআউট করা হয়েছে।' : 'Logged out.');
   };
 
+  const sendOtp = async (phone: string) => {
+    try {
+      dispatch(setAuthLoading(true));
+      dispatch(setPendingIdentifier({ phone, email: '' }));
+      dispatch(setAuthModalView('otp'));
+      toast.success(
+        isBn
+          ? `${phone} নম্বরে ৬ ডিজিটের ওটিপি কোড পাঠানো হয়েছে (ডেমো: 123456)`
+          : `6-digit OTP code sent to ${phone} (Demo: 123456)`
+      );
+    } finally {
+      dispatch(setAuthLoading(false));
+    }
+  };
+
   return {
     user,
     isAuthenticated,
@@ -126,6 +141,7 @@ export function useAuth() {
     closeModal: () => dispatch(closeAuthModal()),
     setView: (view: 'signin' | 'signup' | 'otp' | 'forgot') =>
       dispatch(setAuthModalView(view)),
+    sendOtp,
     login,
     register,
     verifyOtp,

@@ -102,10 +102,10 @@ export const MOCK_TRUST_BADGES: TrustBadge[] = [
 export const MOCK_FOOTER_NAV = {
   about: [
     { labelBn: 'আমাদের সম্পর্কে', labelEn: 'About mediShop', href: '/about' },
-    { labelBn: 'ডিজিডিএ লাইসেন্স', labelEn: 'DGDA License', href: '/license' },
-    { labelBn: 'ফার্মাসিস্ট টিম', labelEn: 'Pharmacist Team', href: '/team' },
-    { labelBn: 'ক্যারিয়ার', labelEn: 'Careers', href: '/careers' },
-    { labelBn: 'ব্লগ ও স্বাস্থ্য টিপস', labelEn: 'Health Blog', href: '/blog' },
+    { labelBn: 'যোগাযোগ করুন', labelEn: 'Contact Us', href: '/contact' },
+    { labelBn: 'ডিজিডিএ লাইসেন্স', labelEn: 'DGDA License', href: '/about#license' },
+    { labelBn: 'ফার্মাসিস্ট টিম', labelEn: 'Pharmacist Team', href: '/about#team' },
+    { labelBn: 'ক্যারিয়ার', labelEn: 'Careers', href: '/about#careers' },
   ],
   categories: [
     { labelBn: 'প্রেসক্রিপশন ওষুধ', labelEn: 'Prescription Medicines', href: '/category/prescription-medicines' },
@@ -120,5 +120,6 @@ export const MOCK_FOOTER_NAV = {
     { labelBn: 'ডেলিভারি নীতি', labelEn: 'Delivery Policy', href: '/delivery-policy' },
     { labelBn: 'ফেরত ও রিফান্ড নীতি', labelEn: 'Return & Refund Policy', href: '/refund-policy' },
     { labelBn: 'গোপনীয়তা নীতি', labelEn: 'Privacy Policy', href: '/privacy' },
+    { labelBn: 'ব্যবহারের শর্তাবলী', labelEn: 'Terms & Conditions', href: '/terms' },
   ],
 };
