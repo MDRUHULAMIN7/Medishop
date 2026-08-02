@@ -1,13 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ShoppingCart,
   Search,
-  Menu,
   User as UserIcon,
   Upload,
   ChevronDown,
@@ -22,14 +20,8 @@ import {
   Globe,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
-import {
-  toggleMobileMenu,
-  setMobileSearch,
-  setSearchQuery,
-  setLanguage,
-} from '@/store/slices/uiSlice';
+import { setSearchQuery, setLanguage } from '@/store/slices/uiSlice';
 import { openAuthModal, logout } from '@/store/slices/authSlice';
-import { toggleCartDrawer, selectTotalQuantity } from '@/store/slices/cartSlice';
 import { useScrollPosition } from '@/hooks/useScrollPosition';
 import { MobileMenuDrawer } from './MobileMenuDrawer';
 import { MobileSearchOverlay } from './MobileSearchOverlay';
@@ -43,23 +35,12 @@ export function Navbar() {
   const isScrolled = useScrollPosition(8);
 
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
-  const totalCartQuantity = useAppSelector(selectTotalQuantity);
   const searchQuery = useAppSelector((state) => state.ui.searchQuery);
   const language = useAppSelector((state) => state.ui.language);
 
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const isBn = language === 'bn';
-
-  const [badgeAnimate, setBadgeAnimate] = useState(false);
-
-  useEffect(() => {
-    if (totalCartQuantity > 0) {
-      setBadgeAnimate(true);
-      const timer = setTimeout(() => setBadgeAnimate(false), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [totalCartQuantity]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -237,28 +218,6 @@ export function Navbar() {
               <Upload className="h-4 w-4" />
               <span>{isBn ? 'প্রেসক্রিপশন আপলোড' : 'Upload Prescription'}</span>
             </Link>
-
-            {/* Shopping Cart Button */}
-            <button
-              onClick={() => dispatch(toggleCartDrawer())}
-              aria-label={
-                isBn
-                  ? `কার্ট - ${totalCartQuantity} টি আইটেম`
-                  : `Cart - ${totalCartQuantity} items`
-              }
-              className="relative rounded-xl p-2.5 text-foreground transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <ShoppingCart className="h-6 w-6" />
-              {totalCartQuantity > 0 && (
-                <motion.span
-                  animate={badgeAnimate ? { scale: [1, 1.3, 1] } : { scale: 1 }}
-                  transition={{ duration: 0.25 }}
-                  className="absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent px-1 text-[11px] font-extrabold text-slate-900 shadow-sm"
-                >
-                  {totalCartQuantity}
-                </motion.span>
-              )}
-            </button>
 
             {/* Account / User Section */}
             {isAuthenticated ? (

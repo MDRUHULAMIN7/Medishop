@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import React from 'react';
-import { fontInter, fontRobotoSlab, fontNotoBengali } from '@/lib/fonts';
+import { fontInter, fontNotoBengali } from '@/lib/fonts';
 import { AppProviders } from '@/components/providers';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -61,7 +61,7 @@ export default function RootLayout({
   return (
     <html
       lang="bn"
-      className={`${fontInter.variable} ${fontRobotoSlab.variable} ${fontNotoBengali.variable}`}
+      className={`${fontInter.variable} ${fontNotoBengali.variable}`}
       suppressHydrationWarning
     >
       <head>

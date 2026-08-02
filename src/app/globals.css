@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import url('https://fonts.maateen.me/solaiman-lipi/font.css');
+@import "tailwindcss";
 
 @theme {
   --color-primary: #1D4ED8;
@@ -31,7 +31,7 @@
   --color-danger-light: #FEE2E2;
 
   --font-sans: var(--font-inter), 'SolaimanLipi', var(--font-noto-bengali), system-ui, sans-serif;
-  --font-serif: var(--font-roboto-slab), Georgia, serif;
+  --font-serif: 'SolaimanLipi', var(--font-noto-bengali), var(--font-inter), sans-serif;
   --font-bengali: 'SolaimanLipi', var(--font-noto-bengali), var(--font-inter), sans-serif;
 
   --radius-sm: 0.375rem;
@@ -52,7 +52,6 @@
 
 :root {
   --font-inter: 'Inter', sans-serif;
-  --font-roboto-slab: 'Roboto Slab', serif;
   --font-noto-bengali: 'SolaimanLipi', 'Noto Sans Bengali', sans-serif;
 }
 
@@ -114,3 +113,65 @@ body {
 .font-bn {
   font-family: var(--font-bengali);
 }
+
+/* Fly To Cart Animation Keyframes (Lift -> Arc Fly -> Drop) */
+@keyframes flyToCart {
+  0% {
+    transform: translate3d(0px, 0px, 0) scale(1);
+    opacity: 1;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+  }
+  18% {
+    /* Step 3: Lift */
+    transform: translate3d(0px, -12px, 0) scale(1.02);
+    opacity: 1;
+    box-shadow: 0 25px 50px -10px rgba(0, 0, 0, 0.35);
+  }
+  46% {
+    /* Step 4: Arc Fly */
+    transform: translate3d(
+      calc(var(--target-x) * 0.42 + var(--curve-x) * 0.24),
+      calc(var(--target-y) * 0.34 + var(--curve-y) * 0.72),
+      0
+    ) scale(0.86);
+    opacity: 0.98;
+    box-shadow: 0 18px 36px -8px rgba(29, 78, 216, 0.24);
+  }
+  76% {
+    transform: translate3d(
+      calc(var(--target-x) * 0.78 + var(--curve-x) * 0.08),
+      calc(var(--target-y) * 0.76 + var(--curve-y) * 0.26),
+      0
+    ) scale(0.48);
+    opacity: 0.94;
+  }
+  100% {
+    /* Step 5: Drop into Cart */
+    transform: translate3d(var(--target-x), var(--target-y), 0) scale(0.06);
+    opacity: 0;
+  }
+}
+
+.animate-fly-to-cart {
+  transform-origin: center center;
+  animation: flyToCart 1.52s linear forwards;
+  will-change: transform, opacity;
+}
+
+/* Floating Cart Bounce Effect */
+@keyframes cartBounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.22) rotate(-5deg);
+  }
+  65% {
+    transform: scale(0.94) rotate(3deg);
+  }
+}
+
+.animate-cart-bounce {
+  animation: cartBounce 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
