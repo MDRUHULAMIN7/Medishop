@@ -42,39 +42,98 @@ export function Footer() {
     setOpenSection(openSection === section ? null : section);
   };
 
-  const TRUST_ICONS: Record<string, React.ReactNode> = {
-    ShieldCheck: <ShieldCheck className="h-6 w-6 text-primary" />,
-    Award: <Award className="h-6 w-6 text-primary" />,
-    Truck: <Truck className="h-6 w-6 text-primary" />,
-    Headphones: <Headphones className="h-6 w-6 text-primary" />,
+  const TRUST_BADGE_CONFIGS: Record<
+    string,
+    {
+      icon: React.ReactNode;
+      badgeTagBn: string;
+      badgeTagEn: string;
+      iconBg: string;
+      cardGradient: string;
+      borderColor: string;
+    }
+  > = {
+    ShieldCheck: {
+      icon: <ShieldCheck className="h-5 w-5 text-white" />,
+      badgeTagBn: 'ডিজিডিএ লাইসেন্সপ্রাপ্ত',
+      badgeTagEn: 'DGDA Certified',
+      iconBg: 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-md shadow-emerald-500/20',
+      cardGradient: 'from-emerald-500/10 via-emerald-500/3 to-transparent',
+      borderColor: 'border-emerald-500/25 hover:border-emerald-500/50 hover:shadow-emerald-500/10',
+    },
+    Award: {
+      icon: <Award className="h-5 w-5 text-white" />,
+      badgeTagBn: '১০০% অরিজিনাল',
+      badgeTagEn: '100% Sourced',
+      iconBg: 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-md shadow-amber-500/20',
+      cardGradient: 'from-amber-500/10 via-amber-500/3 to-transparent',
+      borderColor: 'border-amber-500/25 hover:border-amber-500/50 hover:shadow-amber-500/10',
+    },
+    Truck: {
+      icon: <Truck className="h-5 w-5 text-white" />,
+      badgeTagBn: '৪-৬ ঘণ্টায় সেম-ডে',
+      badgeTagEn: '4-6h Express',
+      iconBg: 'bg-gradient-to-br from-sky-500 to-blue-600 shadow-md shadow-sky-500/20',
+      cardGradient: 'from-sky-500/10 via-sky-500/3 to-transparent',
+      borderColor: 'border-sky-500/25 hover:border-sky-500/50 hover:shadow-sky-500/10',
+    },
+    Headphones: {
+      icon: <Headphones className="h-5 w-5 text-white" />,
+      badgeTagBn: 'ফ্রি ফার্মাসিস্ট কল',
+      badgeTagEn: 'Free Pharmacist',
+      iconBg: 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/20',
+      cardGradient: 'from-indigo-500/10 via-indigo-500/3 to-transparent',
+      borderColor: 'border-indigo-500/25 hover:border-indigo-500/50 hover:shadow-indigo-500/10',
+    },
   };
 
   return (
-    <footer className="border-t border-border bg-muted/40 text-foreground">
+    <footer className="border-t border-border bg-muted/40 text-foreground pb-20 md:pb-0">
       {/* 1. Top Trust Badges Section */}
-      <div className="border-b border-border bg-background py-8">
+      <div className="relative border-b border-border/80 bg-gradient-to-b from-background via-muted/30 to-background py-8 sm:py-10 overflow-hidden">
+        {/* Decorative Subtle Ambient Glows */}
+        <div className="pointer-events-none absolute -left-20 -top-20 h-44 w-44 rounded-full bg-primary/10 blur-3xl" />
+        <div className="pointer-events-none absolute -right-20 -bottom-20 h-44 w-44 rounded-full bg-sky-500/10 blur-3xl" />
+
         <div className="mx-auto max-w-[1700px] px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4">
-            {MOCK_TRUST_BADGES.map((badge) => (
-              <div
-                key={badge.id}
-                className="flex items-start gap-3.5 rounded-2xl border border-border/60 bg-muted/20 p-4 transition-all duration-200 hover:bg-primary/5 hover:border-primary/30"
-              >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                  {TRUST_ICONS[badge.iconName] || (
-                    <ShieldCheck className="h-6 w-6 text-primary" />
+          <div className="grid grid-cols-2 gap-3.5 sm:gap-6 md:grid-cols-4">
+            {MOCK_TRUST_BADGES.map((badge) => {
+              const config = TRUST_BADGE_CONFIGS[badge.iconName] || TRUST_BADGE_CONFIGS.ShieldCheck;
+              return (
+                <div
+                  key={badge.id}
+                  className={cn(
+                    'group relative flex flex-col justify-between rounded-2xl border bg-background/90 p-4 sm:p-5 backdrop-blur-md shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-lg',
+                    config.borderColor
                   )}
+                >
+                  <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${config.cardGradient} opacity-60 transition-opacity group-hover:opacity-100 pointer-events-none`} />
+
+                  <div className="relative z-10 flex flex-col sm:flex-row sm:items-start gap-3">
+                    <div
+                      className={cn(
+                        'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110',
+                        config.iconBg
+                      )}
+                    >
+                      {config.icon}
+                    </div>
+
+                    <div className="flex flex-col min-w-0">
+                      <span className="inline-self-start rounded-md bg-muted/80 px-2 py-0.5 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground mb-1 w-fit border border-border/50">
+                        {isBn ? config.badgeTagBn : config.badgeTagEn}
+                      </span>
+                      <h4 className="text-xs font-bold text-foreground sm:text-sm leading-snug group-hover:text-primary transition-colors">
+                        {isBn ? badge.titleBn : badge.titleEn}
+                      </h4>
+                      <p className="mt-1 text-[11px] text-muted-foreground leading-tight sm:text-xs">
+                        {isBn ? badge.descriptionBn : badge.descriptionEn}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-xs font-bold text-foreground sm:text-sm">
-                    {isBn ? badge.titleBn : badge.titleEn}
-                  </h4>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground leading-tight sm:text-xs">
-                    {isBn ? badge.descriptionBn : badge.descriptionEn}
-                  </p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

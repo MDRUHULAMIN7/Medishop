@@ -4,6 +4,7 @@ import { Language } from '@/types';
 interface UiState {
   isMobileMenuOpen: boolean;
   isMobileSearchOpen: boolean;
+  isQuickContactOpen: boolean;
   searchQuery: string;
   language: Language;
 }
@@ -11,6 +12,7 @@ interface UiState {
 const initialState: UiState = {
   isMobileMenuOpen: false,
   isMobileSearchOpen: false,
+  isQuickContactOpen: false,
   searchQuery: '',
   language: 'bn',
 };
@@ -31,6 +33,12 @@ export const uiSlice = createSlice({
     setMobileSearch: (state, action: PayloadAction<boolean>) => {
       state.isMobileSearchOpen = action.payload;
     },
+    toggleQuickContact: (state) => {
+      state.isQuickContactOpen = !state.isQuickContactOpen;
+    },
+    setQuickContactOpen: (state, action: PayloadAction<boolean>) => {
+      state.isQuickContactOpen = action.payload;
+    },
     setSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload;
     },
@@ -45,6 +53,8 @@ export const {
   setMobileMenu,
   toggleMobileSearch,
   setMobileSearch,
+  toggleQuickContact,
+  setQuickContactOpen,
   setSearchQuery,
   setLanguage,
 } = uiSlice.actions;

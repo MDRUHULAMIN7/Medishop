@@ -9,6 +9,7 @@ export const PHONE_SECONDARY = '+880 9611 330265';
 export const PHONE_SECONDARY_TEL = 'tel:+8809611330265';
 export const WHATSAPP_NUMBER = '+880 1742-643763';
 export const WHATSAPP_LINK = 'https://wa.me/8801742643763';
+export const MESSENGER_LINK = 'https://m.me/codeclubitsolutions';
 
 export const COMPANY_EMAIL_PRIMARY = 'contact@codeclubitsolutions.com';
 export const COMPANY_EMAIL_SECONDARY = 'codeclubitsolutions@gmail.com';

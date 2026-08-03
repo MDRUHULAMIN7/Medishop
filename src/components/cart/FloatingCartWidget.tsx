@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import { ShoppingBag } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import {
@@ -16,6 +17,7 @@ export function FloatingCartWidget() {
   const totalItems = useAppSelector(selectTotalQuantity);
   const grandTotal = useAppSelector(selectGrandTotal);
   const language = useAppSelector((state) => state.ui.language);
+  const isQuickContactOpen = useAppSelector((state) => state.ui.isQuickContactOpen);
   const isBn = language === 'bn';
   const { isBouncing } = useFlyToCart();
 
@@ -24,9 +26,18 @@ export function FloatingCartWidget() {
   };
 
   return (
-    <div
+    <motion.div
       id="floating-cart-btn"
-      className="fixed right-2 sm:right-4 top-1/2 z-40 flex select-none flex-col items-center -translate-y-1/2"
+      animate={{
+        y: isQuickContactOpen ? 'calc(-50% + var(--cart-shift, -66px))' : '-50%',
+      }}
+      transition={{
+        type: 'spring',
+        stiffness: 280,
+        damping: 24,
+        delay: isQuickContactOpen ? 0.12 : 0,
+      }}
+      className="fixed right-2 sm:right-4 top-1/2 z-40 flex select-none flex-col items-center [--cart-shift:-66px] md:[--cart-shift:-20px]"
     >
       <button
         type="button"
@@ -45,8 +56,6 @@ export function FloatingCartWidget() {
           )}
 
           <ShoppingBag className="h-8 w-8 text-white transition-transform group-hover:scale-110" />
-
-        
         </div>
 
         <div className="mt-0.5 w-full truncate rounded-md border border-white/10 bg-black/25 px-1 py-0.5 text-center text-[12px] font-semibold tracking-tight text-amber-200 sm:text-[12px]">
@@ -57,6 +66,6 @@ export function FloatingCartWidget() {
           <span className="pointer-events-none absolute -inset-0.5 -z-10 animate-ping rounded-xl bg-primary/30 opacity-25" />
         )}
       </button>
-    </div>
+    </motion.div>
   );
 }

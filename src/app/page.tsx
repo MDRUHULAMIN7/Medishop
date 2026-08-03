@@ -3,7 +3,6 @@
 import React from 'react';
 import { HeroSlider } from '@/components/home/HeroSlider';
 import { CategorySidebar } from '@/components/home/CategorySidebar';
-import { CategoryChips } from '@/components/home/CategoryChips';
 import { ShopByCategory } from '@/components/home/ShopByCategory';
 import { PrescriptionCTA } from '@/components/home/PrescriptionCTA';
 import { ProductSection } from '@/components/home/ProductSection';
@@ -25,9 +24,6 @@ export default function HomePage() {
 
   return (
     <div className="mx-auto max-w-[1700px] px-3 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col gap-8">
-      {/* Mobile Horizontal Category Chips */}
-      <CategoryChips />
-
       {/* Main Grid: Category Sidebar (Desktop) + Main Feed */}
       <div className="flex items-start gap-6">
         {/* Left Sticky Desktop Category Sidebar */}

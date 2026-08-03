@@ -98,41 +98,54 @@ export function Navbar() {
         )}
       >
         <div className="mx-auto flex flex-col md:flex-row md:items-center justify-between max-w-[1700px] px-4 sm:px-6 lg:px-8 h-auto md:h-[72px]">
-          {/* Mobile Top Row: Logo & Language Toggle + Call Button */}
+          {/* Mobile Top Row: Logo & Language Toggle + Sign In Button */}
           <div className="flex h-14 md:h-full items-center justify-between w-full md:w-auto shrink-0">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-white font-bold shadow-md transition-transform group-hover:scale-105">
-                <Pill className="h-5.5 w-5.5" />
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl bg-primary text-white font-bold shadow-md transition-transform group-hover:scale-105 shrink-0">
+                <Pill className="h-5 w-5 md:h-5.5 md:w-5.5" />
               </div>
               <div className="flex flex-col justify-center">
                 <span className="font-serif-title text-2xl md:text-3xl font-extrabold tracking-tight text-primary leading-none">
                   mediShop
                 </span>
-                <span className="hidden text-[10px] font-bold tracking-wider uppercase text-muted-foreground sm:inline-block mt-0.5">
+                <span className="hidden sm:inline-block text-[10px] font-bold tracking-wider uppercase text-muted-foreground mt-0.5">
                   {isBn ? 'অনলাইন ফার্মেসি ও হেলথকেয়ার' : 'Online Pharmacy BD'}
                 </span>
               </div>
             </Link>
 
             {/* Mobile Header Right Actions */}
-            <div className="flex items-center gap-2 md:hidden">
+            <div className="flex items-center gap-1.5 md:hidden">
               <button
                 onClick={() => dispatch(setLanguage(isBn ? 'en' : 'bn'))}
                 aria-label="Toggle Language"
-                className="flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs font-bold text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                className="flex h-8 items-center gap-1 rounded-full border border-border/80 bg-muted/50 px-2.5 text-xs font-bold text-foreground transition-colors hover:bg-primary/10 hover:text-primary active:scale-95 shrink-0"
               >
                 <Globe className="h-3.5 w-3.5 text-primary" />
                 <span>{isBn ? 'EN' : 'বাং'}</span>
               </button>
 
-              <a
-                href={HOTLINE_TEL}
-                aria-label="Call Hotline"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors"
-              >
-                <Phone className="h-4 w-4" />
-              </a>
+              {isAuthenticated ? (
+                <Link
+                  href="/profile"
+                  aria-label={isBn ? 'মাই প্রোফাইল' : 'My Profile'}
+                  className="flex h-8 items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 text-xs font-bold text-primary transition-all active:scale-95 shrink-0"
+                >
+                  <UserIcon className="h-3.5 w-3.5" />
+                  <span className="max-w-[65px] truncate">
+                    {user?.name?.split(' ')[0] || (isBn ? 'প্রোফাইল' : 'Profile')}
+                  </span>
+                </Link>
+              ) : (
+                <button
+                  onClick={() => dispatch(openAuthModal('signin'))}
+                  aria-label={isBn ? 'সাইন ইন' : 'Sign In'}
+                  className="flex h-8 items-center justify-center rounded-full bg-primary px-3 text-xs font-bold text-white shadow-2xs transition-all hover:bg-primary-dark active:scale-95 shrink-0"
+                >
+                  <span>{isBn ? 'সাইন ইন' : 'Sign In'}</span>
+                </button>
+              )}
             </div>
           </div>
 
