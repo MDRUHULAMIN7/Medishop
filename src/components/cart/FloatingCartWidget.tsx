@@ -10,9 +10,11 @@ import {
   selectTotalQuantity,
 } from '@/store/slices/cartSlice';
 import { useFlyToCart } from '@/context/FlyToCartContext';
+import { usePathname } from 'next/navigation';
 import { cn, formatBDT } from '@/lib/utils';
 
 export function FloatingCartWidget() {
+  const pathname = usePathname();
   const dispatch = useAppDispatch();
   const totalItems = useAppSelector(selectTotalQuantity);
   const grandTotal = useAppSelector(selectGrandTotal);
@@ -20,6 +22,10 @@ export function FloatingCartWidget() {
   const isQuickContactOpen = useAppSelector((state) => state.ui.isQuickContactOpen);
   const isBn = language === 'bn';
   const { isBouncing } = useFlyToCart();
+
+  if (pathname?.startsWith('/dashboard')) {
+    return null;
+  }
 
   const handleOpenCart = () => {
     dispatch(openCartDrawer());

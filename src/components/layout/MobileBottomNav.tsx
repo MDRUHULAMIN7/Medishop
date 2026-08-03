@@ -10,15 +10,21 @@ import {
   User as UserIcon,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
+import { usePathname } from 'next/navigation';
 import { toggleMobileMenu } from '@/store/slices/uiSlice';
 import { openAuthModal } from '@/store/slices/authSlice';
 
 export function MobileBottomNav() {
+  const pathname = usePathname();
   const dispatch = useAppDispatch();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const language = useAppSelector((state) => state.ui.language);
 
   const isBn = language === 'bn';
+
+  if (pathname?.startsWith('/dashboard')) {
+    return null;
+  }
 
   return (
     <nav

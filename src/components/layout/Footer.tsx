@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   Pill,
   ShieldCheck,
@@ -33,10 +34,15 @@ import {
 } from '@/lib/constants';
 
 export function Footer() {
+  const pathname = usePathname();
   const language = useAppSelector((state) => state.ui.language);
-  const isBn = language === 'bn';
-
   const [openSection, setOpenSection] = useState<string | null>(null);
+
+  if (pathname?.startsWith('/dashboard')) {
+    return null;
+  }
+
+  const isBn = language === 'bn';
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section);

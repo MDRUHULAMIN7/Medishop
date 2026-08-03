@@ -5,9 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Phone, MessageSquare } from 'lucide-react';
 import { WHATSAPP_LINK, HOTLINE_TEL, HOTLINE_NUMBER, MESSENGER_LINK } from '@/lib/constants';
 import { useAppDispatch, useAppSelector } from '@/store';
+import { usePathname } from 'next/navigation';
 import { toggleQuickContact, setQuickContactOpen } from '@/store/slices/uiSlice';
 
 export function WhatsAppButton() {
+  const pathname = usePathname();
   const dispatch = useAppDispatch();
   const isOpen = useAppSelector((state) => state.ui.isQuickContactOpen);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -43,6 +45,10 @@ export function WhatsAppButton() {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [dispatch]);
+
+  if (pathname?.startsWith('/dashboard')) {
+    return null;
+  }
 
   const contactOptions = [
     {

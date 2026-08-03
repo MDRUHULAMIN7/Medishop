@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
@@ -30,6 +30,7 @@ import { HOTLINE_NUMBER, HOTLINE_TEL } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
 export function Navbar() {
+  const pathname = usePathname();
   const dispatch = useAppDispatch();
   const router = useRouter();
   const isScrolled = useScrollPosition(8);
@@ -40,6 +41,11 @@ export function Navbar() {
 
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  if (pathname?.startsWith('/dashboard')) {
+    return null;
+  }
+
   const isBn = language === 'bn';
 
   const handleSearchSubmit = (e: React.FormEvent) => {
