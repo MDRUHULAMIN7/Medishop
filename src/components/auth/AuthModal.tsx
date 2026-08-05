@@ -2,16 +2,18 @@
 
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Pill, Search, ShieldCheck, Upload, MessageSquare, Video } from 'lucide-react';
+import { X, Pill, Search, ShieldCheck, Upload, MessageSquare, Video, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppSelector } from '@/store';
-import { SignInForm } from './SignInForm';
-import { SignUpForm } from './SignUpForm';
+
+import { IdentifierForm } from './IdentifierForm';
+import { PasswordLoginForm } from './PasswordLoginForm';
 import { OtpVerification } from './OtpVerification';
-import { ForgotPasswordForm } from './ForgotPasswordForm';
+import { CompleteRegistrationForm } from './CompleteRegistrationForm';
+import { ResetPasswordForm } from './ResetPasswordForm';
 
 export function AuthModal() {
-  const { isAuthModalOpen, authModalView, closeModal } = useAuth();
+  const { isAuthModalOpen, authModalView, closeModal, flowContext } = useAuth();
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
 
@@ -38,6 +40,26 @@ export function AuthModal() {
     };
   }, [isAuthModalOpen]);
 
+  // Helper for rendering progressive stage indicator
+  const getStageStep = () => {
+    switch (authModalView) {
+      case 'identifier':
+        return 1;
+      case 'password_login':
+        return 2;
+      case 'verify_otp':
+        return 2;
+      case 'complete_registration':
+        return 3;
+      case 'reset_password':
+        return 3;
+      default:
+        return 1;
+    }
+  };
+
+  const currentStep = getStageStep();
+
   return (
     <AnimatePresence>
       {isAuthModalOpen && (
@@ -60,9 +82,9 @@ export function AuthModal() {
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             role="dialog"
             aria-modal="true"
-            className="relative z-10 w-full max-w-4xl overflow-hidden rounded-3xl border border-white/20 bg-background shadow-2xl grid grid-cols-1 md:grid-cols-12 min-h-[520px]"
+            className="relative z-10 w-full max-w-4xl overflow-hidden rounded-3xl border border-white/20 bg-background shadow-2xl grid grid-cols-1 md:grid-cols-12 min-h-[530px]"
           >
-            {/* Left Side: Hero Banner & Phone Graphic Mockup (Desktop / Tablet) */}
+            {/* Left Side: Hero Banner & Phone Graphic Mockup */}
             <div className="hidden md:flex md:col-span-7 flex-col justify-between p-6 lg:p-8 bg-gradient-to-br from-primary-soft via-muted/50 to-primary-soft/80 border-r border-border relative overflow-hidden">
               {/* Decorative Background Glow Circles */}
               <div className="absolute -top-16 -left-16 w-56 h-56 rounded-full bg-primary/10 blur-3xl" />
@@ -76,7 +98,8 @@ export function AuthModal() {
                 <span className="font-serif-title text-xl font-extrabold text-primary">
                   mediShop
                 </span>
-                <span className="rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-bold text-primary ml-auto">
+                <span className="rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-bold text-primary ml-auto flex items-center gap-1">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
                   {isBn ? 'ডিজিডিএ অনুমোদিত' : 'DGDA Certified'}
                 </span>
               </div>
@@ -158,35 +181,71 @@ export function AuthModal() {
               </div>
             </div>
 
-            {/* Right Side: Primary Sign-In Box (Col 5) */}
-            <div className="col-span-12 md:col-span-5 relative bg-gradient-to-b from-primary to-primary-dark p-6 sm:p-8 flex flex-col justify-center text-white">
-              {/* Close Button Top Right */}
-              <button
-                type="button"
-                onClick={closeModal}
-                aria-label={isBn ? 'বন্ধ করুন' : 'Close Modal'}
-                className="absolute top-4 right-4 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white hover:text-primary transition-all active:scale-95 shadow-md"
-              >
-                <X className="h-4 w-4 stroke-[3]" />
-              </button>
+            {/* Right Side: Staged Progressive Auth Container (Col 5) */}
+            <div className="col-span-12 md:col-span-5 relative bg-gradient-to-b from-primary to-primary-dark p-6 sm:p-8 flex flex-col justify-between text-white">
+              {/* Top Navigation & Step Pills */}
+              <div className="flex items-center justify-between w-full mb-2">
+                <div className="flex items-center gap-1.5">
+                  <div
+                    className={`h-1.5 w-6 rounded-full transition-all duration-300 ${
+                      currentStep >= 1 ? 'bg-white' : 'bg-white/30'
+                    }`}
+                  />
+                  <div
+                    className={`h-1.5 w-6 rounded-full transition-all duration-300 ${
+                      currentStep >= 2 ? 'bg-white' : 'bg-white/30'
+                    }`}
+                  />
+                  <div
+                    className={`h-1.5 w-6 rounded-full transition-all duration-300 ${
+                      currentStep >= 3 ? 'bg-white' : 'bg-white/30'
+                    }`}
+                  />
+                </div>
 
-              {/* Dynamic View Forms (SignIn, SignUp, OTP, Forgot) */}
-              <div className="w-full flex-1 flex flex-col justify-center">
+                {/* Close Button Top Right */}
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  aria-label={isBn ? 'বন্ধ করুন' : 'Close Modal'}
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white hover:text-primary transition-all active:scale-95 shadow-md cursor-pointer"
+                >
+                  <X className="h-4 w-4 stroke-[3]" />
+                </button>
+              </div>
+
+              {/* Dynamic View Forms with Smooth Framer Motion Transitions */}
+              <div className="w-full flex-1 flex flex-col justify-center my-auto">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={authModalView}
-                    initial={{ opacity: 0, x: 10 }}
+                    initial={{ opacity: 0, x: 15 }}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ duration: 0.15 }}
+                    exit={{ opacity: 0, x: -15 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
                     className="w-full"
                   >
-                    {authModalView === 'signin' && <SignInForm />}
-                    {authModalView === 'signup' && <SignUpForm />}
-                    {authModalView === 'otp' && <OtpVerification />}
-                    {authModalView === 'forgot' && <ForgotPasswordForm />}
+                    {(authModalView === 'identifier' ||
+                      authModalView === 'signin' ||
+                      authModalView === 'signup' ||
+                      authModalView === 'forgot') && <IdentifierForm />}
+
+                    {authModalView === 'password_login' && <PasswordLoginForm />}
+
+                    {(authModalView === 'verify_otp' || authModalView === 'otp') && (
+                      <OtpVerification />
+                    )}
+
+                    {authModalView === 'complete_registration' && <CompleteRegistrationForm />}
+
+                    {authModalView === 'reset_password' && <ResetPasswordForm />}
                   </motion.div>
                 </AnimatePresence>
+              </div>
+
+              {/* Bottom Security Footer */}
+              <div className="pt-3 text-[10px] text-center text-white/70 border-t border-white/10 mt-auto">
+                {isBn ? '🔒 ২৫৬-বিট এনক্রিপশনের মাধ্যমে সুরক্ষিত' : '🔒 Secured with 256-Bit SSL Encryption'}
               </div>
             </div>
           </motion.div>

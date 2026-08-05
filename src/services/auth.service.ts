@@ -1,99 +1,171 @@
+import { apiClient, setAccessToken, clearAccessToken } from '@/lib/apiClient';
 import {
-  SignInCredentials,
-  SignUpCredentials,
-  OtpVerificationPayload,
-  ForgotPasswordCredentials,
-  AuthResponse,
+  CheckIdentifierRequest,
+  CheckIdentifierResult,
+  VerifyOtpRequest,
+  VerifyOtpResult,
+  CompleteRegistrationRequest,
+  LoginRequest,
+  AuthenticatedResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResult,
+  VerifyResetOtpRequest,
+  VerifyResetOtpResult,
+  ResetPasswordRequest,
+  ResetPasswordResult,
+  ChangePasswordRequest,
+  LogoutResult,
 } from '@/types/auth';
+import { User } from '@/types';
 
-/**
- * Mock Authentication Service layer.
- * Implements Promises with artificial delay to simulate network latency.
- * Future API Integration: Swap function bodies with real fetch / axios calls.
- */
 export const AuthService = {
-  async login(credentials: SignInCredentials): Promise<AuthResponse> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // Simulated successful login for any valid form input
-    return {
-      success: true,
-      messageBn: 'সফলভাবে লগইন হয়েছে!',
-      messageEn: 'Logged in successfully!',
-      user: {
-        id: 'u-101',
-        name: credentials.identifier.includes('@')
-          ? credentials.identifier.split('@')[0]
-          : 'নুরুল ইসলাম (Customer)',
-        email: credentials.identifier.includes('@')
-          ? credentials.identifier
-          : 'user@medishop.com.bd',
-        phone: credentials.identifier.includes('@')
-          ? '01711000000'
-          : credentials.identifier,
-        avatarUrl: 'https://placehold.co/100x100/1D4ED8/FFFFFF?text=NI',
-      },
-    };
+  /**
+   * Step 1: Check if identifier (email or phone) exists in backend DB.
+   * If user exists -> returns action 'LOGIN_PASSWORD'
+   * If user does NOT exist -> triggers registration OTP generation and returns action 'VERIFY_OTP'
+   */
+  async checkIdentifier(identifier: string): Promise<CheckIdentifierResult> {
+    return apiClient<CheckIdentifierResult>('/auth/check-identifier', {
+      method: 'POST',
+      body: JSON.stringify({ identifier } as CheckIdentifierRequest),
+    });
   },
 
-  async register(credentials: SignUpCredentials): Promise<AuthResponse> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const identifier =
-      credentials.identifierType === 'email'
-        ? credentials.email!
-        : credentials.phone!;
-
-    return {
-      success: true,
-      messageBn: 'অ্যাকাউন্ট তৈরি হয়েছে। ওটিপি কোড পাঠানো হয়েছে।',
-      messageEn: 'Account created. OTP verification code sent.',
-      pendingIdentifier: identifier,
-    };
+  /**
+   * Step 2 (Registration): Verify registration OTP code.
+   * On success -> returns verificationToken UUID required for completeRegistration.
+   */
+  async verifyRegistrationOtp(
+    identifier: string,
+    otp: string
+  ): Promise<VerifyOtpResult> {
+    return apiClient<VerifyOtpResult>('/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ identifier, otp } as VerifyOtpRequest),
+    });
   },
 
-  async verifyOtp(payload: OtpVerificationPayload): Promise<AuthResponse> {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-
-    // Demo OTP check: "123456" or any 6 digits
-    if (payload.otpCode && payload.otpCode.length === 6) {
-      return {
-        success: true,
-        messageBn: 'ওটিপি ভেরিফিকেশন সফল হয়েছে!',
-        messageEn: 'OTP verified successfully!',
-        user: {
-          id: 'u-' + Math.floor(Math.random() * 1000),
-          name: 'নতুন গ্রাহক (Verified Customer)',
-          phone: payload.identifier.startsWith('01')
-            ? payload.identifier
-            : '01700000000',
-          email: payload.identifier.includes('@')
-            ? payload.identifier
-            : 'customer@medishop.com.bd',
-        },
-      };
+  /**
+   * Step 3 (Registration): Finalize registration using verificationToken + user's name & password.
+   * Sets JWT Access Token and returns PublicUser.
+   */
+  async completeRegistration(
+    payload: CompleteRegistrationRequest
+  ): Promise<AuthenticatedResponse> {
+    const res = await apiClient<AuthenticatedResponse>('/auth/complete-registration', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    if (res?.accessToken) {
+      setAccessToken(res.accessToken);
     }
-
-    return {
-      success: false,
-      messageBn: 'ভুল ওটিপি কোড। ডেমো কোড "123456" দিন।',
-      messageEn: 'Invalid OTP code. Please use demo code "123456".',
-    };
+    return res;
   },
 
+  /**
+   * Direct Login with identifier & password.
+   * Sets JWT Access Token and returns PublicUser.
+   */
+  async login(payload: LoginRequest): Promise<AuthenticatedResponse> {
+    const res = await apiClient<AuthenticatedResponse>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    if (res?.accessToken) {
+      setAccessToken(res.accessToken);
+    }
+    return res;
+  },
+
+  /**
+   * Refresh Access Token using HTTP-only cookie refresh session.
+   */
+  async refresh(): Promise<AuthenticatedResponse> {
+    const res = await apiClient<AuthenticatedResponse>('/auth/refresh', {
+      method: 'POST',
+      skipRefresh: true,
+    });
+    if (res?.accessToken) {
+      setAccessToken(res.accessToken);
+    }
+    return res;
+  },
+
+  /**
+   * Logout current session & invalidate refresh cookie.
+   */
+  async logout(): Promise<LogoutResult> {
+    try {
+      const res = await apiClient<LogoutResult>('/auth/logout', {
+        method: 'POST',
+        skipRefresh: true,
+      });
+      return res;
+    } finally {
+      clearAccessToken();
+    }
+  },
+
+  /**
+   * Request password reset OTP.
+   */
   async forgotPassword(
-    credentials: ForgotPasswordCredentials
-  ): Promise<AuthResponse> {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-
-    return {
-      success: true,
-      messageBn: `পাসওয়ার্ড রিকোভারি লিংক/ওটিপি ${credentials.identifier} নম্বরে পাঠানো হয়েছে।`,
-      messageEn: `Password recovery link/OTP sent to ${credentials.identifier}.`,
-    };
+    payload: ForgotPasswordRequest
+  ): Promise<ForgotPasswordResult> {
+    return apiClient<ForgotPasswordResult>('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
   },
 
-  async logout(): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+  /**
+   * Verify password reset OTP code.
+   * On success -> returns verificationToken UUID.
+   */
+  async verifyResetOtp(
+    identifier: string,
+    otp: string
+  ): Promise<VerifyResetOtpResult> {
+    return apiClient<VerifyResetOtpResult>('/auth/verify-reset-otp', {
+      method: 'POST',
+      body: JSON.stringify({ identifier, otp } as VerifyResetOtpRequest),
+    });
+  },
+
+  /**
+   * Reset password using verificationToken & new password.
+   */
+  async resetPassword(
+    payload: ResetPasswordRequest
+  ): Promise<ResetPasswordResult> {
+    return apiClient<ResetPasswordResult>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  /**
+   * Change password for logged-in user.
+   */
+  async changePassword(
+    payload: ChangePasswordRequest
+  ): Promise<AuthenticatedResponse> {
+    const res = await apiClient<AuthenticatedResponse>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    if (res?.accessToken) {
+      setAccessToken(res.accessToken);
+    }
+    return res;
+  },
+
+  /**
+   * Fetch current authenticated user profile (/auth/me).
+   */
+  async me(): Promise<User> {
+    return apiClient<User>('/auth/me', {
+      method: 'GET',
+    });
   },
 };

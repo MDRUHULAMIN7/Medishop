@@ -15,33 +15,63 @@ export function AuthHeader({ view, onClose }: AuthHeaderProps) {
   const isBn = language === 'bn';
 
   const TITLES: Record<AuthModalView, { bn: string; en: string; subtitleBn: string; subtitleEn: string }> = {
+    identifier: {
+      bn: 'মেডিশপে স্বাগতম!',
+      en: 'Welcome to mediShop!',
+      subtitleBn: 'আপনার মোবাইল/ইমেইল দিয়ে শুরু করুন',
+      subtitleEn: 'Enter your mobile or email to proceed',
+    },
+    password_login: {
+      bn: 'পাসওয়ার্ড প্রদান করুন',
+      en: 'Enter Password',
+      subtitleBn: 'আপনার অ্যাকাউন্টের পাসওয়ার্ড লিখুন',
+      subtitleEn: 'Enter your password to sign in',
+    },
+    verify_otp: {
+      bn: 'ওটিপি ভেরিফিকেশন',
+      en: 'OTP Verification',
+      subtitleBn: 'আপনার নম্বর/ইমেইলে পাঠানো ৬ ডিজিটের কোড দিন',
+      subtitleEn: 'Enter 6-digit code sent to your device',
+    },
+    complete_registration: {
+      bn: 'অ্যাকাউন্ট তৈরি সম্পূর্ণ করুন',
+      en: 'Complete Registration',
+      subtitleBn: 'আপনার নাম ও পাসওয়ার্ড সেট করুন',
+      subtitleEn: 'Set your name and password',
+    },
+    reset_password: {
+      bn: 'নতুন পাসওয়ার্ড সেট করুন',
+      en: 'Set New Password',
+      subtitleBn: 'আপনার নতুন পাসওয়ার্ড সেট করুন',
+      subtitleEn: 'Create a new password for your account',
+    },
     signin: {
       bn: 'মেডিশপে স্বাগতম!',
       en: 'Welcome to mediShop!',
       subtitleBn: 'আপনার অ্যাকাউন্ট থাকলে লগইন করুন',
-      subtitleEn: 'Sign in to access your orders & prescriptions',
+      subtitleEn: 'Sign in to access your account',
     },
     signup: {
       bn: 'নতুন অ্যাকাউন্ট তৈরি করুন',
       en: 'Create a New Account',
-      subtitleBn: 'সহজে ওষুধ ও স্বাস্থ্যসেবা পেতে রেজিস্ট্রেশন করুন',
-      subtitleEn: 'Register to order authentic medicines easily',
+      subtitleBn: 'সহজে রেজিস্ট্রেশন করুন',
+      subtitleEn: 'Register easily',
     },
     otp: {
       bn: 'ওটিপি ভেরিফিকেশন',
       en: 'OTP Verification',
-      subtitleBn: 'আপনার মোবাইল/ইমেইলে পাঠানো ৬ ডিজিটের কোড দিন',
-      subtitleEn: 'Enter 6-digit code sent to your mobile/email',
+      subtitleBn: '৬ ডিজিটের কোড দিন',
+      subtitleEn: 'Enter 6-digit code',
     },
     forgot: {
       bn: 'পাসওয়ার্ড রিকভারি',
       en: 'Forgot Password',
-      subtitleBn: 'পাসওয়ার্ড রিসেট লিংক পেতে তথ্য দিন',
-      subtitleEn: 'Enter information to receive reset instructions',
+      subtitleBn: 'পাসওয়ার্ড রিসেট করুন',
+      subtitleEn: 'Reset password',
     },
   };
 
-  const currentInfo = TITLES[view];
+  const currentInfo = TITLES[view] || TITLES.identifier;
 
   return (
     <div className="relative border-b border-border bg-gradient-to-r from-primary/5 via-sky-50/40 to-teal-50/40 p-5 sm:p-6 text-center">
