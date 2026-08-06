@@ -1,43 +1,68 @@
 import { z } from 'zod';
 
+const bdPhoneRegex = /^(?:\+88)?01[3-9]\d{8}$/;
+
 export const addressSchema = z.object({
   fullName: z
     .string()
-    .min(2, { message: 'Full name must be at least 2 characters' })
-    .max(60, { message: 'Full name must not exceed 60 characters' }),
-  phone: z
-    .string()
-    .min(11, { message: 'Phone number must be 11 digits' })
-    .max(11, { message: 'Phone number must be 11 digits' })
-    .refine((val) => /^01[3-9]\d{8}$/.test(val), {
-      message: 'Enter a valid Bangladeshi phone number (e.g. 01712345678)',
-    }),
-  email: z
-    .string()
-    .email({ message: 'Enter a valid email address' })
-    .optional()
-    .or(z.literal('')),
-  division: z.enum(
-    [
-      'Dhaka',
-      'Chattogram',
-      'Rajshahi',
-      'Khulna',
-      'Barishal',
-      'Sylhet',
-      'Rangpur',
-      'Mymensingh',
-    ],
-    { required_error: 'Please select a division' }
-  ),
-  district: z.string().min(2, { message: 'District is required' }),
-  area: z.string().min(2, { message: 'Area / Thana is required' }),
+    .trim()
+    .min(2, { message: 'গ্রহীতার নাম কমপক্ষে ২ অক্ষরের হতে হবে' }),
+  phone: z.string().trim().refine((val) => bdPhoneRegex.test(val), {
+    message: '১১ ডিজিটের সঠিক মোবাইল নম্বর দিন (যেমন: 01700000000)',
+  }),
+  email: z.string().trim().email({ message: 'সঠিক ইমেইল ইনপুট দিন' }).optional().or(z.literal('')),
+  division: z.string().trim().min(1, { message: 'বিভাগ নির্বাচন করুন' }),
+  district: z.string().trim().min(2, { message: 'জেলা দিন' }),
+  area: z.string().trim().min(2, { message: 'উপজেলা/থানা দিন' }),
   streetAddress: z
     .string()
-    .min(5, { message: 'Street address must be at least 5 characters' }),
-  postalCode: z.string().optional().or(z.literal('')),
-  label: z.enum(['Home', 'Office', 'Other']),
+    .trim()
+    .min(5, { message: 'বিস্তারিত ঠিকানা কমপক্ষে ৫ অক্ষরের হতে হবে' }),
+  postalCode: z.string().trim().optional(),
+  label: z.enum(['Home', 'Office', 'Other'], {
+    required_error: 'লেবেল চয়ন করুন',
+  }),
   isDefault: z.boolean().default(false),
 });
 
 export type AddressFormValues = z.infer<typeof addressSchema>;
+
+export function createAddressValidationSchema(isBn: boolean = true) {
+  return z.object({
+    label: z.string().trim().optional(),
+    recipientName: z
+      .string()
+      .trim()
+      .min(2, {
+        message: isBn
+          ? 'গ্রহীতার নাম কমপক্ষে ২ অক্ষরের হতে হবে'
+          : 'Recipient name must be at least 2 characters',
+      }),
+    phone: z
+      .string()
+      .trim()
+      .refine((val) => bdPhoneRegex.test(val), {
+        message: isBn
+          ? '১১ ডিজিটের সঠিক মোবাইল নম্বর দিন'
+          : 'Enter a valid 11-digit BD mobile number',
+      }),
+    division: z.string().trim().optional(),
+    district: z.string().trim().min(2, {
+      message: isBn ? 'জেলা নির্বাচন বা উল্লেখ করুন' : 'District is required',
+    }),
+    thana: z.string().trim().min(2, {
+      message: isBn ? 'থানা/উপজেলা দিন' : 'Thana/Area is required',
+    }),
+    addressLine: z.string().trim().min(5, {
+      message: isBn
+        ? 'বিস্তারিত ঠিকানা কমপক্ষে ৫ অক্ষরের হতে হবে'
+        : 'Street address must be at least 5 characters',
+    }),
+    postalCode: z.string().trim().optional(),
+    isDefault: z.boolean().optional(),
+  });
+}
+
+export type AddressValidationSchemaType = z.infer<
+  ReturnType<typeof createAddressValidationSchema>
+>;

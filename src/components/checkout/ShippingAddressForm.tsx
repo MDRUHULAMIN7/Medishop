@@ -58,16 +58,16 @@ export function ShippingAddressForm({
   useEffect(() => {
     if (initialData) {
       reset({
-        fullName: initialData.fullName,
-        phone: initialData.phone,
+        fullName: initialData.fullName || initialData.recipientName || '',
+        phone: initialData.phone || '',
         email: initialData.email || '',
-        division: initialData.division,
-        district: initialData.district,
-        area: initialData.area,
-        streetAddress: initialData.streetAddress,
+        division: (initialData.division as Division) || 'Dhaka',
+        district: initialData.district || '',
+        area: initialData.area || initialData.thana || '',
+        streetAddress: initialData.streetAddress || initialData.addressLine || '',
         postalCode: initialData.postalCode || '',
-        label: initialData.label,
-        isDefault: initialData.isDefault,
+        label: (initialData.label as 'Home' | 'Office' | 'Other') || 'Home',
+        isDefault: Boolean(initialData.isDefault),
       });
     } else {
       reset({
