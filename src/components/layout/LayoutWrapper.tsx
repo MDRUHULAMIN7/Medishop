@@ -10,9 +10,8 @@ import { WhatsAppButton } from '@/components/layout/WhatsAppButton';
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // Check if current route is a standalone Dashboard / Profile view
-  const isDashboardRoute =
-    pathname?.startsWith('/dashboard') || pathname?.startsWith('/profile');
+  // ONLY /dashboard sub-routes use standalone full-screen dashboard layout
+  const isDashboardRoute = Boolean(pathname?.startsWith('/dashboard'));
 
   if (isDashboardRoute) {
     // Render clean standalone Dashboard without main shop Navbar, Footer, or Floating Buttons
@@ -23,7 +22,7 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // E-commerce Public Store Layout
+  // E-commerce Public Store Layout (Including /profile and all store pages)
   return (
     <>
       {/* Header Landmark */}

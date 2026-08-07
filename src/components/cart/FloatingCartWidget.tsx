@@ -23,7 +23,7 @@ export function FloatingCartWidget() {
   const isBn = language === 'bn';
   const { isBouncing } = useFlyToCart();
 
-  if (pathname?.startsWith('/dashboard') || pathname?.startsWith('/profile')) {
+  if (pathname?.startsWith('/dashboard')) {
     return null;
   }
 
