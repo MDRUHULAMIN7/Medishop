@@ -1,122 +1,100 @@
+'use client';
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, Plus, ShieldCheck, ExternalLink, Globe, X, Upload } from 'lucide-react';
+import { Building2, Plus, ShieldCheck, Globe, X, Loader2, Trash2, Edit2, Star } from 'lucide-react';
 import { useAppSelector } from '@/store';
-import { toast } from 'sonner';
-
-interface BrandItem {
-  id: string;
-  name: string;
-  country: string;
-  dgdaReg: string;
-  productCount: number;
-  isVerified: boolean;
-  isActive: boolean;
-}
+import { useBrands } from '@/hooks/useBrands';
+import { Brand } from '@/services/brand.service';
 
 export function BrandManager() {
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
 
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const {
+    brands,
+    isLoading,
+    createBrand,
+    updateBrand,
+    toggleFeatured,
+    deleteBrand,
+    isCreating,
+  } = useBrands(true);
 
-  const [brands, setBrands] = useState<BrandItem[]>([
-    {
-      id: 'b-1',
-      name: 'Square Pharmaceuticals Ltd.',
-      country: 'Bangladesh',
-      dgdaReg: 'DAR-SQ-1092',
-      productCount: 420,
-      isVerified: true,
-      isActive: true,
-    },
-    {
-      id: 'b-2',
-      name: 'Beximco Pharmaceuticals',
-      country: 'Bangladesh',
-      dgdaReg: 'DAR-BX-4012',
-      productCount: 310,
-      isVerified: true,
-      isActive: true,
-    },
-    {
-      id: 'b-3',
-      name: 'Incepta Pharmaceuticals Ltd.',
-      country: 'Bangladesh',
-      dgdaReg: 'DAR-INC-8821',
-      productCount: 280,
-      isVerified: true,
-      isActive: true,
-    },
-    {
-      id: 'b-4',
-      name: 'Healthcare Pharmaceuticals Ltd.',
-      country: 'Bangladesh',
-      dgdaReg: 'DAR-HPL-2201',
-      productCount: 190,
-      isVerified: true,
-      isActive: true,
-    },
-    {
-      id: 'b-5',
-      name: 'Renata Limited',
-      country: 'Bangladesh',
-      dgdaReg: 'DAR-REN-3301',
-      productCount: 150,
-      isVerified: true,
-      isActive: true,
-    },
-    {
-      id: 'b-6',
-      name: 'LifeScan Inc. (OneTouch)',
-      country: 'United States',
-      dgdaReg: 'IMP-LS-9912',
-      productCount: 45,
-      isVerified: true,
-      isActive: true,
-    },
-  ]);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
-    country: 'Bangladesh',
-    dgdaReg: '',
-    isVerified: true,
+    slug: '',
+    logo: '',
+    isFeatured: true,
+    isActive: true,
   });
 
-  const handleToggleVerified = (id: string) => {
-    setBrands((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, isVerified: !b.isVerified } : b))
-    );
-    toast.success(isBn ? 'ব্র্যান্ড ভেরিফিকেশন আপডেট হয়েছে' : 'Brand verification status updated');
+  const handleToggleFeatured = async (brand: Brand) => {
+    await toggleFeatured(brand.id);
   };
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleToggleActive = async (brand: Brand) => {
+    await updateBrand({
+      id: brand.id,
+      payload: { isActive: !brand.isActive },
+    });
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm(isBn ? 'আপনি কি নিশ্চিত এই ব্র্যান্ডটি মুছে ফেলতে চান?' : 'Are you sure you want to delete this brand?')) {
+      await deleteBrand(id);
+    }
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name) {
-      toast.error(isBn ? 'ব্র্যান্ড নাম আবশ্যক' : 'Brand name is required');
-      return;
+    if (!formData.name.trim()) return;
+
+    if (editingBrand) {
+      await updateBrand({
+        id: editingBrand.id,
+        payload: {
+          name: formData.name.trim(),
+          slug: formData.slug.trim() || undefined,
+          logo: formData.logo.trim() || undefined,
+          isFeatured: formData.isFeatured,
+          isActive: formData.isActive,
+        },
+      });
+    } else {
+      await createBrand({
+        name: formData.name.trim(),
+        slug: formData.slug.trim() || undefined,
+        logo: formData.logo.trim() || undefined,
+        isFeatured: formData.isFeatured,
+        isActive: formData.isActive,
+      });
     }
 
-    const newBrand: BrandItem = {
-      id: `b-${Date.now()}`,
-      name: formData.name,
-      country: formData.country || 'Bangladesh',
-      dgdaReg: formData.dgdaReg || `DAR-${Date.now().toString().slice(-4)}`,
-      productCount: 0,
-      isVerified: formData.isVerified,
-      isActive: true,
-    };
-
-    setBrands([newBrand, ...brands]);
     setIsAddModalOpen(false);
+    setEditingBrand(null);
     setFormData({
       name: '',
-      country: 'Bangladesh',
-      dgdaReg: '',
-      isVerified: true,
+      slug: '',
+      logo: '',
+      isFeatured: true,
+      isActive: true,
     });
-    toast.success(isBn ? 'নতুন ব্র্যান্ড সফলভাবে যোগ হয়েছে!' : 'New Pharma Brand added successfully!');
+  };
+
+  const openEditModal = (brand: Brand) => {
+    setEditingBrand(brand);
+    setFormData({
+      name: brand.name,
+      slug: brand.slug,
+      logo: brand.logo || '',
+      isFeatured: Boolean(brand.isFeatured),
+      isActive: Boolean(brand.isActive),
+    });
+    setIsAddModalOpen(true);
   };
 
   return (
@@ -124,86 +102,127 @@ export function BrandManager() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4 gap-4">
         <div>
-          <h2 className="text-xl font-black text-foreground">
+          <h2 className="text-xl font-black text-foreground font-serif-title">
             {isBn ? 'ফার্মাসিউটিক্যালস ব্র্যান্ড ও ম্যানুফ্যাকচারার' : 'Pharma Brand Directory'}
           </h2>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mt-0.5">
             {isBn
-              ? 'ডিজিডিএ নিবন্ধিত ওষুধ প্রস্তুতকারক ব্র্যান্ড তালিকা'
-              : 'DGDA licensed pharmaceutical manufacturers & partners'}
+              ? 'লাইভ ব্যাকএন্ড এপিআই ডিজিডিএ নিবন্ধিত ওষুধ প্রস্তুতকারক ব্র্যান্ড তালিকা'
+              : 'Live backend API integration for pharmaceutical manufacturers'}
           </p>
         </div>
 
         <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-xs font-bold text-white shadow-md hover:bg-primary-dark transition-all shrink-0"
+          type="button"
+          onClick={() => {
+            setEditingBrand(null);
+            setFormData({ name: '', slug: '', logo: '', isFeatured: true, isActive: true });
+            setIsAddModalOpen(true);
+          }}
+          className="flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-xs font-bold text-white shadow-md hover:bg-primary-dark transition-all shrink-0 cursor-pointer"
         >
           <Plus className="h-4 w-4" />
           <span>{isBn ? 'নতুন ব্র্যান্ড যোগ' : 'Add New Brand'}</span>
         </button>
       </div>
 
-      {/* Brands Table */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-2xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-border bg-muted/40 font-bold uppercase tracking-wider text-muted-foreground">
-                <th className="py-3 px-4">{isBn ? 'ব্র্যান্ড নাম' : 'Manufacturer Name'}</th>
-                <th className="py-3 px-4">{isBn ? 'দেশ' : 'Country'}</th>
-                <th className="py-3 px-4">{isBn ? 'ডিজিডিএ রেজি নং' : 'DGDA License'}</th>
-                <th className="py-3 px-4">{isBn ? 'প্রডাক্ট সংখ্যা' : 'Medicines Listed'}</th>
-                <th className="py-3 px-4 text-right">{isBn ? 'ভেরিফিকেশন' : 'Verification'}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/60">
-              {brands.map((b) => (
-                <tr key={b.id} className="hover:bg-muted/30 transition-colors">
-                  <td className="py-3 px-4 font-bold text-foreground sm:text-sm">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold">
-                        <Building2 className="h-4 w-4" />
-                      </div>
-                      <span>{b.name}</span>
-                    </div>
-                  </td>
-
-                  <td className="py-3 px-4 font-semibold text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Globe className="h-3.5 w-3.5 text-sky-600" />
-                      <span>{b.country}</span>
-                    </span>
-                  </td>
-
-                  <td className="py-3 px-4 font-bold text-primary">
-                    {b.dgdaReg}
-                  </td>
-
-                  <td className="py-3 px-4 font-bold text-foreground">
-                    {b.productCount} Items
-                  </td>
-
-                  <td className="py-3 px-4 text-right">
-                    <button
-                      onClick={() => handleToggleVerified(b.id)}
-                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                        b.isVerified
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-slate-100 text-slate-800'
-                      }`}
-                    >
-                      <ShieldCheck className="h-3 w-3" />
-                      <span>{b.isVerified ? 'Verified Partner' : 'Unverified'}</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Loading State */}
+      {isLoading ? (
+        <div className="flex h-48 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </div>
+      ) : brands.length === 0 ? (
+        <div className="text-center py-12 text-xs font-bold text-muted-foreground">
+          {isBn ? 'কোনো ব্র্যান্ড তালিকাভুক্ত নেই' : 'No manufacturer brands available'}
+        </div>
+      ) : (
+        /* Brands Table */
+        <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-2xs">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-border bg-muted/40 font-bold uppercase tracking-wider text-muted-foreground">
+                  <th className="py-3 px-4">{isBn ? 'ব্র্যান্ড নাম' : 'Manufacturer Name'}</th>
+                  <th className="py-3 px-4">{isBn ? 'ইউআরএল স্ল্যাগ' : 'URL Slug'}</th>
+                  <th className="py-3 px-4 text-center">{isBn ? 'ফিচারড' : 'Featured'}</th>
+                  <th className="py-3 px-4 text-center">{isBn ? 'স্ট্যাটাস' : 'Status'}</th>
+                  <th className="py-3 px-4 text-right">{isBn ? 'অ্যাকশন' : 'Actions'}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/60">
+                {brands.map((b) => (
+                  <tr key={b.id} className="hover:bg-muted/30 transition-colors">
+                    <td className="py-3 px-4 font-bold text-foreground sm:text-sm">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold overflow-hidden">
+                          {b.logo ? (
+                            <img src={b.logo} alt={b.name} className="h-full w-full object-cover" />
+                          ) : (
+                            <Building2 className="h-4 w-4" />
+                          )}
+                        </div>
+                        <span className="truncate">{b.name}</span>
+                      </div>
+                    </td>
 
-      {/* Add New Brand Modal */}
+                    <td className="py-3 px-4 font-semibold text-muted-foreground">
+                      /{b.slug}
+                    </td>
+
+                    <td className="py-3 px-4 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleFeatured(b)}
+                        className={`rounded-full p-1.5 transition-colors cursor-pointer ${
+                          b.isFeatured ? 'text-amber-500 bg-amber-50' : 'text-muted-foreground hover:bg-muted'
+                        }`}
+                        title="Toggle Featured"
+                      >
+                        <Star className="h-4 w-4 fill-current" />
+                      </button>
+                    </td>
+
+                    <td className="py-3 px-4 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleActive(b)}
+                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold cursor-pointer ${
+                          b.isActive
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-slate-100 text-slate-800'
+                        }`}
+                      >
+                        {b.isActive ? 'Active' : 'Disabled'}
+                      </button>
+                    </td>
+
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openEditModal(b)}
+                          className="p-1.5 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(b.id)}
+                          className="p-1.5 text-muted-foreground hover:text-rose-600 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Add / Edit Brand Modal */}
       <AnimatePresence>
         {isAddModalOpen && (
           <motion.div
@@ -223,7 +242,13 @@ export function BrandManager() {
             >
               <div className="flex items-center justify-between border-b border-border pb-4">
                 <h3 className="text-base font-bold text-foreground">
-                  {isBn ? 'নতুন ফার্মা ব্র্যান্ড যোগ করুন' : 'Add New Pharma Manufacturer'}
+                  {editingBrand
+                    ? isBn
+                      ? 'ফার্মা ব্র্যান্ড এডিট করুন'
+                      : 'Edit Pharma Brand'
+                    : isBn
+                    ? 'নতুন ফার্মা ব্র্যান্ড যোগ করুন'
+                    : 'Add New Pharma Manufacturer'}
                 </h3>
                 <button
                   type="button"
@@ -234,7 +259,7 @@ export function BrandManager() {
                 </button>
               </div>
 
-              <form onSubmit={handleAddSubmit} className="flex flex-col gap-4 mt-4 text-xs">
+              <form onSubmit={handleFormSubmit} className="flex flex-col gap-4 mt-4 text-xs">
                 <div>
                   <label className="font-bold text-foreground block mb-1">
                     Manufacturer / Brand Name *
@@ -244,33 +269,33 @@ export function BrandManager() {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Ex: ACME Laboratories Ltd."
+                    placeholder="Ex: Square Pharmaceuticals Ltd."
                     className="h-10 w-full rounded-xl border border-border bg-background px-3 text-xs focus:border-primary focus:outline-none"
                   />
                 </div>
 
                 <div>
                   <label className="font-bold text-foreground block mb-1">
-                    Country of Origin
+                    URL Slug (Auto-generated if empty)
                   </label>
                   <input
                     type="text"
-                    value={formData.country}
-                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                    placeholder="Bangladesh"
+                    value={formData.slug}
+                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                    placeholder="square-pharmaceuticals"
                     className="h-10 w-full rounded-xl border border-border bg-background px-3 text-xs focus:border-primary focus:outline-none"
                   />
                 </div>
 
                 <div>
                   <label className="font-bold text-foreground block mb-1">
-                    DGDA License / Registration No.
+                    Brand Logo URL
                   </label>
                   <input
-                    type="text"
-                    value={formData.dgdaReg}
-                    onChange={(e) => setFormData({ ...formData, dgdaReg: e.target.value })}
-                    placeholder="DAR-ACME-5021"
+                    type="url"
+                    value={formData.logo}
+                    onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
+                    placeholder="https://images.unsplash.com/..."
                     className="h-10 w-full rounded-xl border border-border bg-background px-3 text-xs focus:border-primary focus:outline-none"
                   />
                 </div>
@@ -278,13 +303,13 @@ export function BrandManager() {
                 <div className="flex items-center gap-2 mt-1">
                   <input
                     type="checkbox"
-                    id="brandVerified"
-                    checked={formData.isVerified}
-                    onChange={(e) => setFormData({ ...formData, isVerified: e.target.checked })}
+                    id="brandFeatured"
+                    checked={formData.isFeatured}
+                    onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
                     className="h-4 w-4 rounded border-border text-primary"
                   />
-                  <label htmlFor="brandVerified" className="font-bold text-foreground">
-                    Verified DGDA Licensed Manufacturer
+                  <label htmlFor="brandFeatured" className="font-bold text-foreground cursor-pointer">
+                    Highlight as Featured Manufacturer on Homepage
                   </label>
                 </div>
 
@@ -292,16 +317,18 @@ export function BrandManager() {
                   <button
                     type="button"
                     onClick={() => setIsAddModalOpen(false)}
-                    className="rounded-xl border border-border px-4 py-2 text-xs font-bold text-foreground hover:bg-muted"
+                    className="rounded-xl border border-border px-4 py-2 text-xs font-bold text-foreground hover:bg-muted cursor-pointer"
                   >
                     Cancel
                   </button>
 
                   <button
                     type="submit"
-                    className="rounded-xl bg-primary px-5 py-2 text-xs font-bold text-white hover:bg-primary-dark shadow-md"
+                    disabled={isCreating}
+                    className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2 text-xs font-bold text-white hover:bg-primary-dark shadow-md disabled:opacity-70 cursor-pointer"
                   >
-                    Add Brand
+                    {isCreating && <Loader2 className="h-4 w-4 animate-spin text-white" />}
+                    <span>{editingBrand ? 'Save Changes' : 'Add Brand'}</span>
                   </button>
                 </div>
               </form>
@@ -312,4 +339,3 @@ export function BrandManager() {
     </div>
   );
 }
-

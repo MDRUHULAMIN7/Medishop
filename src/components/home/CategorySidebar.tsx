@@ -72,7 +72,7 @@ export function CategorySidebar() {
           >
             <div className="flex items-center gap-2.5 lg:gap-3 truncate">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted group-hover:bg-primary/20 transition-colors shrink-0">
-                {CATEGORY_ICONS[cat.iconName] || <Pill className="h-4.5 w-4.5 text-primary" />}
+                {CATEGORY_ICONS[cat.iconName || 'Pill'] || <Pill className="h-4.5 w-4.5 text-primary" />}
               </span>
               <span className="truncate">{isBn ? cat.nameBn : cat.nameEn}</span>
             </div>

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -6,152 +8,103 @@ import {
   Star,
   CheckCircle,
   Pill,
-  Stethoscope,
-  Activity,
-  Heart,
-  Baby,
-  ShieldPlus,
-  Sparkles,
-  Apple,
   X,
+  Loader2,
+  Trash2,
+  Edit2,
 } from 'lucide-react';
 import { useAppSelector } from '@/store';
-import { toast } from 'sonner';
-
-interface CategoryItem {
-  id: string;
-  slug: string;
-  nameBn: string;
-  nameEn: string;
-  iconName: string;
-  productCount: number;
-  isPopular: boolean;
-  isActive: boolean;
-}
+import { useCategories } from '@/hooks/useCategories';
+import { Category } from '@/services/category.service';
 
 export function CategoryManager() {
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
 
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const {
+    categories,
+    isLoading,
+    createCategory,
+    updateCategory,
+    toggleFeatured,
+    deleteCategory,
+    isCreating,
+  } = useCategories(true);
 
-  const [categories, setCategories] = useState<CategoryItem[]>([
-    {
-      id: 'c-1',
-      slug: 'prescription-medicines',
-      nameEn: 'Prescription Medicines',
-      nameBn: 'প্রেসক্রিপশন ওষুধ',
-      iconName: 'Pill',
-      productCount: 1420,
-      isPopular: true,
-      isActive: true,
-    },
-    {
-      id: 'c-2',
-      slug: 'otc-medicines',
-      nameEn: 'OTC Medicines',
-      nameBn: 'ওটিসি (সাধারণ) ওষুধ',
-      iconName: 'Stethoscope',
-      productCount: 890,
-      isPopular: true,
-      isActive: true,
-    },
-    {
-      id: 'c-3',
-      slug: 'diabetic-care',
-      nameEn: 'Diabetic Care',
-      nameBn: 'ডায়াবেটিস কেয়ার',
-      iconName: 'Activity',
-      productCount: 320,
-      isPopular: true,
-      isActive: true,
-    },
-    {
-      id: 'c-4',
-      slug: 'women-care',
-      nameEn: "Women's Choice",
-      nameBn: 'উইমেনস কেয়ার',
-      iconName: 'Heart',
-      productCount: 210,
-      isPopular: true,
-      isActive: true,
-    },
-    {
-      id: 'c-5',
-      slug: 'baby-care',
-      nameEn: 'Baby Care',
-      nameBn: 'বেবি কেয়ার',
-      iconName: 'Baby',
-      productCount: 450,
-      isPopular: true,
-      isActive: true,
-    },
-    {
-      id: 'c-6',
-      slug: 'healthcare-devices',
-      nameEn: 'Healthcare Devices',
-      nameBn: 'হেলথকেয়ার ডিভাইস',
-      iconName: 'ShieldPlus',
-      productCount: 180,
-      isPopular: false,
-      isActive: true,
-    },
-  ]);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
   const [formData, setFormData] = useState({
-    nameEn: '',
-    nameBn: '',
+    name: '',
     slug: '',
-    iconName: 'Pill',
-    isPopular: true,
+    image: '',
+    isFeatured: true,
+    isActive: true,
   });
 
-  const handleTogglePopular = (id: string) => {
-    setCategories((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, isPopular: !c.isPopular } : c))
-    );
-    toast.success(isBn ? 'পপুলার স্ট্যাটাস আপডেট হয়েছে' : 'Popular status updated');
+  const handleTogglePopular = async (cat: Category) => {
+    await toggleFeatured(cat.id);
   };
 
-  const handleToggleActive = (id: string) => {
-    setCategories((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, isActive: !c.isActive } : c))
-    );
-    toast.success(isBn ? 'ক্যাটাগরি স্ট্যাটাস আপডেট হয়েছে' : 'Category active status updated');
+  const handleToggleActive = async (cat: Category) => {
+    await updateCategory({
+      id: cat.id,
+      payload: { isActive: !cat.isActive },
+    });
   };
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleDelete = async (id: string) => {
+    if (window.confirm(isBn ? 'আপনি কি নিশ্চিত এই ক্যাটাগরিটি মুছে ফেলতে চান?' : 'Are you sure you want to delete this category?')) {
+      await deleteCategory(id);
+    }
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.nameEn) {
-      toast.error(isBn ? 'ক্যাটাগরি নাম আবশ্যক' : 'Category name is required');
-      return;
+    if (!formData.name.trim()) return;
+
+    if (editingCategory) {
+      await updateCategory({
+        id: editingCategory.id,
+        payload: {
+          name: formData.name.trim(),
+          slug: formData.slug.trim() || undefined,
+          image: formData.image.trim() || undefined,
+          isFeatured: formData.isFeatured,
+          isActive: formData.isActive,
+        },
+      });
+    } else {
+      await createCategory({
+        name: formData.name.trim(),
+        slug: formData.slug.trim() || undefined,
+        image: formData.image.trim() || undefined,
+        isFeatured: formData.isFeatured,
+        isActive: formData.isActive,
+      });
     }
 
-    const slug =
-      formData.slug ||
-      formData.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-
-    const newCat: CategoryItem = {
-      id: `c-${Date.now()}`,
-      nameEn: formData.nameEn,
-      nameBn: formData.nameBn || formData.nameEn,
-      slug,
-      iconName: formData.iconName,
-      productCount: 0,
-      isPopular: formData.isPopular,
-      isActive: true,
-    };
-
-    setCategories([newCat, ...categories]);
     setIsAddModalOpen(false);
+    setEditingCategory(null);
     setFormData({
-      nameEn: '',
-      nameBn: '',
+      name: '',
       slug: '',
-      iconName: 'Pill',
-      isPopular: true,
+      image: '',
+      isFeatured: true,
+      isActive: true,
     });
-    toast.success(isBn ? 'নতুন ক্যাটাগরি যোগ হয়েছে!' : 'New Category added successfully!');
+  };
+
+  const openEditModal = (cat: Category) => {
+    setEditingCategory(cat);
+    setFormData({
+      name: cat.name,
+      slug: cat.slug,
+      image: cat.image || '',
+      isFeatured: Boolean(cat.isFeatured),
+      isActive: Boolean(cat.isActive),
+    });
+    setIsAddModalOpen(true);
   };
 
   return (
@@ -159,81 +112,119 @@ export function CategoryManager() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4 gap-4">
         <div>
-          <h2 className="text-xl font-black text-foreground">
+          <h2 className="text-xl font-black text-foreground font-serif-title">
             {isBn ? 'ফার্মেসি ক্যাটাগরি কনফিগারেটর' : 'Category Management'}
           </h2>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mt-0.5">
             {isBn
-              ? 'হোমপেজ পপুলার ক্যাটাগরি ও আইকন কাস্টমাইজ করুন'
-              : 'Customize homepage category highlights, icons, and visibility'}
+              ? 'লাইভ ব্যাকএন্ড ক্যাটাগরি, ইমেজ ও হোমপেজ পপুলার ফিল্টার'
+              : 'Live backend API integration for pharmacy categories and featured highlights'}
           </p>
         </div>
 
         <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-xs font-bold text-white shadow-md hover:bg-primary-dark transition-all shrink-0"
+          type="button"
+          onClick={() => {
+            setEditingCategory(null);
+            setFormData({ name: '', slug: '', image: '', isFeatured: true, isActive: true });
+            setIsAddModalOpen(true);
+          }}
+          className="flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-xs font-bold text-white shadow-md hover:bg-primary-dark transition-all shrink-0 cursor-pointer"
         >
           <Plus className="h-4 w-4" />
           <span>{isBn ? 'নতুন ক্যাটাগরি যোগ' : 'Add New Category'}</span>
         </button>
       </div>
 
-      {/* Categories Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {categories.map((cat) => (
-          <div
-            key={cat.id}
-            className="flex flex-col justify-between rounded-2xl border border-border bg-background p-5 shadow-2xs transition-all hover:border-primary/40 hover:shadow-md"
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold">
-                  <FolderTree className="h-5 w-5" />
+      {/* Loading state */}
+      {isLoading ? (
+        <div className="flex h-48 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : categories.length === 0 ? (
+        <div className="text-center py-12 text-xs font-bold text-muted-foreground">
+          {isBn ? 'কোনো ক্যাটাগরি পাওয়া যায়নি' : 'No categories available'}
+        </div>
+      ) : (
+        /* Categories Grid */
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {categories.map((cat) => (
+            <div
+              key={cat.id}
+              className="flex flex-col justify-between rounded-2xl border border-border bg-background p-5 shadow-2xs transition-all hover:border-primary/40 hover:shadow-md"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold overflow-hidden">
+                    {cat.image ? (
+                      <img src={cat.image} alt={cat.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <FolderTree className="h-5 w-5" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-foreground truncate">{cat.name}</h3>
+                    <span className="text-[11px] text-muted-foreground truncate block">
+                      /{cat.slug}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-bold text-foreground">
-                    {isBn ? cat.nameBn : cat.nameEn}
-                  </h3>
-                  <span className="text-[11px] text-muted-foreground">
-                    {cat.productCount} Items Available
-                  </span>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleTogglePopular(cat)}
+                    className={`rounded-full p-1.5 transition-colors cursor-pointer ${
+                      cat.isFeatured
+                        ? 'text-amber-500 bg-amber-50'
+                        : 'text-muted-foreground hover:bg-muted'
+                    }`}
+                    title="Toggle Featured Category"
+                  >
+                    <Star className="h-4 w-4 fill-current" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => openEditModal(cat)}
+                    className="p-1.5 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(cat.id)}
+                    className="p-1.5 text-muted-foreground hover:text-rose-600 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
 
-              <button
-                onClick={() => handleTogglePopular(cat.id)}
-                className={`rounded-full p-1.5 transition-colors ${
-                  cat.isPopular
-                    ? 'text-amber-500 bg-amber-50'
-                    : 'text-muted-foreground hover:bg-muted'
-                }`}
-                title="Toggle Popular Category"
-              >
-                <Star className="h-4 w-4 fill-current" />
-              </button>
+              <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3">
+                <span className="text-[11px] font-medium text-muted-foreground">
+                  ID: {cat.id.slice(-6)}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => handleToggleActive(cat)}
+                  className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold cursor-pointer ${
+                    cat.isActive
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-slate-100 text-slate-800'
+                  }`}
+                >
+                  {cat.isActive ? 'Active' : 'Disabled'}
+                </button>
+              </div>
             </div>
+          ))}
+        </div>
+      )}
 
-            <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3">
-              <span className="text-[11px] font-medium text-muted-foreground">
-                Slug: /{cat.slug}
-              </span>
-
-              <button
-                onClick={() => handleToggleActive(cat.id)}
-                className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                  cat.isActive
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : 'bg-slate-100 text-slate-800'
-                }`}
-              >
-                {cat.isActive ? 'Active' : 'Disabled'}
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Add New Category Modal */}
+      {/* Add / Edit Category Modal */}
       <AnimatePresence>
         {isAddModalOpen && (
           <motion.div
@@ -253,7 +244,13 @@ export function CategoryManager() {
             >
               <div className="flex items-center justify-between border-b border-border pb-4">
                 <h3 className="text-base font-bold text-foreground">
-                  {isBn ? 'নতুন ক্যাটাগরি যুক্ত করুন' : 'Add New Category'}
+                  {editingCategory
+                    ? isBn
+                      ? 'ক্যাটাগরি এডিট করুন'
+                      : 'Edit Category'
+                    : isBn
+                    ? 'নতুন ক্যাটাগরি যোগ করুন'
+                    : 'Add New Category'}
                 </h3>
                 <button
                   type="button"
@@ -264,43 +261,43 @@ export function CategoryManager() {
                 </button>
               </div>
 
-              <form onSubmit={handleAddSubmit} className="flex flex-col gap-4 mt-4 text-xs">
+              <form onSubmit={handleFormSubmit} className="flex flex-col gap-4 mt-4 text-xs">
                 <div>
                   <label className="font-bold text-foreground block mb-1">
-                    Category Name (English) *
+                    Category Name *
                   </label>
                   <input
                     type="text"
                     required
-                    value={formData.nameEn}
-                    onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })}
-                    placeholder="Ex: Herbal & Natural"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Ex: Antibiotics & Anti-infectives"
                     className="h-10 w-full rounded-xl border border-border bg-background px-3 text-xs focus:border-primary focus:outline-none"
                   />
                 </div>
 
                 <div>
                   <label className="font-bold text-foreground block mb-1">
-                    Category Name (Bengali)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.nameBn}
-                    onChange={(e) => setFormData({ ...formData, nameBn: e.target.value })}
-                    placeholder="Ex: হার্বাল ও ন্যাচারাল"
-                    className="h-10 w-full rounded-xl border border-border bg-background px-3 text-xs focus:border-primary focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="font-bold text-foreground block mb-1">
-                    URL Slug (Optional)
+                    URL Slug (Auto-generated if empty)
                   </label>
                   <input
                     type="text"
                     value={formData.slug}
                     onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                    placeholder="herbal-natural"
+                    placeholder="antibiotics-anti-infectives"
+                    className="h-10 w-full rounded-xl border border-border bg-background px-3 text-xs focus:border-primary focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-foreground block mb-1">
+                    Image URL
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.image}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                    placeholder="https://images.unsplash.com/..."
                     className="h-10 w-full rounded-xl border border-border bg-background px-3 text-xs focus:border-primary focus:outline-none"
                   />
                 </div>
@@ -309,12 +306,12 @@ export function CategoryManager() {
                   <input
                     type="checkbox"
                     id="catPopular"
-                    checked={formData.isPopular}
-                    onChange={(e) => setFormData({ ...formData, isPopular: e.target.checked })}
+                    checked={formData.isFeatured}
+                    onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
                     className="h-4 w-4 rounded border-border text-primary"
                   />
-                  <label htmlFor="catPopular" className="font-bold text-foreground">
-                    Highlight as Popular Category on Homepage
+                  <label htmlFor="catPopular" className="font-bold text-foreground cursor-pointer">
+                    Highlight as Featured Category on Homepage
                   </label>
                 </div>
 
@@ -322,16 +319,18 @@ export function CategoryManager() {
                   <button
                     type="button"
                     onClick={() => setIsAddModalOpen(false)}
-                    className="rounded-xl border border-border px-4 py-2 text-xs font-bold text-foreground hover:bg-muted"
+                    className="rounded-xl border border-border px-4 py-2 text-xs font-bold text-foreground hover:bg-muted cursor-pointer"
                   >
                     Cancel
                   </button>
 
                   <button
                     type="submit"
-                    className="rounded-xl bg-primary px-5 py-2 text-xs font-bold text-white hover:bg-primary-dark shadow-md"
+                    disabled={isCreating}
+                    className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2 text-xs font-bold text-white hover:bg-primary-dark shadow-md disabled:opacity-70 cursor-pointer"
                   >
-                    Add Category
+                    {isCreating && <Loader2 className="h-4 w-4 animate-spin text-white" />}
+                    <span>{editingCategory ? 'Save Changes' : 'Add Category'}</span>
                   </button>
                 </div>
               </form>
@@ -342,4 +341,3 @@ export function CategoryManager() {
     </div>
   );
 }
-

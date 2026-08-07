@@ -74,7 +74,7 @@ export function CategoryChips() {
             className="flex shrink-0 items-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground shadow-2xs transition-transform active:scale-95 hover:border-primary hover:bg-primary/5"
           >
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10">
-              {CATEGORY_ICONS[cat.iconName] || <Pill className="h-4 w-4 text-primary" />}
+              {CATEGORY_ICONS[cat.iconName || 'Pill'] || <Pill className="h-4 w-4 text-primary" />}
             </span>
             <span className="whitespace-nowrap">{isBn ? cat.nameBn : cat.nameEn}</span>
           </Link>
