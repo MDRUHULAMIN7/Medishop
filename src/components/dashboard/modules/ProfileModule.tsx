@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Camera, Loader2, Edit2, ShieldCheck, CheckCircle2, Phone, Mail, User as UserIcon, Calendar, Lock } from 'lucide-react';
+import { Camera, Loader2, Edit2, ShieldCheck, CheckCircle2, Phone, Mail, Lock } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { RBAC_ROLES_CONFIG } from '@/config/rbac.config';
 
@@ -48,13 +48,10 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
   const handleProfileSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const payload: { name?: string; phone?: string; email?: string } = {};
-
-    if (name.trim()) payload.name = name.trim();
-    if (phone.trim()) payload.phone = phone.trim();
-    if (email.trim()) payload.email = email.trim();
-
-    await updateProfile(payload);
+    // Send only name (Email and Phone are immutable identity fields)
+    await updateProfile({
+      name: name.trim(),
+    });
   };
 
   return (
@@ -149,21 +146,22 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
         </div>
       </div>
 
-      {/* Profile Details Form (Strict Backend Contract) */}
+      {/* Profile Details Form (Identity Email & Phone Locked) */}
       <div className="rounded-3xl border border-border bg-background p-6 shadow-xs space-y-6">
         <div className="pb-4 border-b border-border">
           <h3 className="text-base font-bold text-foreground font-serif-title">
-            {isBn ? 'অফিসিয়াল প্রোফাইল তথ্য আপডেট' : 'Backend Profile Information'}
+            {isBn ? 'প্রোফাইল তথ্য ও ছবি পরিবর্তন' : 'Update Name & Profile Avatar'}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             {isBn
-              ? 'নাম, মোবাইল নম্বর, ইমেইল ও প্রোফাইল ছবি সেটিং (ছবির সাইজ সর্বোচ্চ 5MB)'
-              : 'Update name, mobile, email and profile avatar (Max 5MB image size)'}
+              ? 'আপনার নাম ও প্রোফাইল ছবি আপডেট করতে পারেন (সিকিউরিটির কারণে ইমেইল ও মোবাইল অপরিবর্তনযোগ্য)'
+              : 'Update your display name and avatar (Email and Phone are locked for account security)'}
           </p>
         </div>
 
         <form onSubmit={handleProfileSave} className="space-y-4 max-w-3xl">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Editable Name */}
             <div>
               <label className="block text-xs font-bold text-foreground mb-1">
                 {isBn ? 'পূর্ণ নাম (Name)' : 'Full Name'}
@@ -182,53 +180,69 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
               )}
             </div>
 
+            {/* Read-only Phone (Locked) */}
             <div>
-              <label className="block text-xs font-bold text-foreground mb-1">
-                {isBn ? 'মোবাইল নম্বর (BD Phone)' : 'BD Phone Number'}
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-foreground">
+                  {isBn ? 'মোবাইল নম্বর (Phone)' : 'Phone Number'}
+                </label>
+                <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600">
+                  <Lock className="h-3 w-3" />
+                  {isBn ? 'লক করা' : 'Locked'}
+                </span>
+              </div>
               <input
                 type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Ex: 01711000000"
-                className={`w-full rounded-xl border px-3.5 py-2.5 text-xs font-semibold text-foreground focus:border-primary focus:bg-background focus:outline-hidden focus:ring-2 focus:ring-primary/20 ${
-                  fieldErrors.phone ? 'border-rose-400 bg-rose-50' : 'border-border bg-muted/30'
-                }`}
+                value={phone || (isBn ? 'যুক্ত করা হয়নি' : 'Not Provided')}
+                disabled
+                readOnly
+                className="w-full rounded-xl border border-border bg-muted/60 px-3.5 py-2.5 text-xs font-bold text-muted-foreground cursor-not-allowed select-none"
               />
-              {fieldErrors.phone && (
-                <span className="text-[11px] font-bold text-rose-500">{fieldErrors.phone}</span>
-              )}
+              <span className="text-[10px] text-muted-foreground mt-0.5 block">
+                {isBn
+                  ? 'অ্যাকাউন্ট সিকিউরিটির জন্য মোবাইল নম্বর পরিবর্তন করা যাবে না'
+                  : 'Phone number cannot be changed for account security'}
+              </span>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Read-only Email (Locked) */}
             <div>
-              <label className="block text-xs font-bold text-foreground mb-1">
-                {isBn ? 'ইমেইল ঠিকানা (Email Address)' : 'Email Address'}
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-foreground">
+                  {isBn ? 'ইমেইল অ্যাড্রেস (Email)' : 'Email Address'}
+                </label>
+                <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600">
+                  <Lock className="h-3 w-3" />
+                  {isBn ? 'লক করা' : 'Locked'}
+                </span>
+              </div>
               <input
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Ex: user@medishop.com.bd"
-                className={`w-full rounded-xl border px-3.5 py-2.5 text-xs font-semibold text-foreground focus:border-primary focus:bg-background focus:outline-hidden focus:ring-2 focus:ring-primary/20 ${
-                  fieldErrors.email ? 'border-rose-400 bg-rose-50' : 'border-border bg-muted/30'
-                }`}
+                value={email || (isBn ? 'যুক্ত করা হয়নি' : 'Not Provided')}
+                disabled
+                readOnly
+                className="w-full rounded-xl border border-border bg-muted/60 px-3.5 py-2.5 text-xs font-bold text-muted-foreground cursor-not-allowed select-none"
               />
-              {fieldErrors.email && (
-                <span className="text-[11px] font-bold text-rose-500">{fieldErrors.email}</span>
-              )}
+              <span className="text-[10px] text-muted-foreground mt-0.5 block">
+                {isBn
+                  ? 'অ্যাকাউন্ট সিকিউরিটির জন্য ইমেইল পরিবর্তন করা যাবে না'
+                  : 'Email address cannot be changed for account security'}
+              </span>
             </div>
 
+            {/* Read-only Role */}
             <div>
               <label className="block text-xs font-bold text-foreground mb-1">
-                {isBn ? 'অ্যাকাউন্ট ভূমিকা (Account Role)' : 'Account Role'}
+                {isBn ? 'অ্যাকাউন্ট ভূমিকা (Role)' : 'Account Role'}
               </label>
               <input
                 type="text"
                 disabled
+                readOnly
                 value={isBn ? roleConfig.titleBn : roleConfig.titleEn}
-                className="w-full rounded-xl border border-border bg-muted/60 px-3.5 py-2.5 text-xs font-bold text-muted-foreground cursor-not-allowed"
+                className="w-full rounded-xl border border-border bg-muted/60 px-3.5 py-2.5 text-xs font-bold text-muted-foreground cursor-not-allowed select-none"
               />
             </div>
           </div>
@@ -247,7 +261,7 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
               ) : (
                 <>
                   <Edit2 className="h-4 w-4" />
-                  <span>{isBn ? 'পরিবর্তন সংরক্ষণ করুন' : 'Save Profile Changes'}</span>
+                  <span>{isBn ? 'নাম পরিবর্তন সংরক্ষণ করুন' : 'Save Name Changes'}</span>
                 </>
               )}
             </button>
