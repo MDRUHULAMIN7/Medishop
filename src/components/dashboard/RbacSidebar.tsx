@@ -62,18 +62,16 @@ export function RbacSidebar({
 }: RbacSidebarProps) {
   const roleConfig = RBAC_ROLES_CONFIG[currentRole] || RBAC_ROLES_CONFIG.customer;
 
-  // Filter menu items allowed for the current role
   const allowedMenuItems = RBAC_MENU_ITEMS.filter((item) =>
     item.roles.includes(currentRole)
   );
 
-  // Group menu items by category with user-friendly headers
   const categories: {
     key: RbacMenuItem['category'];
     titleEn: string;
     titleBn: string;
   }[] = [
-    { key: 'personal', titleEn: 'MY ACCOUNT & PROFILE', titleBn: 'মাই একাউন্ট ও প্রোফাইল' },
+    { key: 'customer', titleEn: 'PATIENT ORDERS & RX', titleBn: 'অর্ডার ও প্রেসক্রিপশন' },
     { key: 'clinical', titleEn: 'PHARMACY CLINICAL AUDIT', titleBn: 'ফার্মেসী ক্লিনিকাল অডিট' },
     { key: 'sales', titleEn: 'COUNTER POS TERMINAL', titleBn: 'কাউন্টার সেলস (POS)' },
     { key: 'inventory', titleEn: 'INVENTORY & CATALOG', titleBn: 'স্টক ও প্রোডাক্ট ক্যাটালগ' },

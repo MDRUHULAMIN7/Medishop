@@ -8,8 +8,6 @@ import { RbacSidebar } from './RbacSidebar';
 import { RbacHeader } from './RbacHeader';
 
 // Import Tab Modules
-import { ProfileModule } from './modules/ProfileModule';
-import { AddressesModule } from './modules/AddressesModule';
 import { AdminUserManagerModule } from './modules/AdminUserManagerModule';
 import { PrescriptionAuditModule } from './modules/PrescriptionAuditModule';
 import { PosSalesModule } from './modules/PosSalesModule';
@@ -28,8 +26,8 @@ export function RbacDashboardLayout() {
   const isBn = language === 'bn';
 
   // Active Role state (Defaults to logged-in user role or 'customer')
-  const [currentRole, setCurrentRole] = useState<UserRole>('customer');
-  const [activeTab, setActiveTab] = useState<RbacTabId>('profile');
+  const [currentRole, setCurrentRole] = useState<UserRole>('admin');
+  const [activeTab, setActiveTab] = useState<RbacTabId>('admin_analytics');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Sync currentRole when reduxUser updates
@@ -45,18 +43,18 @@ export function RbacDashboardLayout() {
     // Ensure activeTab is permitted for new role
     const allowed = RBAC_MENU_ITEMS.filter((item) => item.roles.includes(newRole));
     if (!allowed.some((item) => item.id === activeTab)) {
-      setActiveTab(allowed[0]?.id || 'profile');
+      setActiveTab(allowed[0]?.id || 'admin_analytics');
     }
   };
 
   const renderActiveModule = () => {
     switch (activeTab) {
-      case 'profile':
-        return <ProfileModule isBn={isBn} />;
-      case 'addresses':
-        return <AddressesModule isBn={isBn} />;
-      case 'orders_me':
-        return <OrderManager />;
+      case 'admin_analytics':
+        return <AdminAnalyticsModule isBn={isBn} />;
+      case 'admin_users':
+        return <AdminUserManagerModule isBn={isBn} />;
+      case 'admin_coupons':
+        return <PaymentManager />;
       case 'prescriptions_audit':
         return <PrescriptionAuditModule isBn={isBn} />;
       case 'pos_sales':
@@ -72,14 +70,12 @@ export function RbacDashboardLayout() {
         );
       case 'inventory_low_stock':
         return <InventoryProductsModule isBn={isBn} />;
-      case 'admin_analytics':
-        return <AdminAnalyticsModule isBn={isBn} />;
-      case 'admin_users':
-        return <AdminUserManagerModule isBn={isBn} />;
-      case 'admin_coupons':
-        return <PaymentManager />;
+      case 'orders_customer':
+        return <OrderManager />;
+      case 'prescriptions_customer':
+        return <PrescriptionAuditModule isBn={isBn} />;
       default:
-        return <ProfileModule isBn={isBn} />;
+        return <AdminAnalyticsModule isBn={isBn} />;
     }
   };
 

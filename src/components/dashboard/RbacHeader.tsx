@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Menu,
   Globe,
@@ -45,6 +46,7 @@ export function RbacHeader({
   onSelectTab,
   isBn = true,
 }: RbacHeaderProps) {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   const activeRoleConfig = RBAC_ROLES_CONFIG[currentRole] || RBAC_ROLES_CONFIG.customer;
@@ -173,8 +175,8 @@ export function RbacHeader({
                 <button
                   type="button"
                   onClick={() => {
-                    onSelectTab('profile');
                     setIsProfileDropdownOpen(false);
+                    router.push('/profile');
                   }}
                   className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted cursor-pointer"
                 >

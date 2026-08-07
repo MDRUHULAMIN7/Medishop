@@ -2,6 +2,7 @@ import { UserRole } from '@/types';
 
 export interface RbacRoleInfo {
   role: UserRole;
+  route: string;
   titleEn: string;
   titleBn: string;
   descriptionEn: string;
@@ -13,18 +14,16 @@ export interface RbacRoleInfo {
 }
 
 export type RbacTabId =
-  | 'profile'
-  | 'addresses'
-  | 'orders_me'
-  | 'prescriptions_me'
+  | 'admin_analytics'
+  | 'admin_users'
+  | 'admin_coupons'
   | 'prescriptions_audit'
   | 'pos_sales'
   | 'inventory_products'
   | 'inventory_categories'
   | 'inventory_low_stock'
-  | 'admin_analytics'
-  | 'admin_users'
-  | 'admin_coupons';
+  | 'orders_customer'
+  | 'prescriptions_customer';
 
 export interface RbacMenuItem {
   id: RbacTabId;
@@ -33,25 +32,27 @@ export interface RbacMenuItem {
   descriptionEn?: string;
   descriptionBn?: string;
   iconName: string;
-  category: 'personal' | 'clinical' | 'sales' | 'inventory' | 'administration';
+  category: 'clinical' | 'sales' | 'inventory' | 'administration' | 'customer';
   roles: UserRole[];
   badgeCount?: number;
 }
 
 export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
-  customer: {
-    role: 'customer',
-    titleEn: 'Customer / Patient',
-    titleBn: 'গ্রাহক / পেশেন্ট',
-    descriptionEn: 'Manage prescriptions, order history, and delivery addresses',
-    descriptionBn: 'প্রেসক্রিপশন আপলোড, অর্ডারের হিস্ট্রি ও ডেলিভারি এড্রেস কন্ট্রোল',
-    badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    badgeText: 'text-emerald-700',
-    badgeBorder: 'border-emerald-200',
-    iconName: 'User',
+  admin: {
+    role: 'admin',
+    route: '/dashboard/admin',
+    titleEn: 'Super Administrator',
+    titleBn: 'সিস্টেম এডমিন',
+    descriptionEn: 'Full system control, sales analytics, user status block & coupons',
+    descriptionBn: 'সম্পূর্ণ সিস্টেম একসেস, সেলস এনালাইটিক্স, ইউজার ব্লক ও কুপন',
+    badgeBg: 'bg-rose-50 text-rose-700 border-rose-200',
+    badgeText: 'text-rose-700',
+    badgeBorder: 'border-rose-200',
+    iconName: 'ShieldAlert',
   },
   pharmacist: {
     role: 'pharmacist',
+    route: '/dashboard/pharmacist',
     titleEn: 'Licensed Pharmacist',
     titleBn: 'রেজিস্টার্ড ফার্মাসিস্ট',
     descriptionEn: 'Audit Rx prescriptions, verify OTC compliance & counter sales',
@@ -63,6 +64,7 @@ export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
   },
   sales_staff: {
     role: 'sales_staff',
+    route: '/dashboard/sales',
     titleEn: 'Sales & POS Staff',
     titleBn: 'সেলস ও কাউন্টার স্টাফ',
     descriptionEn: 'Process fast counter sales, print billing receipts & register cash',
@@ -74,6 +76,7 @@ export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
   },
   inventory_manager: {
     role: 'inventory_manager',
+    route: '/dashboard/inventory',
     titleEn: 'Inventory Manager',
     titleBn: 'ইনভেন্টরি ম্যানেজার',
     descriptionEn: 'Manage stock levels, batch expiry dates, categories & brands',
@@ -83,63 +86,22 @@ export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
     badgeBorder: 'border-indigo-200',
     iconName: 'Package',
   },
-  admin: {
-    role: 'admin',
-    titleEn: 'Super Administrator',
-    titleBn: 'সিস্টেম এডমিন',
-    descriptionEn: 'Full system control, sales analytics, user status block & coupons',
-    descriptionBn: 'সম্পূর্ণ সিস্টেম একসেস, সেলস এনালাইটিক্স, ইউজার ব্লক ও কুপন',
-    badgeBg: 'bg-rose-50 text-rose-700 border-rose-200',
-    badgeText: 'text-rose-700',
-    badgeBorder: 'border-rose-200',
-    iconName: 'ShieldAlert',
+  customer: {
+    role: 'customer',
+    route: '/dashboard/customer',
+    titleEn: 'Customer / Patient',
+    titleBn: 'গ্রাহক / পেশেন্ট',
+    descriptionEn: 'Track placed orders, prescriptions, and health history',
+    descriptionBn: 'অর্ডারের ট্র্যাকিং, আপলোড করা প্রেসক্রিপশন ও হিস্ট্রি',
+    badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    badgeText: 'text-emerald-700',
+    badgeBorder: 'border-emerald-200',
+    iconName: 'User',
   },
 };
 
 export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
-  // 1. Personal Account Section
-  {
-    id: 'profile',
-    labelEn: 'Personal Profile',
-    labelBn: 'মাই প্রোফাইল সেটিং',
-    descriptionEn: 'Update name, mobile, email and profile picture (Max 5MB)',
-    descriptionBn: 'নাম, মোবাইল, ইমেইল ও প্রোফাইল ছবি পরিবর্তন (সর্বোচ্চ 5MB)',
-    iconName: 'User',
-    category: 'personal',
-    roles: ['customer', 'pharmacist', 'sales_staff', 'inventory_manager', 'admin'],
-  },
-  {
-    id: 'addresses',
-    labelEn: 'Delivery Addresses',
-    labelBn: 'শিপিং এড্রেস বুক',
-    descriptionEn: 'Manage primary and multiple saved delivery addresses',
-    descriptionBn: 'একাধিক ডেলিভারি ঠিকানা যোগ ও ডিফল্ট এড্রেস নির্বাচন',
-    iconName: 'MapPin',
-    category: 'personal',
-    roles: ['customer', 'pharmacist', 'sales_staff', 'inventory_manager', 'admin'],
-  },
-  {
-    id: 'orders_me',
-    labelEn: 'My Order History',
-    labelBn: 'আমার অনলাইন অর্ডারস',
-    descriptionEn: 'Track placed medicine orders, status updates and invoices',
-    descriptionBn: 'অর্ডারের লাইভ স্টেটাস, ট্র্যাকিং ও ট্যাক্স ইনভয়েস',
-    iconName: 'PackageCheck',
-    category: 'personal',
-    roles: ['customer', 'admin'],
-  },
-  {
-    id: 'prescriptions_me',
-    labelEn: 'My Prescriptions',
-    labelBn: 'প্রেসক্রিপশন ফাইলস',
-    descriptionEn: 'Upload medical prescription PDFs or photos for verification',
-    descriptionBn: 'প্রেসক্রিপশন ফাইল আপলোড ও ডাক্তার প্রেসক্রিপশন রেকর্ডস',
-    iconName: 'FileText',
-    category: 'personal',
-    roles: ['customer', 'admin'],
-  },
-
-  // 2. Clinical Section
+  // 1. Clinical Section (Pharmacist & Admin)
   {
     id: 'prescriptions_audit',
     labelEn: 'Rx Audit & Verification',
@@ -151,7 +113,7 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
     roles: ['pharmacist', 'admin'],
   },
 
-  // 3. Counter POS Section
+  // 2. Counter POS Section (Sales Staff, Pharmacist & Admin)
   {
     id: 'pos_sales',
     labelEn: 'Counter POS Terminal',
@@ -163,7 +125,7 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
     roles: ['sales_staff', 'pharmacist', 'admin'],
   },
 
-  // 4. Inventory Section
+  // 3. Inventory Section (Inventory Manager & Admin)
   {
     id: 'inventory_products',
     labelEn: 'Medicine Catalog',
@@ -195,7 +157,7 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
     roles: ['inventory_manager', 'pharmacist', 'admin'],
   },
 
-  // 5. Administration Section
+  // 4. Administration Section (Admin only)
   {
     id: 'admin_analytics',
     labelEn: 'Sales & Revenue KPIs',
@@ -225,5 +187,27 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
     iconName: 'Ticket',
     category: 'administration',
     roles: ['admin'],
+  },
+
+  // 5. Customer Section (Customer & Admin)
+  {
+    id: 'orders_customer',
+    labelEn: 'My Order History',
+    labelBn: 'আমার অর্ডার হিস্ট্রি',
+    descriptionEn: 'Track online medicine orders, delivery status and invoices',
+    descriptionBn: 'অর্ডারের লাইভ স্টেটাস, ট্র্যাকিং ও ট্যাক্স ইনভয়েস',
+    iconName: 'PackageCheck',
+    category: 'customer',
+    roles: ['customer', 'admin'],
+  },
+  {
+    id: 'prescriptions_customer',
+    labelEn: 'My Prescriptions',
+    labelBn: 'আমার প্রেসক্রিপশন ফাইলস',
+    descriptionEn: 'Uploaded doctor prescription records',
+    descriptionBn: 'প্রেসক্রিপশন ফাইলস ও স্বাস্থ্য সংক্রান্ত তথ্য',
+    iconName: 'FileText',
+    category: 'customer',
+    roles: ['customer', 'admin'],
   },
 ];
