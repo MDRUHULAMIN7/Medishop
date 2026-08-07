@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Camera, Loader2, Edit2, ShieldCheck, CheckCircle2, Phone, Mail } from 'lucide-react';
+import { Camera, Loader2, Edit2, ShieldCheck, CheckCircle2, Phone, Mail, User as UserIcon, Calendar, Lock } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { RBAC_ROLES_CONFIG } from '@/config/rbac.config';
 
 interface ProfileModuleProps {
   isBn?: boolean;
@@ -15,9 +16,6 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [gender, setGender] = useState('Male');
-  const [bloodGroup, setBloodGroup] = useState('O+');
-  const [emergencyPhone, setEmergencyPhone] = useState('01898765432');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -29,6 +27,8 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
       setEmail(user.email || '');
     }
   }, [user]);
+
+  const roleConfig = user?.role ? RBAC_ROLES_CONFIG[user.role] : RBAC_ROLES_CONFIG.customer;
 
   const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -59,7 +59,7 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
 
   return (
     <div className="space-y-6">
-      {/* User Hero Banner */}
+      {/* User Hero Banner with Real Backend Data */}
       <div className="rounded-3xl border border-border bg-background p-6 shadow-xs flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
         <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
           {/* Avatar Circle with Upload Trigger */}
@@ -85,7 +85,7 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
               className="hidden"
             />
 
-            {/* Camera Icon Overlay */}
+            {/* Camera Overlay */}
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
@@ -103,23 +103,27 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
               )}
             </button>
 
-            <div
-              className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-xs z-10"
-              title="Verified Customer"
-            >
-              <CheckCircle2 className="h-4 w-4" />
-            </div>
+            {user?.isVerified && (
+              <div
+                className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-xs z-10"
+                title="Verified Account"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+              </div>
+            )}
           </div>
 
           {/* Basic Info */}
           <div>
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
               <h1 className="text-xl sm:text-2xl font-black text-foreground font-serif-title">
-                {name || (isBn ? 'গ্রাহক প্রোফাইল' : 'Customer Profile')}
+                {name || (isBn ? 'ইউজার প্রোফাইল' : 'User Profile')}
               </h1>
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-700 border border-emerald-200">
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold border ${roleConfig.badgeBg}`}
+              >
                 <ShieldCheck className="h-3 w-3" />
-                {isBn ? 'ডিজিডিএ ভেরিফাইড পেশেন্ট' : 'Verified DGDA Account'}
+                {isBn ? roleConfig.titleBn : roleConfig.titleEn}
               </span>
             </div>
 
@@ -136,21 +140,25 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
                   {email}
                 </span>
               )}
+              <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                {isBn ? 'অ্যাকাউন্ট স্ট্যাটাস: এক্টিভ' : 'Account Status: Active'}
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Profile Details Form */}
+      {/* Profile Details Form (Strict Backend Contract) */}
       <div className="rounded-3xl border border-border bg-background p-6 shadow-xs space-y-6">
         <div className="pb-4 border-b border-border">
           <h3 className="text-base font-bold text-foreground font-serif-title">
-            {isBn ? 'প্রোফাইল তথ্য পরিবর্তন করুন' : 'Update Personal Information'}
+            {isBn ? 'অফিসিয়াল প্রোফাইল তথ্য আপডেট' : 'Backend Profile Information'}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             {isBn
-              ? 'আপনার সঠিক তথ্য ও ছবি আপডেট রাখুন (ছবির সাইজ সর্বোচ্চ 5MB)'
-              : 'Keep your personal details and profile picture updated (Max 5MB avatar size)'}
+              ? 'নাম, মোবাইল নম্বর, ইমেইল ও প্রোফাইল ছবি সেটিং (ছবির সাইজ সর্বোচ্চ 5MB)'
+              : 'Update name, mobile, email and profile avatar (Max 5MB image size)'}
           </p>
         </div>
 
@@ -158,12 +166,13 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-foreground mb-1">
-                {isBn ? 'পূর্ণ নাম' : 'Full Name'}
+                {isBn ? 'পূর্ণ নাম (Name)' : 'Full Name'}
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                placeholder="Ex: Nurul Islam"
                 className={`w-full rounded-xl border px-3.5 py-2.5 text-xs font-semibold text-foreground focus:border-primary focus:bg-background focus:outline-hidden focus:ring-2 focus:ring-primary/20 ${
                   fieldErrors.name ? 'border-rose-400 bg-rose-50' : 'border-border bg-muted/30'
                 }`}
@@ -175,12 +184,13 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
 
             <div>
               <label className="block text-xs font-bold text-foreground mb-1">
-                {isBn ? 'মোবাইল নম্বর' : 'Mobile Number'}
+                {isBn ? 'মোবাইল নম্বর (BD Phone)' : 'BD Phone Number'}
               </label>
               <input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
+                placeholder="Ex: 01711000000"
                 className={`w-full rounded-xl border px-3.5 py-2.5 text-xs font-semibold text-foreground focus:border-primary focus:bg-background focus:outline-hidden focus:ring-2 focus:ring-primary/20 ${
                   fieldErrors.phone ? 'border-rose-400 bg-rose-50' : 'border-border bg-muted/30'
                 }`}
@@ -194,12 +204,13 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-foreground mb-1">
-                {isBn ? 'ইমেইল অ্যাড্রেস' : 'Email Address'}
+                {isBn ? 'ইমেইল ঠিকানা (Email Address)' : 'Email Address'}
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="Ex: user@medishop.com.bd"
                 className={`w-full rounded-xl border px-3.5 py-2.5 text-xs font-semibold text-foreground focus:border-primary focus:bg-background focus:outline-hidden focus:ring-2 focus:ring-primary/20 ${
                   fieldErrors.email ? 'border-rose-400 bg-rose-50' : 'border-border bg-muted/30'
                 }`}
@@ -211,47 +222,13 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
 
             <div>
               <label className="block text-xs font-bold text-foreground mb-1">
-                {isBn ? 'লিঙ্গ' : 'Gender'}
-              </label>
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                className="w-full rounded-xl border border-border bg-muted/30 px-3.5 py-2.5 text-xs font-semibold text-foreground focus:border-primary focus:bg-background focus:outline-hidden focus:ring-2 focus:ring-primary/20"
-              >
-                <option value="Male">Male (পুরুষ)</option>
-                <option value="Female">Female (নারী)</option>
-                <option value="Other">Other (অন্যান্য)</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-foreground mb-1">
-                {isBn ? 'রক্তের গ্রুপ (Blood Group)' : 'Blood Group'}
-              </label>
-              <select
-                value={bloodGroup}
-                onChange={(e) => setBloodGroup(e.target.value)}
-                className="w-full rounded-xl border border-border bg-muted/30 px-3.5 py-2.5 text-xs font-semibold text-foreground focus:border-primary focus:bg-background focus:outline-hidden focus:ring-2 focus:ring-primary/20"
-              >
-                {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map((bg) => (
-                  <option key={bg} value={bg}>
-                    {bg}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-foreground mb-1">
-                {isBn ? 'জরুরি পরিচিতির মোবাইল' : 'Emergency Contact Phone'}
+                {isBn ? 'অ্যাকাউন্ট ভূমিকা (Account Role)' : 'Account Role'}
               </label>
               <input
-                type="tel"
-                value={emergencyPhone}
-                onChange={(e) => setEmergencyPhone(e.target.value)}
-                className="w-full rounded-xl border border-border bg-muted/30 px-3.5 py-2.5 text-xs font-semibold text-foreground focus:border-primary focus:bg-background focus:outline-hidden focus:ring-2 focus:ring-primary/20"
+                type="text"
+                disabled
+                value={isBn ? roleConfig.titleBn : roleConfig.titleEn}
+                className="w-full rounded-xl border border-border bg-muted/60 px-3.5 py-2.5 text-xs font-bold text-muted-foreground cursor-not-allowed"
               />
             </div>
           </div>
@@ -270,7 +247,7 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
               ) : (
                 <>
                   <Edit2 className="h-4 w-4" />
-                  <span>{isBn ? 'পরিবর্তন সংরক্ষণ করুন' : 'Save Changes'}</span>
+                  <span>{isBn ? 'পরিবর্তন সংরক্ষণ করুন' : 'Save Profile Changes'}</span>
                 </>
               )}
             </button>
