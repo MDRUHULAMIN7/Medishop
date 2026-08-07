@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   Truck,
   Globe,
+  LayoutDashboard,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { setSearchQuery, setLanguage } from '@/store/slices/uiSlice';
@@ -273,6 +274,14 @@ export function Navbar() {
                           {user?.phone || user?.email}
                         </p>
                       </div>
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setIsAccountDropdownOpen(false)}
+                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-extrabold text-primary bg-primary/10 hover:bg-primary hover:text-white transition-all shadow-xs"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        <span>{isBn ? 'ড্যাশবোর্ড (Dashboard)' : 'Dashboard'}</span>
+                      </Link>
                       <Link
                         href="/profile"
                         onClick={() => setIsAccountDropdownOpen(false)}

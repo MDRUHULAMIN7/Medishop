@@ -18,6 +18,7 @@ import {
   ShieldPlus,
   Sparkles,
   Apple,
+  LayoutDashboard,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { setMobileMenu, setLanguage } from '@/store/slices/uiSlice';
@@ -129,17 +130,38 @@ export function MobileMenuDrawer() {
               {/* User Greeting / Auth Status */}
               <div className="mb-6 rounded-xl bg-muted/60 p-4">
                 {isAuthenticated ? (
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary font-bold text-white">
-                      {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary font-bold text-white">
+                        {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">
+                          {user?.name || (isBn ? 'গ্রাহক' : 'Customer')}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {user?.phone || user?.email || (isBn ? 'লগইন আছে' : 'Logged in')}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">
-                        {user?.name || (isBn ? 'গ্রাহক' : 'Customer')}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {user?.phone || user?.email || (isBn ? 'লগইন আছে' : 'Logged in')}
-                      </p>
+
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/60">
+                      <Link
+                        href="/dashboard"
+                        onClick={handleClose}
+                        className="flex items-center justify-center gap-1.5 rounded-lg bg-primary py-2 px-3 text-xs font-bold text-white shadow-xs"
+                      >
+                        <LayoutDashboard className="h-3.5 w-3.5" />
+                        <span>{isBn ? 'ড্যাশবোর্ড' : 'Dashboard'}</span>
+                      </Link>
+                      <Link
+                        href="/profile"
+                        onClick={handleClose}
+                        className="flex items-center justify-center gap-1.5 rounded-lg border border-border bg-background py-2 px-3 text-xs font-bold text-foreground hover:bg-muted"
+                      >
+                        <UserIcon className="h-3.5 w-3.5 text-primary" />
+                        <span>{isBn ? 'প্রোফাইল' : 'Profile'}</span>
+                      </Link>
                     </div>
                   </div>
                 ) : (
