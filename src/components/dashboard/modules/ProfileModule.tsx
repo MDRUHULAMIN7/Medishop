@@ -24,9 +24,9 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
 
   useEffect(() => {
     if (user) {
-      if (user.name) setName(user.name);
-      if (user.phone) setPhone(user.phone);
-      if (user.email) setEmail(user.email);
+      setName(user.name || '');
+      setPhone(user.phone || '');
+      setEmail(user.email || '');
     }
   }, [user]);
 
@@ -47,11 +47,14 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
 
   const handleProfileSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateProfile({
-      name,
-      phone,
-      email,
-    });
+
+    const payload: { name?: string; phone?: string; email?: string } = {};
+
+    if (name.trim()) payload.name = name.trim();
+    if (phone.trim()) payload.phone = phone.trim();
+    if (email.trim()) payload.email = email.trim();
+
+    await updateProfile(payload);
   };
 
   return (

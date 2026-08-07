@@ -9,16 +9,16 @@ export const ADDRESSES_STORAGE_KEY = 'medishop_addresses_v1';
  */
 export function mapUserAddressToShippingAddress(addr: UserAddress): ShippingAddress {
   return {
-    id: addr.id,
-    fullName: addr.recipientName || '',
-    recipientName: addr.recipientName || '',
-    phone: addr.phone || '',
+    id: addr.id || (addr as any)._id?.toString() || `addr-${Date.now()}`,
+    fullName: addr.recipientName || 'Recipient Name',
+    recipientName: addr.recipientName || 'Recipient Name',
+    phone: addr.phone || '01700000000',
     division: addr.division || 'Dhaka',
-    district: addr.district || '',
-    area: addr.thana || '',
-    thana: addr.thana || '',
-    streetAddress: addr.addressLine || '',
-    addressLine: addr.addressLine || '',
+    district: addr.district || 'Dhaka',
+    area: addr.thana || 'Thana',
+    thana: addr.thana || 'Thana',
+    streetAddress: addr.addressLine || 'Street Address',
+    addressLine: addr.addressLine || 'Street Address',
     postalCode: addr.postalCode || '',
     label: (addr.label as any) || 'Home',
     isDefault: Boolean(addr.isDefault),
@@ -27,7 +27,7 @@ export function mapUserAddressToShippingAddress(addr: UserAddress): ShippingAddr
 
 export class AddressService {
   /**
-   * Fetch all shipping addresses for current authenticated user.
+   * Fetch all shipping addresses for current authenticated user from backend API (/users/me/addresses).
    */
   public async getAddresses(): Promise<ShippingAddress[]> {
     try {
@@ -38,8 +38,8 @@ export class AddressService {
         return mapped;
       }
       return this.getFromStorage();
-    } catch {
-      // Fallback to local storage if offline/guest
+    } catch (err) {
+      console.warn('Backend getAddresses failed, falling back to local state:', err);
       return this.getFromStorage();
     }
   }
@@ -50,26 +50,27 @@ export class AddressService {
   }
 
   /**
-   * Add new or edit existing shipping address via backend API.
+   * Add new or edit existing shipping address via backend API (/users/me/addresses).
    */
   public async saveAddress(
     addressData: Partial<ShippingAddress> & { id?: string; recipientName?: string; thana?: string; addressLine?: string }
   ): Promise<ShippingAddress> {
-    const recipientName = addressData.recipientName || addressData.fullName || 'Recipient Name';
-    const thana = addressData.thana || addressData.area || 'Thana';
-    const addressLine = addressData.addressLine || addressData.streetAddress || 'Street Address';
-    const district = addressData.district || 'Dhaka';
-    const phone = addressData.phone || '01700000000';
+    const recipientName = (addressData.recipientName || addressData.fullName || 'Recipient Name').trim();
+    const thana = (addressData.thana || addressData.area || 'Thana').trim();
+    const addressLine = (addressData.addressLine || addressData.streetAddress || 'Street Address').trim();
+    const district = (addressData.district || 'Dhaka').trim();
+    const rawPhone = (addressData.phone || '01700000000').trim();
+    const phone = rawPhone.replace(/[\s-]/g, '');
 
     const payload = {
-      label: addressData.label || 'Home',
+      label: (addressData.label || 'Home').trim(),
       recipientName,
       phone,
-      division: addressData.division || 'Dhaka',
+      division: (addressData.division || 'Dhaka').trim(),
       district,
       thana,
       addressLine,
-      postalCode: addressData.postalCode || '',
+      postalCode: (addressData.postalCode || '').trim(),
       isDefault: addressData.isDefault,
     };
 
@@ -77,13 +78,13 @@ export class AddressService {
       let updatedUser: User;
 
       if (addressData.id) {
-        // Edit existing address
+        // Edit existing address via PATCH /users/me/addresses/:addressId
         updatedUser = await apiClient<User>(`/users/me/addresses/${addressData.id}`, {
           method: 'PATCH',
           body: JSON.stringify(payload),
         });
       } else {
-        // Add new address
+        // Add new address via POST /users/me/addresses
         updatedUser = await apiClient<User>('/users/me/addresses', {
           method: 'POST',
           body: JSON.stringify(payload),
@@ -146,7 +147,7 @@ export class AddressService {
   }
 
   /**
-   * Set address as default via backend API.
+   * Set address as default via backend API (/users/me/addresses/:id/default).
    */
   public async setDefaultAddress(id: string): Promise<ShippingAddress[]> {
     try {
@@ -172,7 +173,7 @@ export class AddressService {
   }
 
   /**
-   * Delete address via backend API.
+   * Delete address via backend API (/users/me/addresses/:id).
    */
   public async deleteAddress(id: string): Promise<void> {
     try {

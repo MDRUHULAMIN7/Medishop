@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { setUser } from '@/store/slices/authSlice';
 import { UserProfileService, UpdateProfilePayload } from '@/services/userProfile.service';
@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 export function useUserProfile() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
 
@@ -35,6 +36,13 @@ export function useUserProfile() {
       setIsLoading(false);
     }
   }, [dispatch]);
+
+  // Sync profile on mount if authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchProfile();
+    }
+  }, [isAuthenticated, fetchProfile]);
 
   /**
    * Update profile details (Name, Email, Phone, Avatar).

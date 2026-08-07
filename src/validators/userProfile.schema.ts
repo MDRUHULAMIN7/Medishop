@@ -37,7 +37,8 @@ export function createUserProfileSchema(isBn: boolean = true) {
         .refine(
           (val) => {
             if (!val || val.trim() === '') return true;
-            return bdPhoneRegex.test(val);
+            const cleaned = val.trim().replace(/[\s-]/g, '');
+            return bdPhoneRegex.test(cleaned);
           },
           {
             message: isBn
