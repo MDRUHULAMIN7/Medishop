@@ -23,6 +23,8 @@ import { UserRole } from '@/types';
 import { RBAC_ROLES_CONFIG } from '@/config/rbac.config';
 import { RbacTabId } from '@/config/rbac.config';
 
+import { useAuth } from '@/hooks/useAuth';
+
 interface RbacHeaderProps {
   currentRole: UserRole;
   onRoleChange: (role: UserRole) => void;
@@ -48,6 +50,7 @@ export function RbacHeader({
 }: RbacHeaderProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { logout: executeLogout } = useAuth();
   const user = useAppSelector((state) => state.auth.user);
   const activeRoleConfig = RBAC_ROLES_CONFIG[currentRole] || RBAC_ROLES_CONFIG.customer;
 
@@ -58,8 +61,9 @@ export function RbacHeader({
     dispatch(setLanguage(isBn ? 'en' : 'bn'));
   };
 
-  const handleLogout = () => {
-    dispatch(logout());
+  const handleLogout = async () => {
+    setIsProfileDropdownOpen(false);
+    await executeLogout();
   };
 
   return (

@@ -30,10 +30,13 @@ import { SearchAutocomplete } from '@/components/search/SearchAutocomplete';
 import { HOTLINE_NUMBER, HOTLINE_TEL } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
+import { useAuth } from '@/hooks/useAuth';
+
 export function Navbar() {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const { logout: executeLogout } = useAuth();
   const isScrolled = useScrollPosition(8);
 
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
@@ -57,9 +60,9 @@ export function Navbar() {
     }
   };
 
-  const handleLogout = () => {
-    dispatch(logout());
+  const handleLogout = async () => {
     setIsAccountDropdownOpen(false);
+    await executeLogout();
   };
 
   return (

@@ -13,7 +13,7 @@ import {
   logout as logoutAction,
 } from '@/store/slices/authSlice';
 import { AuthService } from '@/services/auth.service';
-import { ApiError } from '@/lib/apiClient';
+import { ApiError, clearAccessToken } from '@/lib/apiClient';
 import {
   SignInCredentials,
   OtpVerificationPayload,
@@ -21,9 +21,11 @@ import {
   ResetPasswordCredentials,
   AuthModalView,
 } from '@/types';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 export function useAuth() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const {
     user,
@@ -344,8 +346,10 @@ export function useAuth() {
     } catch {
       // Ignore network errors on logout
     } finally {
+      clearAccessToken();
       dispatch(logoutAction());
-      toast.info(isBn ? 'লগআউট করা হয়েছে।' : 'Logged out.');
+      toast.info(isBn ? 'সফলভাবে লগআউট করা হয়েছে।' : 'Logged out successfully.');
+      router.push('/');
     }
   };
 
