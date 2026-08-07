@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAppSelector } from '@/store';
 import { AdminAnalyticsModule } from '@/components/dashboard/modules/AdminAnalyticsModule';
 import { AdminUserManagerModule } from '@/components/dashboard/modules/AdminUserManagerModule';
@@ -11,10 +12,26 @@ import { PaymentManager } from '@/components/dashboard/PaymentManager';
 import { TrendingUp, UserCheck, Boxes, Tags, Ticket } from 'lucide-react';
 
 export default function AdminDashboardPage() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
 
   const [adminTab, setAdminTab] = useState<'analytics' | 'users' | 'products' | 'categories' | 'coupons'>('analytics');
+
+  useEffect(() => {
+    if (tabParam === 'users') {
+      setAdminTab('users');
+    } else if (tabParam === 'products') {
+      setAdminTab('products');
+    } else if (tabParam === 'categories') {
+      setAdminTab('categories');
+    } else if (tabParam === 'coupons') {
+      setAdminTab('coupons');
+    } else if (tabParam === 'analytics') {
+      setAdminTab('analytics');
+    }
+  }, [tabParam]);
 
   return (
     <div className="space-y-6">

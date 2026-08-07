@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAppSelector } from '@/store';
 import { InventoryProductsModule } from '@/components/dashboard/modules/InventoryProductsModule';
 import { CategoryManager } from '@/components/dashboard/CategoryManager';
@@ -8,10 +9,22 @@ import { BrandManager } from '@/components/dashboard/BrandManager';
 import { Boxes, FolderTree, Building2 } from 'lucide-react';
 
 export default function InventoryDashboardPage() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
 
   const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'brands'>('products');
+
+  useEffect(() => {
+    if (tabParam === 'categories') {
+      setActiveTab('categories');
+    } else if (tabParam === 'brands') {
+      setActiveTab('brands');
+    } else if (tabParam === 'products') {
+      setActiveTab('products');
+    }
+  }, [tabParam]);
 
   return (
     <div className="space-y-6">

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   User,
   MapPin,
@@ -60,6 +61,7 @@ export function RbacSidebar({
   onCloseMobile,
   isBn = true,
 }: RbacSidebarProps) {
+  const router = useRouter();
   const roleConfig = RBAC_ROLES_CONFIG[currentRole] || RBAC_ROLES_CONFIG.customer;
 
   const allowedMenuItems = RBAC_MENU_ITEMS.filter((item) =>
@@ -77,6 +79,12 @@ export function RbacSidebar({
     { key: 'inventory', titleEn: 'INVENTORY & CATALOG', titleBn: 'স্টক ও প্রোডাক্ট ক্যাটালগ' },
     { key: 'administration', titleEn: 'SYSTEM ADMINISTRATION', titleBn: 'সিস্টেম এডমিন ও এনালাইটিক্স' },
   ];
+
+  const handleMenuClick = (item: RbacMenuItem) => {
+    setActiveTab(item.id);
+    onCloseMobile();
+    router.push(item.targetRoute);
+  };
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-background border-r border-border w-80 shrink-0 select-none shadow-xs">
@@ -142,10 +150,7 @@ export function RbacSidebar({
                     <button
                       key={item.id}
                       type="button"
-                      onClick={() => {
-                        setActiveTab(item.id);
-                        onCloseMobile();
-                      }}
+                      onClick={() => handleMenuClick(item)}
                       className={`group w-full flex items-center justify-between rounded-xl px-3.5 py-3 text-sm font-bold transition-all cursor-pointer ${
                         isActive
                           ? 'bg-primary/10 text-primary border-l-4 border-primary font-black shadow-xs'

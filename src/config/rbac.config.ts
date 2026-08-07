@@ -35,6 +35,7 @@ export interface RbacMenuItem {
   category: 'clinical' | 'sales' | 'inventory' | 'administration' | 'customer';
   roles: UserRole[];
   badgeCount?: number;
+  targetRoute: string;
 }
 
 export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
@@ -111,6 +112,7 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
     iconName: 'ClipboardCheck',
     category: 'clinical',
     roles: ['pharmacist', 'admin'],
+    targetRoute: '/dashboard/pharmacist',
   },
 
   // 2. Counter POS Section (Sales Staff, Pharmacist & Admin)
@@ -123,6 +125,7 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
     iconName: 'ShoppingBag',
     category: 'sales',
     roles: ['sales_staff', 'pharmacist', 'admin'],
+    targetRoute: '/dashboard/sales',
   },
 
   // 3. Inventory Section (Inventory Manager & Admin)
@@ -135,6 +138,7 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
     iconName: 'Boxes',
     category: 'inventory',
     roles: ['inventory_manager', 'admin'],
+    targetRoute: '/dashboard/inventory?tab=products',
   },
   {
     id: 'inventory_categories',
@@ -145,6 +149,7 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
     iconName: 'Tags',
     category: 'inventory',
     roles: ['inventory_manager', 'admin'],
+    targetRoute: '/dashboard/inventory?tab=categories',
   },
   {
     id: 'inventory_low_stock',
@@ -155,6 +160,7 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
     iconName: 'AlertTriangle',
     category: 'inventory',
     roles: ['inventory_manager', 'pharmacist', 'admin'],
+    targetRoute: '/dashboard/inventory?tab=products',
   },
 
   // 4. Administration Section (Admin only)
@@ -167,6 +173,7 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
     iconName: 'TrendingUp',
     category: 'administration',
     roles: ['admin'],
+    targetRoute: '/dashboard/admin?tab=analytics',
   },
   {
     id: 'admin_users',
@@ -177,6 +184,7 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
     iconName: 'UserCheck',
     category: 'administration',
     roles: ['admin'],
+    targetRoute: '/dashboard/admin?tab=users',
   },
   {
     id: 'admin_coupons',
@@ -187,6 +195,7 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
     iconName: 'Ticket',
     category: 'administration',
     roles: ['admin'],
+    targetRoute: '/dashboard/admin?tab=coupons',
   },
 
   // 5. Customer Section (Customer & Admin)
@@ -199,6 +208,7 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
     iconName: 'PackageCheck',
     category: 'customer',
     roles: ['customer', 'admin'],
+    targetRoute: '/dashboard/customer?tab=orders',
   },
   {
     id: 'prescriptions_customer',
@@ -209,5 +219,6 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
     iconName: 'FileText',
     category: 'customer',
     roles: ['customer', 'admin'],
+    targetRoute: '/dashboard/customer?tab=prescriptions',
   },
 ];
