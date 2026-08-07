@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   Menu,
-  Search,
   Globe,
   LogOut,
   User as UserIcon,
@@ -62,48 +61,48 @@ export function RbacHeader({
   };
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-border bg-background/95 px-4 sm:px-6 backdrop-blur-md">
+    <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-border bg-background/95 px-4 sm:px-6 backdrop-blur-md shrink-0">
       {/* Left: Mobile Menu Toggle & Title */}
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={onToggleMobileSidebar}
-          className="lg:hidden flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-muted/30 text-foreground hover:bg-muted cursor-pointer"
+          className="lg:hidden flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-muted/30 text-foreground hover:bg-muted cursor-pointer"
           aria-label="Toggle menu"
         >
           <Menu className="h-5 w-5" />
         </button>
 
-        <div className="hidden sm:flex items-center gap-2">
-          <span className="text-xs font-bold text-muted-foreground">
-            {isBn ? 'ড্যাশবোর্ড মোড:' : 'Dashboard Mode:'}
+        <div className="flex items-center gap-2 text-sm font-bold">
+          <span className="text-muted-foreground hidden sm:inline">
+            {isBn ? 'ড্যাশবোর্ড রোল মোড:' : 'Dashboard Role Mode:'}
           </span>
-          <span className="text-xs font-extrabold text-foreground">
+          <span className="font-extrabold text-foreground bg-muted/40 px-2.5 py-1 rounded-lg border border-border">
             {isBn ? activeRoleConfig.titleBn : activeRoleConfig.titleEn}
           </span>
         </div>
       </div>
 
-      {/* Center/Right: Role Switcher Tester Dropdown & Tools */}
-      <div className="flex items-center gap-2 sm:gap-3">
+      {/* Right: Role Switcher Tester Dropdown & Profile Actions */}
+      <div className="flex items-center gap-3">
         {/* Role Switcher Tester Dropdown */}
         <div className="relative">
           <button
             type="button"
             onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-            className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-bold border transition-all cursor-pointer ${activeRoleConfig.badgeBg}`}
+            className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-extrabold border transition-all cursor-pointer ${activeRoleConfig.badgeBg}`}
           >
             <ShieldCheck className="h-4 w-4" />
-            <span className="hidden md:inline font-extrabold">
+            <span className="hidden md:inline">
               {isBn ? activeRoleConfig.titleBn : activeRoleConfig.titleEn}
             </span>
             <ChevronDown className="h-3.5 w-3.5 opacity-70" />
           </button>
 
           {isRoleDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-border bg-background p-2 shadow-xl ring-1 ring-black/5 z-50">
-              <div className="px-3 py-2 border-b border-border text-[11px] font-extrabold text-muted-foreground uppercase">
-                {isBn ? 'টেস্টিং ভিউ পরিবর্তন করুন (RBAC Switcher)' : 'Switch Role View (RBAC)'}
+            <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-border bg-background p-2 shadow-2xl ring-1 ring-black/5 z-50">
+              <div className="px-3 py-2 border-b border-border text-[11px] font-black text-muted-foreground uppercase">
+                {isBn ? 'রোল ভিউ পরিবর্তন করুন (RBAC Switcher)' : 'Switch Role View (RBAC)'}
               </div>
               <div className="py-1 space-y-1">
                 {ROLE_OPTIONS.map((opt) => {
@@ -119,7 +118,7 @@ export function RbacHeader({
                       }}
                       className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
                         isSelected
-                          ? 'bg-primary text-white'
+                          ? 'bg-primary text-white font-black'
                           : 'text-foreground hover:bg-muted'
                       }`}
                     >
@@ -164,13 +163,13 @@ export function RbacHeader({
           </button>
 
           {isProfileDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-border bg-background p-2 shadow-xl ring-1 ring-black/5 z-50">
+            <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-border bg-background p-2 shadow-2xl ring-1 ring-black/5 z-50">
               <div className="px-3 py-2 border-b border-border">
                 <p className="text-xs font-extrabold text-foreground truncate">{user?.name || 'User Profile'}</p>
                 <p className="text-[11px] text-muted-foreground truncate">{user?.email || user?.phone}</p>
               </div>
 
-              <div className="py-1">
+              <div className="py-1 space-y-1">
                 <button
                   type="button"
                   onClick={() => {

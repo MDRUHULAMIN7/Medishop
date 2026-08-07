@@ -2,10 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import React from 'react';
 import { fontInter, fontNotoBengali } from '@/lib/fonts';
 import { AppProviders } from '@/components/providers';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
-import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
-import { WhatsAppButton } from '@/components/layout/WhatsAppButton';
+import { LayoutWrapper } from '@/components/layout/LayoutWrapper';
 import '@/app/globals.css';
 
 export const metadata: Metadata = {
@@ -73,22 +70,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AppProviders>
-          {/* Header Landmark */}
-          <Navbar />
-
-          {/* Main Content Landmark with safe mobile bottom padding */}
-          <main id="main-content" className="flex-1 pb-16 md:pb-0">
-            {children}
-          </main>
-
-          {/* Footer Landmark */}
-          <Footer />
-
-          {/* Mobile Bottom Navigation Bar */}
-          <MobileBottomNav />
-
-          {/* Floating WhatsApp Quick Action Button */}
-          <WhatsAppButton />
+          <LayoutWrapper>{children}</LayoutWrapper>
         </AppProviders>
       </body>
     </html>

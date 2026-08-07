@@ -97,13 +97,13 @@ export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
 };
 
 export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
-  // 1. Personal Section (Available to ALL roles)
+  // 1. Personal Account Section
   {
     id: 'profile',
     labelEn: 'Personal Profile',
-    labelBn: 'প্রোফাইল তথ্য',
+    labelBn: 'মাই প্রোফাইল সেটিং',
     descriptionEn: 'Update name, mobile, email and profile picture (Max 5MB)',
-    descriptionBn: 'নাম, মোবাইল, ইমেইল ও প্রোফাইল ছবি সেটিং (সর্বোচ্চ 5MB)',
+    descriptionBn: 'নাম, মোবাইল, ইমেইল ও প্রোফাইল ছবি পরিবর্তন (সর্বোচ্চ 5MB)',
     iconName: 'User',
     category: 'personal',
     roles: ['customer', 'pharmacist', 'sales_staff', 'inventory_manager', 'admin'],
@@ -131,7 +131,7 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
   {
     id: 'prescriptions_me',
     labelEn: 'My Prescriptions',
-    labelBn: 'আমার প্রেসক্রিপশন সমূহ',
+    labelBn: 'প্রেসক্রিপশন ফাইলস',
     descriptionEn: 'Upload medical prescription PDFs or photos for verification',
     descriptionBn: 'প্রেসক্রিপশন ফাইল আপলোড ও ডাক্তার প্রেসক্রিপশন রেকর্ডস',
     iconName: 'FileText',
@@ -139,37 +139,37 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
     roles: ['customer', 'admin'],
   },
 
-  // 2. Clinical & Prescription Section (Pharmacist & Admin)
+  // 2. Clinical Section
   {
     id: 'prescriptions_audit',
     labelEn: 'Rx Audit & Verification',
     labelBn: 'প্রেসক্রিপশন অডিট ও অনুমোদন',
     descriptionEn: 'Review patient uploaded prescriptions, verify OTC & approve',
-    descriptionBn: 'পেশেন্টের আপলোড করা প্রেসক্রিপশন রিভিউ ও ডিজিটাল সিগনেচার',
+    descriptionBn: 'পেশেন্টের আপলোড করা প্রেসক্রিপশন রিভিউ ও ভেরিফিকেশন',
     iconName: 'ClipboardCheck',
     category: 'clinical',
     roles: ['pharmacist', 'admin'],
   },
 
-  // 3. Sales & Counter POS Section (Sales Staff, Pharmacist & Admin)
+  // 3. Counter POS Section
   {
     id: 'pos_sales',
     labelEn: 'Counter POS Terminal',
-    labelBn: 'কাউন্টার সেলস টার্মিনাল (POS)',
+    labelBn: 'কাউন্টার সেলস (POS)',
     descriptionEn: 'In-store fast medicine billing, barcode scanner & receipts',
-    descriptionBn: 'ফার্মেসী ডিসপেনসারি ক্যাশ কাউন্টার বিলিং ও রসিদ প্রিন্টিং',
+    descriptionBn: 'ফার্মেসী ক্যাশ কাউন্টার বিলিং ও মেমো রিসিপ্ট প্রিন্টিং',
     iconName: 'ShoppingBag',
     category: 'sales',
     roles: ['sales_staff', 'pharmacist', 'admin'],
   },
 
-  // 4. Inventory Management Section (Inventory Manager & Admin)
+  // 4. Inventory Section
   {
     id: 'inventory_products',
-    labelEn: 'Medicine & Stock Catalog',
+    labelEn: 'Medicine Catalog',
     labelBn: 'মেডিসিন ক্যাটালগ ও স্টক',
     descriptionEn: 'Manage product listings, pricing, strip sizes & stock count',
-    descriptionBn: 'মেডিসিন প্রাইসিং, স্ট্রিপ সাইজ ও ডাটাবেজ ক্যাটালগ',
+    descriptionBn: 'মেডিসিন প্রাইজ, স্ট্রিপ সাইজ ও ডাটাবেজ ক্যাটালগ',
     iconName: 'Boxes',
     category: 'inventory',
     roles: ['inventory_manager', 'admin'],
@@ -177,17 +177,17 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
   {
     id: 'inventory_categories',
     labelEn: 'Categories & Brands',
-    labelBn: 'ক্যাটাগরি ও ফার্মাসিউটিক্যালস',
+    labelBn: 'ক্যাটাগরি ও ব্র্যান্ডস',
     descriptionEn: 'Manage category tree and pharma manufacturer brand profiles',
-    descriptionBn: 'ঔষধের শ্রেণীবিভাগ ও স্কয়ার, ইনসেপ্টার মতো ব্র্যান্ডস',
+    descriptionBn: 'ঔষধের শ্রেণীবিভাগ ও ম্যানুফ্যাকচারার ব্র্যান্ডস',
     iconName: 'Tags',
     category: 'inventory',
     roles: ['inventory_manager', 'admin'],
   },
   {
     id: 'inventory_low_stock',
-    labelEn: 'Low Stock Restock Alerts',
-    labelBn: 'স্টক শর্টেজ ও রিস্টক এলার্ট',
+    labelEn: 'Low Stock Alerts',
+    labelBn: 'স্টক শর্টেজ রিস্টক এলার্ট',
     descriptionEn: 'Real-time alert report for products running out of stock',
     descriptionBn: 'স্টক কমে যাওয়া জরুরি ওষুধের রিস্টক নোটিফিকেশন',
     iconName: 'AlertTriangle',
@@ -195,11 +195,11 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
     roles: ['inventory_manager', 'pharmacist', 'admin'],
   },
 
-  // 5. System Administration Section (Admin only)
+  // 5. Administration Section
   {
     id: 'admin_analytics',
-    labelEn: 'Executive Dashboard & KPIs',
-    labelBn: 'সেলস এনালাইটিক্স ও ড্যাশবোর্ড',
+    labelEn: 'Sales & Revenue KPIs',
+    labelBn: 'সেলস এনালাইটিক্স ড্যাশবোর্ড',
     descriptionEn: 'Revenue charts, POS counter sales breakdown & KPI overview',
     descriptionBn: 'দৈনিক ও মাসিক আয়, অনলাইন বনাম কাউন্টার সেলস রিপোর্ট',
     iconName: 'TrendingUp',
@@ -208,20 +208,20 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
   },
   {
     id: 'admin_users',
-    labelEn: 'User Control & Block Status',
-    labelBn: 'ইউজার ম্যানেজমেন্ট ও ব্লক সেটিং',
+    labelEn: 'User Control & Block',
+    labelBn: 'ইউজার মেম্বারশিপ ও ব্লক সেটিং',
     descriptionEn: 'Manage user accounts, roles & block suspicious users',
-    descriptionBn: 'ইউজার মেম্বারশিপ তালিকা, রোল অ্যাসাইন ও সেশন ব্লক সুবিধা',
+    descriptionBn: 'ইউজার তালিকা, রোল অ্যাসাইন ও সেশন ব্লক সুবিধা',
     iconName: 'UserCheck',
     category: 'administration',
     roles: ['admin'],
   },
   {
     id: 'admin_coupons',
-    labelEn: 'Promo Coupons & Discounts',
-    labelBn: 'প্রোমো কোড ও ডিসকাউন্ট',
+    labelEn: 'Promo Coupons',
+    labelBn: 'প্রোমো কোড ও কুপন',
     descriptionEn: 'Create discount vouchers and percentage discount campaigns',
-    descriptionBn: 'প্রোমো কোড তৈরি, মিনিমাম অর্ডার সীমা ও মেয়াদ নির্ধারণ',
+    descriptionBn: 'প্রোমো কোড তৈরি, মিনিমাম অর্ডার সীমা ও ডিসকাউন্ট',
     iconName: 'Ticket',
     category: 'administration',
     roles: ['admin'],
