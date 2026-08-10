@@ -9,20 +9,15 @@ import {
   Globe,
   LogOut,
   User as UserIcon,
+  Home,
   ChevronDown,
-  ShieldAlert,
   ShieldCheck,
-  Stethoscope,
-  ShoppingCart,
-  Package,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { setLanguage } from '@/store/slices/uiSlice';
-import { logout } from '@/store/slices/authSlice';
 import { UserRole } from '@/types';
 import { RBAC_ROLES_CONFIG } from '@/config/rbac.config';
 import { RbacTabId } from '@/config/rbac.config';
-
 import { useAuth } from '@/hooks/useAuth';
 
 interface RbacHeaderProps {
@@ -33,19 +28,9 @@ interface RbacHeaderProps {
   isBn?: boolean;
 }
 
-const ROLE_OPTIONS: { role: UserRole; labelEn: string; labelBn: string; icon: React.ElementType }[] = [
-  { role: 'customer', labelEn: 'Customer / Patient', labelBn: 'গ্রাহক / পেশেন্ট', icon: UserIcon },
-  { role: 'pharmacist', labelEn: 'Licensed Pharmacist', labelBn: 'ফার্মাসিস্ট', icon: Stethoscope },
-  { role: 'sales_staff', labelEn: 'Sales & POS Staff', labelBn: 'সেলস স্টাফ', icon: ShoppingCart },
-  { role: 'inventory_manager', labelEn: 'Inventory Manager', labelBn: 'ইনভেন্টরি ম্যানেজার', icon: Package },
-  { role: 'admin', labelEn: 'Super Administrator', labelBn: 'সিস্টেম এডমিন', icon: ShieldAlert },
-];
-
 export function RbacHeader({
   currentRole,
-  onRoleChange,
   onToggleMobileSidebar,
-  onSelectTab,
   isBn = true,
 }: RbacHeaderProps) {
   const router = useRouter();
@@ -54,7 +39,6 @@ export function RbacHeader({
   const user = useAppSelector((state) => state.auth.user);
   const activeRoleConfig = RBAC_ROLES_CONFIG[currentRole] || RBAC_ROLES_CONFIG.customer;
 
-  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
   const toggleLanguage = () => {
@@ -68,7 +52,7 @@ export function RbacHeader({
 
   return (
     <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-border bg-background/95 px-4 sm:px-6 backdrop-blur-md shrink-0">
-      {/* Left: Mobile Menu Toggle & Title */}
+      {/* Left: Mobile Menu Toggle & Role Badge */}
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -80,67 +64,15 @@ export function RbacHeader({
         </button>
 
         <div className="flex items-center gap-2 text-sm font-bold">
-          <span className="text-muted-foreground hidden sm:inline">
-            {isBn ? 'ড্যাশবোর্ড রোল মোড:' : 'Dashboard Role Mode:'}
-          </span>
-          <span className="font-extrabold text-foreground bg-muted/40 px-2.5 py-1 rounded-lg border border-border">
-            {isBn ? activeRoleConfig.titleBn : activeRoleConfig.titleEn}
+          <span className="font-extrabold text-foreground bg-muted/40 px-3 py-1 rounded-lg border border-border flex items-center gap-1.5">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            <span>{isBn ? activeRoleConfig.titleBn : activeRoleConfig.titleEn}</span>
           </span>
         </div>
       </div>
 
-      {/* Right: Role Switcher Tester Dropdown & Profile Actions */}
+      {/* Right: Language Switcher & User Profile Actions */}
       <div className="flex items-center gap-3">
-        {/* Role Switcher Tester Dropdown */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-            className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-extrabold border transition-all cursor-pointer ${activeRoleConfig.badgeBg}`}
-          >
-            <ShieldCheck className="h-4 w-4" />
-            <span className="hidden md:inline">
-              {isBn ? activeRoleConfig.titleBn : activeRoleConfig.titleEn}
-            </span>
-            <ChevronDown className="h-3.5 w-3.5 opacity-70" />
-          </button>
-
-          {isRoleDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-border bg-background p-2 shadow-2xl ring-1 ring-black/5 z-50">
-              <div className="px-3 py-2 border-b border-border text-[11px] font-black text-muted-foreground uppercase">
-                {isBn ? 'রোল ভিউ পরিবর্তন করুন (RBAC Switcher)' : 'Switch Role View (RBAC)'}
-              </div>
-              <div className="py-1 space-y-1">
-                {ROLE_OPTIONS.map((opt) => {
-                  const Icon = opt.icon;
-                  const isSelected = currentRole === opt.role;
-                  return (
-                    <button
-                      key={opt.role}
-                      type="button"
-                      onClick={() => {
-                        onRoleChange(opt.role);
-                        setIsRoleDropdownOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
-                        isSelected
-                          ? 'bg-primary text-white font-black'
-                          : 'text-foreground hover:bg-muted'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Icon className="h-4 w-4 shrink-0" />
-                        <span>{isBn ? opt.labelBn : opt.labelEn}</span>
-                      </div>
-                      {isSelected && <span className="text-[10px] font-black uppercase">Active</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* Language Switcher */}
         <button
           type="button"
@@ -176,28 +108,34 @@ export function RbacHeader({
               </div>
 
               <div className="py-1 space-y-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsProfileDropdownOpen(false);
-                    router.push('/profile');
-                  }}
-                  className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted cursor-pointer"
+                {/* 1. Store Homepage Link */}
+                <Link
+                  href="/"
+                  onClick={() => setIsProfileDropdownOpen(false)}
+                  className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted transition-colors"
+                >
+                  <Home className="h-4 w-4 text-primary" />
+                  <span>{isBn ? 'হোমপেজ' : 'Store Homepage'}</span>
+                </Link>
+
+                {/* 2. My Profile Link */}
+                <Link
+                  href="/profile"
+                  onClick={() => setIsProfileDropdownOpen(false)}
+                  className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted transition-colors"
                 >
                   <UserIcon className="h-4 w-4 text-primary" />
-                  <span>{isBn ? 'মাই প্রোফাইল সেটিং' : 'My Profile Settings'}</span>
-                </button>
+                  <span>{isBn ? 'মাই প্রোফাইল' : 'My Profile'}</span>
+                </Link>
 
+                {/* 3. Logout Action */}
                 <button
                   type="button"
-                  onClick={() => {
-                    handleLogout();
-                    setIsProfileDropdownOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 cursor-pointer"
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                 >
                   <LogOut className="h-4 w-4" />
-                  <span>{isBn ? 'লগআউট করুন' : 'Logout'}</span>
+                  <span>{isBn ? 'লগআউট' : 'Logout'}</span>
                 </button>
               </div>
             </div>

@@ -13,9 +13,7 @@ export interface RbacRoleInfo {
   iconName: string;
 }
 
-export type RbacTabId =
-  | 'inventory_categories'
-  | 'orders_customer';
+export type RbacTabId = 'inventory_categories';
 
 export interface RbacMenuItem {
   id: RbacTabId;
@@ -24,7 +22,7 @@ export interface RbacMenuItem {
   descriptionEn?: string;
   descriptionBn?: string;
   iconName: string;
-  category: 'inventory' | 'customer';
+  category: 'inventory';
   roles: UserRole[];
   badgeCount?: number;
   targetRoute: string;
@@ -81,11 +79,11 @@ export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
   },
   customer: {
     role: 'customer',
-    route: '/dashboard/customer',
+    route: '/profile',
     titleEn: 'Customer / Patient',
     titleBn: 'গ্রাহক / পেশেন্ট',
-    descriptionEn: 'Manage personal profile, shipping address & orders',
-    descriptionBn: 'প্রোফাইল সেটিং, শিপিং এড্রেস বুক ও অর্ডারের তথ্য',
+    descriptionEn: 'Manage personal profile & shipping addresses',
+    descriptionBn: 'প্রোফাইল সেটিং ও শিপিং এড্রেস বুক',
     badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     badgeText: 'text-emerald-700',
     badgeBorder: 'border-emerald-200',
@@ -94,7 +92,7 @@ export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
 };
 
 export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
-  // 1. Integrated Backend Inventory Catalog (Categories & Brands API)
+  // Integrated Backend Inventory Catalog (Categories & Brands API)
   {
     id: 'inventory_categories',
     labelEn: 'Categories & Brands',
@@ -103,20 +101,7 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
     descriptionBn: 'ক্যাটাগরি ও ডিজিডিএ ম্যানুফ্যাকচারার ব্র্যান্ডস ম্যানেজমেন্ট',
     iconName: 'Tags',
     category: 'inventory',
-    roles: ['admin', 'inventory_manager', 'pharmacist', 'sales_staff'],
+    roles: ['admin', 'inventory_manager', 'pharmacist', 'sales_staff', 'customer'],
     targetRoute: '/dashboard/admin?tab=categories',
-  },
-
-  // 2. Integrated Backend Customer Profile & Address Book API
-  {
-    id: 'orders_customer',
-    labelEn: 'My Account & Address Book',
-    labelBn: 'প্রোফাইল ও শিপিং এড্রেস বুক',
-    descriptionEn: 'Live REST API for User Profile, Avatar & Address Book',
-    descriptionBn: 'ইউজার প্রোফাইল তথ্য, ছবি ও এড্রেস বুক ম্যানেজমেন্ট',
-    iconName: 'User',
-    category: 'customer',
-    roles: ['customer', 'admin', 'inventory_manager', 'pharmacist', 'sales_staff'],
-    targetRoute: '/profile',
   },
 ];

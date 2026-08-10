@@ -4,18 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  User,
-  MapPin,
-  PackageCheck,
-  FileText,
-  ClipboardCheck,
-  ShoppingBag,
-  Boxes,
   Tags,
-  AlertTriangle,
-  TrendingUp,
-  UserCheck,
-  Ticket,
   Pill,
   X,
   ShieldCheck,
@@ -39,18 +28,7 @@ interface RbacSidebarProps {
 }
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  User,
-  MapPin,
-  PackageCheck,
-  FileText,
-  ClipboardCheck,
-  ShoppingBag,
-  Boxes,
   Tags,
-  AlertTriangle,
-  TrendingUp,
-  UserCheck,
-  Ticket,
 };
 
 export function RbacSidebar({
@@ -74,7 +52,6 @@ export function RbacSidebar({
     titleBn: string;
   }[] = [
     { key: 'inventory', titleEn: 'INTEGRATED CATALOG MODULES', titleBn: 'ক্যাটাগরি ও ব্রান্ড ফিচারস' },
-    { key: 'customer', titleEn: 'ACCOUNT PROFILE & ADDRESSES', titleBn: 'মাই প্রোফাইল ও ঠিকানা' },
   ];
 
   const handleMenuClick = (item: RbacMenuItem) => {
@@ -96,7 +73,7 @@ export function RbacSidebar({
               mediShop
             </span>
             <span className="block text-[10px] font-extrabold tracking-widest text-primary uppercase">
-              {isBn ? 'ডিজিটাল পোর্টাল' : 'RBAC PORTAL'}
+              {isBn ? 'ডিজিটাল পোর্টাল' : 'ADMIN PORTAL'}
             </span>
           </div>
         </Link>
@@ -140,7 +117,7 @@ export function RbacSidebar({
 
               <div className="space-y-1">
                 {items.map((item) => {
-                  const Icon = ICON_MAP[item.iconName] || User;
+                  const Icon = ICON_MAP[item.iconName] || Tags;
                   const isActive = activeTab === item.id;
 
                   return (

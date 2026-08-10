@@ -40,24 +40,12 @@ export function RbacDashboardLayout() {
   };
 
   const renderActiveModule = () => {
-    switch (activeTab) {
-      case 'inventory_categories':
-        return (
-          <div className="space-y-6">
-            <CategoryManager />
-            <BrandManager />
-          </div>
-        );
-      case 'orders_customer':
-        return <ProfileModule isBn={isBn} />;
-      default:
-        return (
-          <div className="space-y-6">
-            <CategoryManager />
-            <BrandManager />
-          </div>
-        );
-    }
+    return (
+      <div className="space-y-6">
+        <CategoryManager />
+        <BrandManager />
+      </div>
+    );
   };
 
   return (

@@ -29,7 +29,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       setActiveTab('inventory_categories');
     } else if (pathname?.includes('/dashboard/customer')) {
       setCurrentRole('customer');
-      setActiveTab('orders_customer');
+      setActiveTab('inventory_categories');
     } else if (reduxUser?.role) {
       setCurrentRole(reduxUser.role);
     }
