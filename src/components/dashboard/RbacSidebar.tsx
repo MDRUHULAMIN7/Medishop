@@ -73,11 +73,8 @@ export function RbacSidebar({
     titleEn: string;
     titleBn: string;
   }[] = [
-    { key: 'customer', titleEn: 'PATIENT ORDERS & RX', titleBn: 'অর্ডার ও প্রেসক্রিপশন' },
-    { key: 'clinical', titleEn: 'PHARMACY CLINICAL AUDIT', titleBn: 'ফার্মেসী ক্লিনিকাল অডিট' },
-    { key: 'sales', titleEn: 'COUNTER POS TERMINAL', titleBn: 'কাউন্টার সেলস (POS)' },
-    { key: 'inventory', titleEn: 'INVENTORY & CATALOG', titleBn: 'স্টক ও প্রোডাক্ট ক্যাটালগ' },
-    { key: 'administration', titleEn: 'SYSTEM ADMINISTRATION', titleBn: 'সিস্টেম এডমিন ও এনালাইটিক্স' },
+    { key: 'inventory', titleEn: 'INTEGRATED CATALOG MODULES', titleBn: 'ক্যাটাগরি ও ব্রান্ড ফিচারস' },
+    { key: 'customer', titleEn: 'ACCOUNT PROFILE & ADDRESSES', titleBn: 'মাই প্রোফাইল ও ঠিকানা' },
   ];
 
   const handleMenuClick = (item: RbacMenuItem) => {

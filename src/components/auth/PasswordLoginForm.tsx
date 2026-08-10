@@ -130,12 +130,12 @@ export function PasswordLoginForm() {
         </div>
 
         {/* Forgot Password Link */}
-        <div className="flex items-center justify-end px-1">
+        <div className="flex items-center justify-end px-1 pt-0.5">
           <button
             type="button"
             onClick={handleForgotPassword}
             disabled={isLoading}
-            className="text-xs font-semibold text-white/90 underline hover:text-white cursor-pointer"
+            className="text-xs font-normal text-white/95 hover:text-white hover:underline transition-all cursor-pointer opacity-95"
           >
             {isBn ? 'পাসওয়ার্ড ভুলে গেছেন?' : 'Forgot Password?'}
           </button>

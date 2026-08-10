@@ -19,27 +19,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isBn = language === 'bn';
 
   const [currentRole, setCurrentRole] = useState<UserRole>('customer');
-  const [activeTab, setActiveTab] = useState<RbacTabId>('admin_analytics');
+  const [activeTab, setActiveTab] = useState<RbacTabId>('inventory_categories');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Sync role & active tab with current URL sub-route
   useEffect(() => {
-    if (pathname?.includes('/dashboard/admin')) {
-      setCurrentRole('admin');
-      setActiveTab('admin_analytics');
-    } else if (pathname?.includes('/dashboard/pharmacist')) {
-      setCurrentRole('pharmacist');
-      setActiveTab('prescriptions_audit');
-    } else if (pathname?.includes('/dashboard/sales')) {
-      setCurrentRole('sales_staff');
-      setActiveTab('pos_sales');
-    } else if (pathname?.includes('/dashboard/inventory')) {
-      setCurrentRole('inventory_manager');
-      if (pathname.includes('tab=categories')) {
-        setActiveTab('inventory_categories');
-      } else {
-        setActiveTab('inventory_products');
-      }
+    if (pathname?.includes('/dashboard/admin') || pathname?.includes('/dashboard/inventory')) {
+      setCurrentRole(reduxUser?.role || 'admin');
+      setActiveTab('inventory_categories');
     } else if (pathname?.includes('/dashboard/customer')) {
       setCurrentRole('customer');
       setActiveTab('orders_customer');
@@ -66,40 +53,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       toast.error(
         isBn ? 'এই এডমিন পেজে প্রবেশের অনুমতি নেই।' : 'Access denied. You do not have Admin permissions.'
       );
-      const safeRoute = RBAC_ROLES_CONFIG[userRole]?.route || '/dashboard/customer';
-      router.replace(safeRoute);
-    } else if (
-      pathname?.includes('/dashboard/inventory') &&
-      !['admin', 'inventory_manager'].includes(userRole)
-    ) {
-      toast.error(
-        isBn
-          ? 'ইনভেন্টরি সেকশনে প্রবেশের অনুমতি নেই।'
-          : 'Access denied. You do not have Inventory Manager permissions.'
-      );
-      const safeRoute = RBAC_ROLES_CONFIG[userRole]?.route || '/dashboard/customer';
-      router.replace(safeRoute);
-    } else if (
-      pathname?.includes('/dashboard/pharmacist') &&
-      !['admin', 'pharmacist'].includes(userRole)
-    ) {
-      toast.error(
-        isBn
-          ? 'প্রেসক্রিপশন অডিট সেকশনে প্রবেশের অনুমতি নেই।'
-          : 'Access denied. You do not have Pharmacist permissions.'
-      );
-      const safeRoute = RBAC_ROLES_CONFIG[userRole]?.route || '/dashboard/customer';
-      router.replace(safeRoute);
-    } else if (
-      pathname?.includes('/dashboard/sales') &&
-      !['admin', 'sales_staff', 'pharmacist'].includes(userRole)
-    ) {
-      toast.error(
-        isBn
-          ? 'ক্যাশ কাউন্টার POS সেকশনে প্রবেশের অনুমতি নেই।'
-          : 'Access denied. You do not have Sales Staff permissions.'
-      );
-      const safeRoute = RBAC_ROLES_CONFIG[userRole]?.route || '/dashboard/customer';
+      const safeRoute = RBAC_ROLES_CONFIG[userRole]?.route || '/profile';
       router.replace(safeRoute);
     }
   }, [pathname, reduxUser, isAuthenticated, isInitialized, isBn, router]);
@@ -107,7 +61,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Role Switcher Tester Handler
   const handleRoleChange = (newRole: UserRole) => {
     setCurrentRole(newRole);
-    const targetRoute = RBAC_ROLES_CONFIG[newRole]?.route || '/dashboard/customer';
+    const targetRoute = RBAC_ROLES_CONFIG[newRole]?.route || '/profile';
     router.push(targetRoute);
   };
 
