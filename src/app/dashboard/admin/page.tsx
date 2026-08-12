@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { ProductManager } from '@/components/dashboard/ProductManager';
 import { CategoryManager } from '@/components/dashboard/CategoryManager';
 import { BrandManager } from '@/components/dashboard/BrandManager';
+import { CouponManager } from '@/components/dashboard/CouponManager';
 import { Loader2 } from 'lucide-react';
 
 function AdminContent() {
@@ -17,6 +18,10 @@ function AdminContent() {
 
   if (tab === 'brands') {
     return <BrandManager />;
+  }
+
+  if (tab === 'coupons') {
+    return <CouponManager />;
   }
 
   return <CategoryManager />;

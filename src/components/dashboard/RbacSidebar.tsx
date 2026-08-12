@@ -12,6 +12,7 @@ import {
   FolderTree,
   Building2,
   Package,
+  Ticket,
 } from 'lucide-react';
 import { UserRole } from '@/types';
 import { RbacTabId } from '@/config/rbac.config';
@@ -142,6 +143,20 @@ export function RbacSidebar({
                 >
                   <Building2 className="h-4 w-4 shrink-0" />
                   <span>{isBn ? 'ফার্মাসিউটিক্যালস ব্র্যান্ডস (DGDA)' : 'Pharma Brands (DGDA)'}</span>
+                </button>
+
+                {/* Sub-Button 4: Discount Coupons & Promo Codes */}
+                <button
+                  type="button"
+                  onClick={() => handleSubItemClick('coupons' as any)}
+                  className={`w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === ('coupons' as any)
+                      ? 'bg-primary text-white font-black shadow-md'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  <Ticket className="h-4 w-4 shrink-0" />
+                  <span>{isBn ? 'ডিসকাউন্ট কুপন ও প্রোমো কোড' : 'Coupons & Promo Codes'}</span>
                 </button>
               </motion.div>
             )}
