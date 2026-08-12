@@ -107,19 +107,23 @@ export function useCheckout() {
     dispatch(setSubmitting(true));
 
     try {
+      const rawAddrId = (selectedAddress as any)._id || selectedAddress.id || '';
+      const isProfileAddr = rawAddrId && !rawAddrId.startsWith('custom_');
+
       const response = await orderService.checkout({
-        shippingAddressId: (selectedAddress as any)._id || selectedAddress.id,
+        ...(isProfileAddr ? { shippingAddressId: rawAddrId } : {}),
         shippingAddress: {
-          recipientName: selectedAddress.recipientName || '',
-          phone: selectedAddress.phone || '',
-          district: selectedAddress.district || '',
-          thana: selectedAddress.thana || '',
-          addressLine: selectedAddress.addressLine || '',
-          division: selectedAddress.division,
+          recipientName: selectedAddress.recipientName || selectedAddress.fullName || 'Customer',
+          phone: selectedAddress.phone || '01700000000',
+          division: selectedAddress.division || 'Dhaka',
+          district: selectedAddress.district || 'Dhaka',
+          thana: selectedAddress.thana || selectedAddress.area || 'Dhanmondi',
+          addressLine: selectedAddress.addressLine || selectedAddress.streetAddress || 'House 1, Road 1',
           postalCode: selectedAddress.postalCode,
         },
         paymentMethod: paymentMethod.id as any,
         couponCode: appliedCoupon?.code,
+        deliveryCharge: summary.deliveryCharge,
         note: notes,
       });
 

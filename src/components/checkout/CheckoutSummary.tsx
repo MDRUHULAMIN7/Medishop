@@ -161,34 +161,6 @@ export function CheckoutSummary({
           <span>{isBn ? 'কার্ট পরিবর্তন করুন' : 'View & Edit Cart'}</span>
         </Link>
       </div>
-
-      {/* Card 3: Need Help? matching Screenshot */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-xs space-y-3">
-        <div>
-          <h4 className="text-sm font-bold text-gray-900">{isBn ? 'সহায়তা প্রয়োজন?' : 'Need Help?'}</h4>
-          <p className="text-xs text-gray-400">
-            {isBn ? 'আমাদের টিম আপনাকে সাহায্য করতে প্রস্তুত' : 'Our support team is here to help you'}
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <a
-            href="tel:8801742643763"
-            className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-50 py-2.5 text-xs font-bold text-blue-600 hover:bg-blue-100 transition-colors"
-          >
-            <Phone className="h-4 w-4" />
-            <span>+880 1742-643763</span>
-          </a>
-
-          <button
-            type="button"
-            className="w-full flex items-center justify-center gap-2 rounded-xl border border-gray-200 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-          >
-            <MessageSquare className="h-4 w-4 text-blue-600" />
-            <span>{isBn ? 'লাইভ চ্যাট সাপোর্ট' : 'Live Chat Support'}</span>
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

@@ -2,9 +2,8 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tag, CheckCircle2, X, Loader2, Info } from 'lucide-react';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 import { useCoupon } from '@/hooks/useCoupon';
-import { formatPrice } from '@/utils/cart';
 
 interface CouponBoxProps {
   isBn?: boolean;
@@ -16,14 +15,14 @@ export function CouponBox({ isBn = true }: CouponBoxProps) {
     setCouponCodeInput,
     appliedCoupon,
     isLoading,
-    errorMsg,
     applyCoupon,
     removeCoupon,
   } = useCoupon();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    applyCoupon();
+    if (!couponCodeInput.trim()) return;
+    await applyCoupon();
   };
 
   return (
@@ -34,7 +33,7 @@ export function CouponBox({ isBn = true }: CouponBoxProps) {
 
       <AnimatePresence mode="wait">
         {appliedCoupon ? (
-          /* Applied Coupon Status Box matching Screenshot */
+          /* Applied Coupon Status Box */
           <motion.div
             key="applied"
             initial={{ opacity: 0, scale: 0.95 }}
@@ -60,7 +59,7 @@ export function CouponBox({ isBn = true }: CouponBoxProps) {
             </button>
           </motion.div>
         ) : (
-          /* Input Field + Apply Button matching Screenshot */
+          /* Input Field + Apply Button (Toast response only, no text below input) */
           <motion.div key="input" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <form onSubmit={handleSubmit} className="flex gap-2">
               <input
@@ -84,14 +83,6 @@ export function CouponBox({ isBn = true }: CouponBoxProps) {
                 )}
               </button>
             </form>
-
-            {/* Error Message */}
-            {errorMsg && (
-              <p className="mt-1.5 text-xs font-medium text-red-600 flex items-center gap-1">
-                <Info className="h-3.5 w-3.5 shrink-0" />
-                <span>{errorMsg}</span>
-              </p>
-            )}
           </motion.div>
         )}
       </AnimatePresence>

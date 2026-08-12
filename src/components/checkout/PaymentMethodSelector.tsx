@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Banknote, Smartphone, CreditCard, Building2, Check, CreditCard as CardIcon } from 'lucide-react';
+import { Banknote, CreditCard, Building2, Check, CreditCard as CardIcon } from 'lucide-react';
 import { PaymentMethod, PaymentMethodId } from '@/types/checkout';
 import { cn } from '@/lib/utils';
 
@@ -28,14 +28,14 @@ export function PaymentMethodSelector({
         );
       case 'bkash':
         return (
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-pink-50 text-pink-600 font-bold text-xs shrink-0">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e2136e] text-white font-black text-[11px] tracking-tight shrink-0 shadow-xs">
             <span>bKash</span>
           </div>
         );
       case 'nagad':
         return (
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 font-bold text-xs shrink-0">
-            <span>Nagad</span>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f7921e] text-white font-black text-[11px] tracking-tight shrink-0 shadow-xs">
+            <span>নগদ</span>
           </div>
         );
       case 'card':
@@ -53,7 +53,7 @@ export function PaymentMethodSelector({
       default:
         return (
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 shrink-0">
-            <Smartphone className="h-5 w-5" />
+            <CreditCard className="h-5 w-5" />
           </div>
         );
     }
@@ -61,7 +61,7 @@ export function PaymentMethodSelector({
 
   return (
     <div className="space-y-4">
-      {/* Header matching Screenshot */}
+      {/* Header */}
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
           <CardIcon className="h-5 w-5" />
@@ -71,12 +71,12 @@ export function PaymentMethodSelector({
             {isBn ? 'পেমেন্ট মেথড' : 'Payment Method'}
           </h3>
           <p className="text-xs text-gray-500">
-            {isBn ? 'আপনার নিরাপদ পেমেন্ট মাধ্যম নির্বাচন করুন' : 'Select a secure payment method'}
+            {isBn ? 'আপনার পছন্দসই পেমেন্ট মাধ্যম সিলেক্ট করুন' : 'Select a secure payment method'}
           </p>
         </div>
       </div>
 
-      {/* Grid of Cards matching Screenshot */}
+      {/* Grid of Payment Method Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {methods.map((method) => {
           const isSelected = method.id === selectedId;
