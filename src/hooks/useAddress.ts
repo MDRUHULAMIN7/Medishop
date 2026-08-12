@@ -3,7 +3,9 @@ import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/store';
 import {
   setSelectedAddressId,
+  setCustomAddress,
   selectSelectedAddressId,
+  selectCustomAddress,
 } from '@/store/slices/checkoutSlice';
 import { ShippingAddress } from '@/types/address';
 import { addressService } from '@/services/address.service';
@@ -11,6 +13,7 @@ import { addressService } from '@/services/address.service';
 export function useAddress() {
   const dispatch = useAppDispatch();
   const selectedAddressId = useAppSelector(selectSelectedAddressId);
+  const customAddress = useAppSelector(selectCustomAddress);
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
 
@@ -23,8 +26,8 @@ export function useAddress() {
       const data = await addressService.getAddresses();
       setAddresses(data);
 
-      // Auto select default address if none selected
-      if (!selectedAddressId && data.length > 0) {
+      // Auto select default address if none selected and no custom address active
+      if (!selectedAddressId && !customAddress && data.length > 0) {
         const defaultAddr = data.find((a) => a.isDefault) || data[0];
         dispatch(setSelectedAddressId(defaultAddr.id));
       }
@@ -33,13 +36,14 @@ export function useAddress() {
     } finally {
       setIsLoading(false);
     }
-  }, [dispatch, selectedAddressId]);
+  }, [dispatch, selectedAddressId, customAddress]);
 
   useEffect(() => {
     fetchAddresses();
   }, [fetchAddresses]);
 
-  const selectedAddress =
+  const selectedAddress: ShippingAddress | null =
+    customAddress ||
     addresses.find((a) => a.id === selectedAddressId) ||
     addresses.find((a) => a.isDefault) ||
     addresses[0] ||
@@ -87,6 +91,13 @@ export function useAddress() {
     [dispatch]
   );
 
+  const handleSetCustomAddress = useCallback(
+    (addr: ShippingAddress | null) => {
+      dispatch(setCustomAddress(addr));
+    },
+    [dispatch]
+  );
+
   const handleSetDefaultAddress = useCallback(
     async (id: string) => {
       try {
@@ -109,10 +120,12 @@ export function useAddress() {
     addresses,
     selectedAddress,
     selectedAddressId,
+    customAddress,
     isLoading,
     saveAddress: handleSaveAddress,
     deleteAddress: handleDeleteAddress,
     selectAddress: handleSelectAddress,
+    setCustomAddress: handleSetCustomAddress,
     setDefaultAddress: handleSetDefaultAddress,
     refreshAddresses: fetchAddresses,
   };

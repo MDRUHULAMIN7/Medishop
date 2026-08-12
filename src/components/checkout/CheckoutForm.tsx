@@ -5,6 +5,7 @@ import { AddressSelector } from './AddressSelector';
 import { DeliveryMethodSelector } from './DeliveryMethodSelector';
 import { PaymentMethodSelector } from './PaymentMethodSelector';
 import { OrderReview } from './OrderReview';
+import { CouponBox } from '../cart/CouponBox';
 import { useCheckout } from '@/hooks/useCheckout';
 
 interface CheckoutFormProps {
@@ -51,7 +52,12 @@ export function CheckoutForm({ isBn = true }: CheckoutFormProps) {
         />
       </section>
 
-      {/* 4. Order Review & Notes */}
+      {/* 4. Promo Code / Coupon Section in Checkout */}
+      <section className="rounded-2xl border border-border bg-background p-5 shadow-xs">
+        <CouponBox isBn={isBn} />
+      </section>
+
+      {/* 5. Order Review & Notes */}
       <section className="rounded-2xl border border-border bg-background p-5 shadow-xs space-y-4">
         <OrderReview items={items} isBn={isBn} />
 

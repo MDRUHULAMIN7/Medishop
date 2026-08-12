@@ -34,6 +34,7 @@ export default function UploadPrescriptionPage() {
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedFile, setSelectedFile] = useState<{
     name: string;
@@ -205,6 +206,27 @@ export default function UploadPrescriptionPage() {
                 <span>{isBn ? 'প্রেসক্রিপশন নথি যুক্ত করুন' : 'Attach Prescription Document'}</span>
               </h2>
 
+              {/* Upload & Camera Input Options */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-border bg-muted/20 py-2.5 text-xs font-bold text-foreground hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+                >
+                  <Upload className="h-4 w-4" />
+                  <span>{isBn ? 'গ্যালারি থেকে পছন্দ করুন' : 'Browse Gallery / File'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-2xl border border-primary/40 bg-primary/10 py-2.5 text-xs font-bold text-primary hover:bg-primary hover:text-white transition-all cursor-pointer"
+                >
+                  <Camera className="h-4 w-4" />
+                  <span>{isBn ? 'ক্যামেরা ফটো তুলুন' : 'Take Camera Photo'}</span>
+                </button>
+              </div>
+
               {/* Upload Dropzone */}
               <div
                 onClick={() => fileInputRef.current?.click()}
@@ -218,6 +240,14 @@ export default function UploadPrescriptionPage() {
                   ref={fileInputRef}
                   type="file"
                   accept="image/*,application/pdf"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
                   onChange={handleFileChange}
                   className="hidden"
                 />

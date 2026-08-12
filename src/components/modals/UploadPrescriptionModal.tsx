@@ -16,6 +16,7 @@ import {
   Clock,
   User,
   Phone,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
@@ -36,9 +37,8 @@ export function UploadPrescriptionModal({
   isBn = true,
 }: UploadPrescriptionModalProps) {
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
-  const user = useAppSelector((state) => state.auth.user);
 
-  const { addresses, selectedAddress, selectedAddressId, selectAddress } = useAddress();
+  const { addresses, selectedAddressId, selectAddress } = useAddress();
 
   const [activeTab, setActiveTab] = useState<'gallery' | 'camera' | 'saved'>('gallery');
   const [selectedFile, setSelectedFile] = useState<{
@@ -48,6 +48,12 @@ export function UploadPrescriptionModal({
   } | null>(null);
 
   const [selectedPrescriptionId, setSelectedPrescriptionId] = useState<string | null>(null);
+
+  // WebRTC Live Camera Stream State
+  const [isWebcamActive, setIsWebcamActive] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
 
   // Guest Address State
   const [guestName, setGuestName] = useState('');
@@ -73,6 +79,61 @@ export function UploadPrescriptionModal({
     enabled: isOpen && isAuthenticated,
   });
 
+  const stopWebcam = () => {
+    if (mediaStream) {
+      mediaStream.getTracks().forEach((track) => track.stop());
+      setMediaStream(null);
+    }
+    setIsWebcamActive(false);
+  };
+
+  const startWebcam = async () => {
+    try {
+      stopWebcam();
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false,
+      });
+      setMediaStream(stream);
+      setIsWebcamActive(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      console.warn('Webcam stream unavailable, falling back to camera file input:', err);
+      setIsWebcamActive(false);
+      cameraInputRef.current?.click();
+    }
+  };
+
+  const captureWebcamSnapshot = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const file = new File([blob], `camera_rx_${Date.now()}.jpg`, { type: 'image/jpeg' });
+            const url = URL.createObjectURL(file);
+            setSelectedFile({
+              name: file.name,
+              url,
+              rawFile: file,
+            });
+            setSelectedPrescriptionId(null);
+            stopWebcam();
+            toast.success(isBn ? 'ক্যামেরা ফটো ক্যাপচার করা হয়েছে' : 'Camera photo captured!');
+          }
+        }, 'image/jpeg', 0.9);
+      }
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -83,6 +144,7 @@ export function UploadPrescriptionModal({
         rawFile: file,
       });
       setSelectedPrescriptionId(null);
+      stopWebcam();
       toast.success(isBn ? 'প্রেসক্রিপশন ছবি নির্বাচন করা হয়েছে' : 'Prescription image selected');
     }
   };
@@ -93,7 +155,18 @@ export function UploadPrescriptionModal({
       name: `Prescription #${(rx.id || (rx as any)._id).slice(-6)}`,
       url: rx.images[0] || '',
     });
+    stopWebcam();
     toast.info(isBn ? 'সংরক্ষিত প্রেসক্রিপশন নির্বাচন করা হয়েছে' : 'Selected saved prescription');
+  };
+
+  const handleTabChange = (tab: 'gallery' | 'camera' | 'saved') => {
+    setActiveTab(tab);
+    if (tab === 'camera') {
+      // Trigger camera input directly or start camera
+      cameraInputRef.current?.click();
+    } else {
+      stopWebcam();
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -136,6 +209,7 @@ export function UploadPrescriptionModal({
           : 'Prescription order request submitted! Our pharmacist will call to verify.'
       );
 
+      stopWebcam();
       setIsSubmitting(false);
       onClose();
     } catch (err: any) {
@@ -152,7 +226,10 @@ export function UploadPrescriptionModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={() => {
+              stopWebcam();
+              onClose();
+            }}
             className="fixed inset-0 bg-black/60 backdrop-blur-xs"
           />
 
@@ -182,8 +259,11 @@ export function UploadPrescriptionModal({
 
               <button
                 type="button"
-                onClick={onClose}
-                className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+                onClick={() => {
+                  stopWebcam();
+                  onClose();
+                }}
+                className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -194,7 +274,7 @@ export function UploadPrescriptionModal({
               {/* Option 1: Upload from Gallery */}
               <button
                 type="button"
-                onClick={() => setActiveTab('gallery')}
+                onClick={() => handleTabChange('gallery')}
                 className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-2 text-xs font-bold transition-all cursor-pointer ${
                   activeTab === 'gallery'
                     ? 'bg-background text-primary shadow-xs'
@@ -208,10 +288,7 @@ export function UploadPrescriptionModal({
               {/* Option 2: Open Camera */}
               <button
                 type="button"
-                onClick={() => {
-                  setActiveTab('camera');
-                  cameraInputRef.current?.click();
-                }}
+                onClick={() => handleTabChange('camera')}
                 className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-2 text-xs font-bold transition-all cursor-pointer ${
                   activeTab === 'camera'
                     ? 'bg-background text-primary shadow-xs'
@@ -226,7 +303,7 @@ export function UploadPrescriptionModal({
               {isAuthenticated && (
                 <button
                   type="button"
-                  onClick={() => setActiveTab('saved')}
+                  onClick={() => handleTabChange('saved')}
                   className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-2 text-xs font-bold transition-all cursor-pointer ${
                     activeTab === 'saved'
                       ? 'bg-background text-primary shadow-xs'
@@ -234,7 +311,7 @@ export function UploadPrescriptionModal({
                   }`}
                 >
                   <Clock className="h-4 w-4" />
-                  <span>{isBn ? 'সংরক্ষিত তালিকা' : 'Saved Prescriptions'}</span>
+                  <span>{isBn ? 'সংরক্ষিত তালিকা' : 'Saved List'}</span>
                 </button>
               )}
             </div>
@@ -247,6 +324,7 @@ export function UploadPrescriptionModal({
               onChange={handleFileChange}
               className="hidden"
             />
+            {/* Camera File Input with capture="environment" for Native Camera */}
             <input
               ref={cameraInputRef}
               type="file"
@@ -258,57 +336,114 @@ export function UploadPrescriptionModal({
 
             {/* Tab Content */}
             {activeTab === 'gallery' || activeTab === 'camera' ? (
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-3xl p-6 text-center cursor-pointer transition-all ${
-                  selectedFile
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border bg-muted/20 hover:border-primary/50 hover:bg-primary/5'
-                }`}
-              >
-                {selectedFile ? (
-                  <div className="space-y-2">
-                    <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary mx-auto flex items-center justify-center">
-                      <FileText className="h-6 w-6" />
-                    </div>
-                    <p className="text-xs font-bold text-foreground truncate max-w-xs mx-auto">
-                      {selectedFile.name}
-                    </p>
-                    <div className="flex items-center justify-center gap-3 pt-1">
+              <div className="space-y-3">
+                {isWebcamActive ? (
+                  /* WebRTC Live Camera Viewfinder */
+                  <div className="relative overflow-hidden rounded-3xl border border-primary bg-black flex flex-col items-center justify-center">
+                    <video ref={videoRef} autoPlay playsInline className="w-full h-64 object-cover" />
+                    <canvas ref={canvasRef} className="hidden" />
+                    <div className="absolute bottom-3 flex items-center gap-3 bg-black/50 p-2 rounded-full backdrop-blur-xs">
                       <button
                         type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPreviewImageUrl(selectedFile.url);
-                        }}
-                        className="text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                        onClick={captureWebcamSnapshot}
+                        className="flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-xs font-extrabold text-white shadow-lg cursor-pointer hover:bg-primary-dark"
                       >
-                        <Eye className="h-3.5 w-3.5" />
-                        <span>{isBn ? 'প্রিভিউ' : 'Preview'}</span>
+                        <Camera className="h-4 w-4" />
+                        <span>{isBn ? 'ছবি তুলুন' : 'Capture Photo'}</span>
                       </button>
                       <button
                         type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedFile(null);
-                        }}
-                        className="text-xs font-bold text-rose-600 hover:underline flex items-center gap-1 cursor-pointer"
+                        onClick={stopWebcam}
+                        className="rounded-full bg-white/20 p-2 text-white hover:bg-white/30 cursor-pointer"
                       >
-                        <X className="h-3.5 w-3.5" />
-                        <span>{isBn ? 'রিমুভ' : 'Remove'}</span>
+                        <X className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary mx-auto flex items-center justify-center">
-                      {activeTab === 'camera' ? <Camera className="h-6 w-6" /> : <Upload className="h-6 w-6" />}
-                    </div>
-                    <p className="text-xs font-bold text-foreground">
-                      {activeTab === 'camera'
-                        ? (isBn ? 'ক্যামেরা ফটো সিলেক্ট করুন' : 'Take or upload camera photo')
-                        : (isBn ? 'প্রেসক্রিপশন ছবি বা পিডিএফ ড্র্যাগ অথবা সিলেক্ট করুন' : 'Click to upload prescription image or PDF')}
-                    </p>
+                  /* Standard Dropzone */
+                  <div
+                    onClick={() => {
+                      if (activeTab === 'camera') {
+                        cameraInputRef.current?.click();
+                      } else {
+                        fileInputRef.current?.click();
+                      }
+                    }}
+                    className={`border-2 border-dashed rounded-3xl p-6 text-center cursor-pointer transition-all ${
+                      selectedFile
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border bg-muted/20 hover:border-primary/50 hover:bg-primary/5'
+                    }`}
+                  >
+                    {selectedFile ? (
+                      <div className="space-y-2">
+                        <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary mx-auto flex items-center justify-center">
+                          <FileText className="h-6 w-6" />
+                        </div>
+                        <p className="text-xs font-bold text-foreground truncate max-w-xs mx-auto">
+                          {selectedFile.name}
+                        </p>
+                        <div className="flex items-center justify-center gap-3 pt-1">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewImageUrl(selectedFile.url);
+                            }}
+                            className="text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            <span>{isBn ? 'প্রিভিউ' : 'Preview'}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedFile(null);
+                            }}
+                            className="text-xs font-bold text-rose-600 hover:underline flex items-center gap-1 cursor-pointer"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                            <span>{isBn ? 'রিমুভ' : 'Remove'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary mx-auto flex items-center justify-center">
+                          {activeTab === 'camera' ? <Camera className="h-6 w-6" /> : <Upload className="h-6 w-6" />}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-foreground">
+                            {activeTab === 'camera'
+                              ? (isBn ? 'ক্যামেরা চালু করে ছবি তুলুন' : 'Click to launch device camera')
+                              : (isBn ? 'গ্যালারি বা ড্রাইভ থেকে নির্বাচন করতে ক্লিক করুন' : 'Click to select prescription file from gallery')}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground mt-1">
+                            {activeTab === 'camera'
+                              ? (isBn ? 'সরাসরি ক্যামেরার সাহায্যে ছবি তোলা হবে' : 'Opens your mobile or desktop camera')
+                              : 'JPG, PNG, WEBP, PDF (Max 10MB)'}
+                          </p>
+                        </div>
+
+                        {activeTab === 'camera' && (
+                          <div className="pt-2 flex justify-center gap-2">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                startWebcam();
+                              }}
+                              className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary hover:bg-primary/20 cursor-pointer"
+                            >
+                              <Camera className="h-3.5 w-3.5" />
+                              <span>{isBn ? 'লাইভ ক্যামেরা ওপেন করুন' : 'Launch Live Webcam'}</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -466,7 +601,10 @@ export function UploadPrescriptionModal({
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={() => {
+                    stopWebcam();
+                    onClose();
+                  }}
                   className="rounded-2xl border border-border bg-background px-4 py-2.5 text-xs font-bold text-foreground hover:bg-muted"
                 >
                   {isBn ? 'বাতিল' : 'Cancel'}

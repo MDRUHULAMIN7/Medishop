@@ -1,8 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { DeliveryMethodId, PaymentMethodId } from '@/types/checkout';
+import { ShippingAddress } from '@/types/address';
 
 interface CheckoutSliceState {
   selectedAddressId: string | null;
+  customAddress: ShippingAddress | null;
   selectedDeliveryMethodId: DeliveryMethodId;
   selectedPaymentMethodId: PaymentMethodId;
   notes: string;
@@ -12,6 +14,7 @@ interface CheckoutSliceState {
 
 const initialState: CheckoutSliceState = {
   selectedAddressId: null,
+  customAddress: null,
   selectedDeliveryMethodId: 'standard',
   selectedPaymentMethodId: 'cod',
   notes: '',
@@ -25,6 +28,13 @@ export const checkoutSlice = createSlice({
   reducers: {
     setSelectedAddressId: (state, action: PayloadAction<string | null>) => {
       state.selectedAddressId = action.payload;
+      state.customAddress = null;
+    },
+    setCustomAddress: (state, action: PayloadAction<ShippingAddress | null>) => {
+      state.customAddress = action.payload;
+      if (action.payload) {
+        state.selectedAddressId = null;
+      }
     },
     setDeliveryMethodId: (state, action: PayloadAction<DeliveryMethodId>) => {
       state.selectedDeliveryMethodId = action.payload;
@@ -43,6 +53,7 @@ export const checkoutSlice = createSlice({
     },
     resetCheckout: (state) => {
       state.selectedAddressId = null;
+      state.customAddress = null;
       state.selectedDeliveryMethodId = 'standard';
       state.selectedPaymentMethodId = 'cod';
       state.notes = '';
@@ -54,6 +65,7 @@ export const checkoutSlice = createSlice({
 
 export const {
   setSelectedAddressId,
+  setCustomAddress,
   setDeliveryMethodId,
   setPaymentMethodId,
   setCheckoutNotes,
@@ -64,6 +76,8 @@ export const {
 
 export const selectSelectedAddressId = (state: { checkout: CheckoutSliceState }) =>
   state.checkout.selectedAddressId;
+export const selectCustomAddress = (state: { checkout: CheckoutSliceState }) =>
+  state.checkout.customAddress;
 export const selectSelectedDeliveryMethodId = (state: { checkout: CheckoutSliceState }) =>
   state.checkout.selectedDeliveryMethodId;
 export const selectSelectedPaymentMethodId = (state: { checkout: CheckoutSliceState }) =>
