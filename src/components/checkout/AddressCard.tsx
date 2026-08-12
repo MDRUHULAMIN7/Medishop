@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Home, Briefcase, MapPin, Check, Edit2, Trash2, Phone } from 'lucide-react';
+import { Home, Briefcase, MapPin, Check, Edit2, Phone } from 'lucide-react';
 import { ShippingAddress } from '@/types/address';
 import { cn } from '@/lib/utils';
 
@@ -19,54 +19,52 @@ export function AddressCard({
   isSelected,
   onSelect,
   onEdit,
-  onDelete,
   isBn = true,
 }: AddressCardProps) {
   const getLabelIcon = () => {
     switch (address.label) {
       case 'Home':
-        return <Home className="h-3.5 w-3.5" />;
+        return <Home className="h-4 w-4 text-blue-600" />;
       case 'Office':
-        return <Briefcase className="h-3.5 w-3.5" />;
+        return <Briefcase className="h-4 w-4 text-blue-600" />;
       default:
-        return <MapPin className="h-3.5 w-3.5" />;
+        return <MapPin className="h-4 w-4 text-blue-600" />;
     }
   };
+
+  const recipientName = address.recipientName || address.fullName;
+  const fullAddrText = `${address.streetAddress || address.addressLine || ''}, ${address.thana || address.area || ''}, ${address.district || ''} ${address.postalCode ? `- ${address.postalCode}` : ''}`;
 
   return (
     <div
       onClick={() => onSelect(address.id)}
       className={cn(
-        'relative flex cursor-pointer flex-col justify-between rounded-2xl border p-4.5 transition-all duration-200',
+        'relative cursor-pointer rounded-2xl p-4.5 transition-all duration-200 flex flex-col justify-between',
         isSelected
-          ? 'border-primary bg-primary/5 shadow-md ring-2 ring-primary/20'
-          : 'border-border bg-background hover:border-primary/40 hover:shadow-xs'
+          ? 'border-2 border-blue-600 bg-white shadow-xs'
+          : 'border border-gray-200 bg-white hover:border-gray-300'
       )}
     >
-      {/* Top Header */}
-      <div className="flex items-start justify-between gap-2 mb-2">
+      {/* Top Header Row matching Screenshot */}
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          {/* Label Badge */}
-          <span className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-2.5 py-1 text-xs font-bold text-foreground">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
             {getLabelIcon()}
-            {address.label}
-          </span>
+          </div>
+          <span className="text-sm font-bold text-gray-900">{address.label || 'Home'}</span>
 
-          {/* Default Badge */}
           {address.isDefault && (
-            <span className="rounded-lg bg-emerald-50 px-2 py-0.5 text-[10px] font-extrabold text-emerald-700 border border-emerald-200">
+            <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600 border border-emerald-200">
               {isBn ? 'ডিফল্ট' : 'Default'}
             </span>
           )}
         </div>
 
-        {/* Selected Check Indicator */}
+        {/* Selected Blue Checkmark Badge on Top Right */}
         <div
           className={cn(
-            'flex h-5 w-5 items-center justify-center rounded-full border transition-all',
-            isSelected
-              ? 'border-primary bg-primary text-white'
-              : 'border-muted-foreground/30 bg-background'
+            'flex h-5 w-5 items-center justify-center rounded-full transition-all',
+            isSelected ? 'bg-blue-600 text-white' : 'border-2 border-gray-300 bg-white'
           )}
         >
           {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
@@ -74,45 +72,30 @@ export function AddressCard({
       </div>
 
       {/* Recipient Details */}
-      <div className="space-y-1 my-2">
-        <h4 className="text-sm font-bold text-foreground">{address.fullName}</h4>
-        <p className="flex items-center gap-1.5 text-xs font-semibold text-primary">
-          <Phone className="h-3 w-3" />
-          {address.phone}
+      <div className="space-y-1 my-1">
+        <h4 className="text-sm font-bold text-gray-900">{recipientName}</h4>
+        <p className="flex items-center gap-1.5 text-xs text-gray-600 font-medium">
+          <Phone className="h-3.5 w-3.5 text-blue-600" />
+          <span>{address.phone}</span>
         </p>
-        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mt-1">
-          {address.streetAddress}, {address.area}, {address.district}, {address.division}
-          {address.postalCode ? ` - ${address.postalCode}` : ''}
+        <p className="text-xs text-gray-500 leading-relaxed mt-1">
+          {fullAddrText}
         </p>
       </div>
 
-      {/* Action Footer */}
-      <div className="mt-3 flex items-center justify-end gap-3 pt-2.5 border-t border-border/60">
+      {/* Action Footer: Edit Button on Bottom Right */}
+      <div className="mt-3 flex items-center justify-end pt-2 border-t border-gray-100">
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             onEdit(address);
           }}
-          className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors"
         >
           <Edit2 className="h-3.5 w-3.5" />
           <span>{isBn ? 'সম্পাদনা' : 'Edit'}</span>
         </button>
-
-        {onDelete && !address.isDefault && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(address.id);
-            }}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-red-600 transition-colors"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            <span>{isBn ? 'মুছুন' : 'Delete'}</span>
-          </button>
-        )}
       </div>
     </div>
   );

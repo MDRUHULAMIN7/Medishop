@@ -21,6 +21,7 @@ export type PaymentMethodId =
   | 'nagad'
   | 'rocket'
   | 'card'
+  | 'banking'
   | 'sslcommerz'
   | 'stripe';
 
