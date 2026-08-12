@@ -107,12 +107,31 @@ export function CouponManager() {
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
+  const todayStr = new Date().toISOString().split('T')[0];
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.code.trim()) {
       toast.error(isBn ? 'দয়া করে কুপন কোড লিখুন' : 'Please enter coupon code');
       return;
     }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const start = new Date(formData.startDate);
+    const end = new Date(formData.endDate);
+
+    if (start < today) {
+      toast.error(isBn ? 'শুরুর তারিখ আজকের বা ভবিষ্যতের তারিখ হতে হবে' : 'Start date cannot be in the past');
+      return;
+    }
+
+    if (start >= end) {
+      toast.error(isBn ? 'মেয়াদ শেষের তারিখ শুরুর তারিখের পরে হতে হবে' : 'End date must be after start date');
+      return;
+    }
+
     createMutation.mutate(formData);
   };
 
@@ -465,6 +484,7 @@ export function CouponManager() {
                     </label>
                     <input
                       type="date"
+                      min={todayStr}
                       value={formData.startDate}
                       onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                       required
@@ -478,6 +498,7 @@ export function CouponManager() {
                     </label>
                     <input
                       type="date"
+                      min={formData.startDate || todayStr}
                       value={formData.endDate}
                       onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                       required
