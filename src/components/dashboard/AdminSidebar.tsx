@@ -16,7 +16,8 @@ import {
   Settings,
   Pill,
   ChevronRight,
-  LogOut,
+  Boxes,
+  Store,
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -25,6 +26,8 @@ import { useAppSelector } from '@/store';
 export type DashboardTab =
   | 'overview'
   | 'products'
+  | 'inventory'
+  | 'pos_sales'
   | 'categories'
   | 'brands'
   | 'banners'
@@ -61,11 +64,24 @@ export function AdminSidebar({
       badge: 'Live',
     },
     {
+      id: 'pos_sales' as DashboardTab,
+      labelBn: 'কাউন্টার সেলস টার্মিনাল (POS)',
+      labelEn: 'In-Store POS Terminal',
+      icon: Store,
+      badge: 'POS',
+      badgeColor: 'bg-emerald-600 text-white font-bold',
+    },
+    {
+      id: 'inventory' as DashboardTab,
+      labelBn: 'শেয়ার্ড ইনভেন্টরি ও লেজার',
+      labelEn: 'Inventory & Stock Ledger',
+      icon: Boxes,
+    },
+    {
       id: 'products' as DashboardTab,
-      labelBn: 'ওষুধ ও প্রডাক্টস',
+      labelBn: 'ওষুধ ও প্রডাক্ট ক্যাটালগ',
       labelEn: 'Medicine & Products',
       icon: Package,
-      badge: '254',
     },
     {
       id: 'categories' as DashboardTab,
@@ -90,8 +106,6 @@ export function AdminSidebar({
       labelBn: 'অর্ডার ও ট্র্যাকিং',
       labelEn: 'Orders & Tracking',
       icon: ShoppingBag,
-      badge: '12 New',
-      badgeColor: 'bg-accent text-slate-950 font-bold',
     },
     {
       id: 'payments' as DashboardTab,
@@ -110,8 +124,6 @@ export function AdminSidebar({
       labelBn: 'কাস্টমার সাপোর্ট',
       labelEn: 'Customer Support',
       icon: Headphones,
-      badge: '3',
-      badgeColor: 'bg-primary text-white font-bold',
     },
     {
       id: 'users' as DashboardTab,
@@ -141,7 +153,7 @@ export function AdminSidebar({
                 mediShop
               </span>
               <span className="text-[10px] font-bold tracking-wider uppercase text-muted-foreground mt-0.5">
-                {isBn ? 'এডমিন প্যানেল v1.2' : 'Admin Panel v1.2'}
+                {isBn ? 'এডমিন প্যানেল v2.0' : 'Admin Panel v2.0'}
               </span>
             </div>
           </Link>
@@ -174,7 +186,7 @@ export function AdminSidebar({
         </div>
 
         {/* Navigation Items */}
-        <nav className="flex flex-col gap-1 overflow-y-auto max-h-[calc(100vh-280px)] pr-1">
+        <nav className="flex flex-col gap-1 overflow-y-auto max-h-[calc(100vh-280px)] pr-1 custom-scrollbar">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -186,7 +198,7 @@ export function AdminSidebar({
                   if (onCloseMobile) onCloseMobile();
                 }}
                 className={cn(
-                  'group flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all duration-200',
+                  'group flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all duration-200 cursor-pointer',
                   isActive
                     ? 'bg-primary text-white shadow-md shadow-primary/20'
                     : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'

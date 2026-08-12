@@ -13,6 +13,9 @@ import {
   Building2,
   Package,
   Ticket,
+  Store,
+  Boxes,
+  FileCheck2,
 } from 'lucide-react';
 import { UserRole } from '@/types';
 import { RbacTabId } from '@/config/rbac.config';
@@ -27,6 +30,7 @@ interface RbacSidebarProps {
 }
 
 export function RbacSidebar({
+  currentRole,
   activeTab,
   setActiveTab,
   isOpenMobile,
@@ -36,15 +40,19 @@ export function RbacSidebar({
   const router = useRouter();
   const [isCatalogExpanded, setIsCatalogExpanded] = useState(true);
 
-  const handleSubItemClick = (tab: 'products' | 'categories' | 'brands') => {
+  const handleSubItemClick = (tab: string, targetPath?: string) => {
     setActiveTab(tab as RbacTabId);
     onCloseMobile();
-    router.push(`/dashboard/admin?tab=${tab}&page=1`);
+    if (targetPath) {
+      router.push(targetPath);
+    } else {
+      router.push(`/dashboard/admin?tab=${tab}&page=1`);
+    }
   };
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-background border-r border-border w-80 shrink-0 select-none shadow-xs">
-      {/* Brand Header: Perfectly aligned h-16 (64px) height matching RbacHeader */}
+      {/* Brand Header */}
       <div className="h-16 px-6 border-b border-border flex items-center justify-between shrink-0">
         <Link href="/" className="flex items-center gap-2.5 group">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white font-bold shadow-md transition-transform group-hover:scale-105 shrink-0">
@@ -55,7 +63,7 @@ export function RbacSidebar({
               mediShop
             </span>
             <span className="text-[10px] font-bold tracking-wider uppercase text-muted-foreground mt-0.5">
-              {isBn ? 'অনলাইন ফার্মেসি ও হেলথকেয়ার' : 'Online Pharmacy BD'}
+              {isBn ? 'ফার্মেসি ও হেলথকেয়ার POS' : 'Pharmacy Operations'}
             </span>
           </div>
         </Link>
@@ -82,7 +90,7 @@ export function RbacSidebar({
             <div className="flex items-center gap-3">
               <Tags className="h-5 w-5 text-primary shrink-0 transition-transform group-hover:scale-110" />
               <span className="font-black">
-                {isBn ? 'ফার্মাসিউটিক্যালস ক্যাটালগ' : 'Pharma Inventory'}
+                {isBn ? 'ফার্মাসিউটিক্যালস অপারেশন্স' : 'Pharma Operations'}
               </span>
             </div>
             <motion.div
@@ -103,7 +111,51 @@ export function RbacSidebar({
                 transition={{ duration: 0.25, ease: [0.04, 0.62, 0.23, 0.98] }}
                 className="overflow-hidden pl-4 pr-1 pt-1.5 space-y-1.5"
               >
-                {/* Sub-Button 1: Medicine Products Catalog */}
+                {/* 1. POS Sales Counter */}
+                <button
+                  type="button"
+                  onClick={() => handleSubItemClick('pos_sales', '/dashboard/sales')}
+                  className={`w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === ('pos_sales' as any)
+                      ? 'bg-emerald-600 text-white font-black shadow-md'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  <Store className="h-4 w-4 shrink-0" />
+                  <span>{isBn ? 'কাউন্টার পজ বিক্রয় (POS)' : 'In-Store POS Terminal'}</span>
+                </button>
+
+                {/* 2. Shared Central Inventory & Ledger */}
+                <button
+                  type="button"
+                  onClick={() => handleSubItemClick('inventory', '/dashboard/inventory')}
+                  className={`w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === ('inventory' as any)
+                      ? 'bg-indigo-600 text-white font-black shadow-md'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  <Boxes className="h-4 w-4 shrink-0" />
+                  <span>{isBn ? 'শেয়ার্ড ইনভেন্টরি ও অডিট লেজার' : 'Inventory & Stock Ledger'}</span>
+                </button>
+
+                {/* 3. Prescription Audit Queue (For Pharmacists) */}
+                {(currentRole === 'pharmacist' || currentRole === 'admin') && (
+                  <button
+                    type="button"
+                    onClick={() => handleSubItemClick('prescriptions', '/dashboard/pharmacist')}
+                    className={`w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all cursor-pointer ${
+                      activeTab === ('prescriptions' as any)
+                        ? 'bg-amber-600 text-white font-black shadow-md'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    }`}
+                  >
+                    <FileCheck2 className="h-4 w-4 shrink-0" />
+                    <span>{isBn ? 'প্রেসক্রিপশন অডিট কিউ' : 'Prescription Review Queue'}</span>
+                  </button>
+                )}
+
+                {/* 4. Medicine Products Catalog */}
                 <button
                   type="button"
                   onClick={() => handleSubItemClick('products')}
@@ -117,7 +169,7 @@ export function RbacSidebar({
                   <span>{isBn ? 'ওষুধ ও পণ্য ক্যাটালগ' : 'Medicine Catalog'}</span>
                 </button>
 
-                {/* Sub-Button 2: Pharmacy Categories */}
+                {/* 5. Pharmacy Categories */}
                 <button
                   type="button"
                   onClick={() => handleSubItemClick('categories')}
@@ -131,7 +183,7 @@ export function RbacSidebar({
                   <span>{isBn ? 'ফার্মেসি ক্যাটাগরি' : 'Pharmacy Categories'}</span>
                 </button>
 
-                {/* Sub-Button 3: Pharma Brands (DGDA) */}
+                {/* 6. Pharma Brands (DGDA) */}
                 <button
                   type="button"
                   onClick={() => handleSubItemClick('brands')}
@@ -142,13 +194,13 @@ export function RbacSidebar({
                   }`}
                 >
                   <Building2 className="h-4 w-4 shrink-0" />
-                  <span>{isBn ? 'ফার্মাসিউটিক্যালস ব্র্যান্ডস (DGDA)' : 'Pharma Brands (DGDA)'}</span>
+                  <span>{isBn ? 'ফার্মাসিউটিক্যালস ব্র্যান্ডস' : 'Pharma Brands (DGDA)'}</span>
                 </button>
 
-                {/* Sub-Button 4: Discount Coupons & Promo Codes */}
+                {/* 7. Discount Coupons */}
                 <button
                   type="button"
-                  onClick={() => handleSubItemClick('coupons' as any)}
+                  onClick={() => handleSubItemClick('coupons')}
                   className={`w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all cursor-pointer ${
                     activeTab === ('coupons' as any)
                       ? 'bg-primary text-white font-black shadow-md'
