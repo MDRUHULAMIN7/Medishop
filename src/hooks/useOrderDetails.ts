@@ -6,8 +6,8 @@ import {
   selectCurrentOrder,
   selectLastPlacedOrder,
 } from '@/store/slices/orderSlice';
-import { Order } from '@/types/order';
 import { orderService } from '@/services/order.service';
+import { normalizeOrder } from './useOrders';
 
 export function useOrderDetails(orderId?: string) {
   const dispatch = useAppDispatch();
@@ -27,7 +27,8 @@ export function useOrderDetails(orderId?: string) {
     setIsLoading(true);
     try {
       const order = await orderService.getOrderById(orderId);
-      dispatch(setCurrentOrder(order));
+      const normalized = normalizeOrder(order);
+      dispatch(setCurrentOrder(normalized));
     } catch (e) {
       console.error('Failed to fetch order detail:', e);
     } finally {
@@ -46,13 +47,14 @@ export function useOrderDetails(orderId?: string) {
     try {
       const updated = await orderService.cancelOrder(targetId);
       if (updated) {
-        dispatch(setCurrentOrder(updated));
+        const normalized = normalizeOrder(updated);
+        dispatch(setCurrentOrder(normalized));
         toast.success(
           isBn ? 'অর্ডারটি বাতিল করা হয়েছে' : 'Order cancelled successfully'
         );
       }
-    } catch (e) {
-      toast.error(isBn ? 'অর্ডার বাতিল করতে সমস্যা হয়েছে' : 'Failed to cancel order');
+    } catch (e: any) {
+      toast.error(e?.message || (isBn ? 'অর্ডার বাতিল করতে সমস্যা হয়েছে' : 'Failed to cancel order'));
     }
   }, [orderId, currentOrder, dispatch, isBn]);
 

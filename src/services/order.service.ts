@@ -18,6 +18,12 @@ export interface CheckoutPayload {
   note?: string;
 }
 
+export interface UpdateOrderStatusPayload {
+  orderStatus?: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded';
+  note?: string;
+}
+
 export class OrderService {
   /**
    * Process checkout with backend server validation (Stock check, RX check, Coupon re-check, Cart clear)
@@ -54,35 +60,34 @@ export class OrderService {
   }
 
   /**
-   * Admin: List all orders
+   * Admin / Staff: List all orders with optional filters
    */
-  public async getAllOrders(query?: string): Promise<any[]> {
+  public async getAllOrders(query?: string): Promise<any> {
     const q = query ? `?${query}` : '';
-    return apiClient<any[]>(`/orders${q}`, {
+    return apiClient<any>(`/orders${q}`, {
       method: 'GET',
     });
   }
 
   /**
-   * Admin / User: Update order status
+   * Admin / Staff: Update order status (orderStatus, paymentStatus, note)
    */
-  public async updateOrderStatus(id: string, status: string): Promise<any> {
+  public async updateOrderStatus(id: string, payload: UpdateOrderStatusPayload): Promise<any> {
     return apiClient<any>(`/orders/${id}/status`, {
       method: 'PATCH',
-      body: JSON.stringify({ status }),
+      body: JSON.stringify(payload),
     });
   }
 
   /**
    * Cancel order
    */
-  public async cancelOrder(id: string): Promise<any> {
+  public async cancelOrder(id: string, note?: string): Promise<any> {
     return apiClient<any>(`/orders/${id}/status`, {
       method: 'PATCH',
-      body: JSON.stringify({ status: 'cancelled' }),
+      body: JSON.stringify({ orderStatus: 'cancelled', note }),
     });
   }
 }
 
 export const orderService = new OrderService();
-

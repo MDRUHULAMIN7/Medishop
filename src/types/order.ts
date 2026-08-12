@@ -3,6 +3,8 @@ import { ShippingAddress } from './address';
 import { DeliveryMethod, PaymentMethod } from './checkout';
 
 export type OrderStatus =
+  | 'pending'
+  | 'processing'
   | 'placed'
   | 'confirmed'
   | 'packed'

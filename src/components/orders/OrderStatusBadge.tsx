@@ -18,26 +18,22 @@ export function OrderStatusBadge({
 }: OrderStatusBadgeProps) {
   const getBadgeConfig = () => {
     switch (status) {
+      case 'pending':
       case 'placed':
         return {
-          labelEn: 'Order Placed',
-          labelBn: 'অর্ডার জমা নেওয়া হয়েছে',
+          labelEn: 'Pending',
+          labelBn: 'অর্ডার পেন্ডিং',
           icon: <Clock className="h-3 w-3" />,
-          classes: 'bg-sky-50 text-sky-700 border-sky-200',
+          classes: 'bg-amber-50 text-amber-700 border-amber-200',
         };
+      case 'processing':
       case 'confirmed':
-        return {
-          labelEn: 'Confirmed',
-          labelBn: 'নিশ্চিত করা হয়েছে',
-          icon: <CheckCircle2 className="h-3 w-3" />,
-          classes: 'bg-blue-50 text-blue-700 border-blue-200',
-        };
       case 'packed':
         return {
-          labelEn: 'Packed',
-          labelBn: 'প্যাকেজিং সম্পন্ন',
+          labelEn: 'Processing',
+          labelBn: 'প্রসেসিং হচ্ছে',
           icon: <Package className="h-3 w-3" />,
-          classes: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+          classes: 'bg-blue-50 text-blue-700 border-blue-200',
         };
       case 'shipped':
         return {
