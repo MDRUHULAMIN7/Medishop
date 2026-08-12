@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Product } from '@/types/home';
+import { Product } from '@/services/product.service';
 import { ProductCard } from '@/components/home/ProductCard';
 import { NoResults } from '@/components/search/NoResults';
 import { ProductGridSkeleton } from './ProductGridSkeleton';

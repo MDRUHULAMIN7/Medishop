@@ -102,10 +102,20 @@ input:disabled {
   cursor: not-allowed;
 }
 
-/* Focus Ring Utility for Accessibility */
-*:focus-visible {
+/* Focus Ring Utility for Accessibility (excluding inputs/selects to avoid double rings) */
+*:focus-visible:not(input):not(select):not(textarea) {
   outline: 2px solid var(--color-ring);
   outline-offset: 2px;
+}
+
+input:focus,
+input:focus-visible,
+select:focus,
+select:focus-visible,
+textarea:focus,
+textarea:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* Custom Scrollbar */

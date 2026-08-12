@@ -29,8 +29,8 @@ export function SearchSuggestionItem({
       {/* Thumbnail */}
       <div className="relative h-12 w-12 shrink-0 rounded-lg overflow-hidden bg-muted">
         <Image
-          src={product.image}
-          alt={isBn ? product.nameBn : product.nameEn}
+          src={product.image && product.image.trim() !== '' ? product.image : 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=400&auto=format&fit=crop'}
+          alt={isBn ? product.nameBn || (product as any).name || '' : product.nameEn || (product as any).name || ''}
           fill
           className="object-cover"
         />
@@ -40,7 +40,9 @@ export function SearchSuggestionItem({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] font-medium text-muted-foreground truncate">
-            {product.brand}
+            {typeof product.brand === 'object' && product.brand !== null
+              ? (product.brand as any).name || ''
+              : product.brand || (product as any).brandName || ''}
           </span>
           {product.requiresRx && (
             <span className="inline-flex items-center gap-0.5 rounded bg-rose-500 px-1 py-0.2 text-[9px] font-bold text-white">

@@ -11,13 +11,20 @@ import { useRouter } from 'next/navigation';
 interface AddToCartSectionProps {
   product: Product;
   quantity: number;
+  selectedUnit?: string;
+  price?: number;
+  mrp?: number;
 }
 
-export function AddToCartSection({ product, quantity }: AddToCartSectionProps) {
+export function AddToCartSection({ product, quantity, selectedUnit, price, mrp }: AddToCartSectionProps) {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
+
+  const sellingPrice = price !== undefined ? price : product.price;
+  const itemMrp = mrp !== undefined ? mrp : product.mrp;
+  const unit = selectedUnit || product.unit;
 
   const handleAddToCart = () => {
     dispatch(
@@ -27,10 +34,10 @@ export function AddToCartSection({ product, quantity }: AddToCartSectionProps) {
         nameEn: product.nameEn,
         nameBn: product.nameBn,
         brand: product.brand,
-        sellingPrice: product.price,
-        mrp: product.mrp,
+        sellingPrice,
+        mrp: itemMrp,
         image: product.image,
-        unit: product.unit,
+        unit,
         quantity,
         prescriptionRequired: product.requiresRx,
         stock: product.stockCount,
@@ -39,8 +46,8 @@ export function AddToCartSection({ product, quantity }: AddToCartSectionProps) {
 
     toast.success(
       isBn
-        ? `"${product.nameBn}" কার্টে যোগ করা হয়েছে!`
-        : `"${product.nameEn}" added to cart!`
+        ? `"${product.nameBn}" (${unit}) কার্টে যোগ করা হয়েছে!`
+        : `"${product.nameEn}" (${unit}) added to cart!`
     );
   };
 

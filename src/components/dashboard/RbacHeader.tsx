@@ -22,9 +22,9 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface RbacHeaderProps {
   currentRole: UserRole;
-  onRoleChange: (role: UserRole) => void;
+  onRoleChange?: (role: UserRole) => void;
   onToggleMobileSidebar: () => void;
-  onSelectTab: (tab: RbacTabId) => void;
+  onSelectTab?: (tab: RbacTabId) => void;
   isBn?: boolean;
 }
 
@@ -52,7 +52,7 @@ export function RbacHeader({
 
   return (
     <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-border bg-background/95 px-4 sm:px-6 backdrop-blur-md shrink-0">
-      {/* Left: Mobile Menu Toggle & Role Badge */}
+      {/* Left: Mobile Menu Toggle & Role Badge Banner */}
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -63,9 +63,9 @@ export function RbacHeader({
           <Menu className="h-5 w-5" />
         </button>
 
-        <div className="flex items-center gap-2 text-sm font-bold">
-          <span className="font-extrabold text-foreground bg-muted/40 px-3 py-1 rounded-lg border border-border flex items-center gap-1.5">
-            <ShieldCheck className="h-4 w-4 text-primary" />
+        <div className="flex items-center gap-2 text-xs sm:text-sm font-bold">
+          <span className="font-extrabold text-foreground bg-muted/40 px-3 py-1.5 rounded-xl border border-border flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
             <span>{isBn ? activeRoleConfig.titleBn : activeRoleConfig.titleEn}</span>
           </span>
         </div>

@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAppSelector } from '@/store';
 import { InventoryProductsModule } from '@/components/dashboard/modules/InventoryProductsModule';
 import { CategoryManager } from '@/components/dashboard/CategoryManager';
 import { BrandManager } from '@/components/dashboard/BrandManager';
-import { Boxes, FolderTree, Building2 } from 'lucide-react';
+import { Boxes, FolderTree, Building2, Loader2 } from 'lucide-react';
 
-export default function InventoryDashboardPage() {
+function InventoryDashboardContent() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
   const language = useAppSelector((state) => state.ui.language);
@@ -75,5 +75,19 @@ export default function InventoryDashboardPage() {
       {activeTab === 'categories' && <CategoryManager />}
       {activeTab === 'brands' && <BrandManager />}
     </div>
+  );
+}
+
+export default function InventoryDashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      }
+    >
+      <InventoryDashboardContent />
+    </Suspense>
   );
 }

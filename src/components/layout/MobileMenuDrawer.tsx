@@ -23,7 +23,7 @@ import {
 import { useAppDispatch, useAppSelector } from '@/store';
 import { setMobileMenu, setLanguage } from '@/store/slices/uiSlice';
 import { openAuthModal } from '@/store/slices/authSlice';
-import { MOCK_CATEGORIES } from '@/mocks';
+import { useCategories } from '@/hooks/useCategories';
 import { cn } from '@/lib/utils';
 
 const ICON_MAP: Record<string, React.ReactNode> = {
@@ -42,6 +42,7 @@ export function MobileMenuDrawer() {
   const isOpen = useAppSelector((state) => state.ui.isMobileMenuOpen);
   const language = useAppSelector((state) => state.ui.language);
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+  const { categories } = useCategories();
 
   const isBn = language === 'bn';
 
@@ -244,15 +245,15 @@ export function MobileMenuDrawer() {
                   {isBn ? 'ওষুধের ক্যাটাগরি' : 'Medicine Categories'}
                 </h3>
                 <nav className="flex flex-col gap-1">
-                  {MOCK_CATEGORIES.map((cat) => (
+                  {(categories || []).map((cat) => (
                     <Link
                       key={cat.id}
                       href={`/category/${cat.slug}`}
                       onClick={handleClose}
                       className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
                     >
-                      {ICON_MAP[cat.iconName] || <Pill className="h-5 w-5 text-primary" />}
-                      <span>{isBn ? cat.nameBn : cat.nameEn}</span>
+                      {ICON_MAP[cat.iconName || 'Pill'] || <Pill className="h-5 w-5 text-primary" />}
+                      <span>{isBn ? cat.nameBn || cat.name : cat.nameEn || cat.name}</span>
                     </Link>
                   ))}
                 </nav>

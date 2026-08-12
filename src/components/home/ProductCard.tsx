@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useRef, useState } from 'react';
+import React, { memo, useRef, useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -14,24 +14,17 @@ import {
   ShoppingCart,
   X,
 } from 'lucide-react';
-import { Product } from '@/types/home';
+import { Product } from '@/services/product.service';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { addToCart, updateQuantity } from '@/store/slices/cartSlice';
 import { formatBDT, cn } from '@/lib/utils';
 import { useFlyToCart } from '@/context/FlyToCartContext';
 import { toast } from 'sonner';
+import { getProductUnitOptions } from '@/lib/packagingUtils';
 
 interface ProductCardProps {
   product: Product;
 }
-
-const UNIT_OPTIONS = [
-  { value: 'Piece', labelBn: 'পিস', labelEn: 'Piece' },
-  { value: 'Strip', labelBn: 'পাতা', labelEn: 'Strip' },
-  { value: 'Box', labelBn: 'বক্স', labelEn: 'Box' },
-] as const;
-
-type UnitValue = (typeof UNIT_OPTIONS)[number]['value'];
 
 export const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
   const dispatch = useAppDispatch();
@@ -40,29 +33,39 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
   const { flyToCart } = useFlyToCart();
   const cardRef = useRef<HTMLDivElement>(null);
 
+  const unitOptions = useMemo(() => {
+    return getProductUnitOptions(product);
+  }, [product]);
+
   const [isAddFlowOpen, setIsAddFlowOpen] = useState(false);
-  const [selectedUnit, setSelectedUnit] = useState<UnitValue>('Piece');
+  const [selectedUnit, setSelectedUnit] = useState<string>(unitOptions[0]?.value || 'pcs');
   const [pendingQuantity, setPendingQuantity] = useState(1);
 
+  const activeOption = useMemo(() => {
+    return unitOptions.find((u) => u.value === selectedUnit) || unitOptions[0] || {
+      value: 'pcs', labelBn: 'পিস', labelEn: 'Piece', price: product.price, mrp: product.mrp, stock: product.stockCount
+    };
+  }, [unitOptions, selectedUnit, product]);
+
   const cartItems = useAppSelector((state) => state.cart.items);
-  const cartItem = cartItems.find((i) => i.productId === product.id);
+  const cartItem = cartItems.find((i) => i.productId === product.id && i.unit === selectedUnit);
   const quantityInCart = cartItem ? cartItem.quantity : 0;
 
-  const currentUnit = (cartItem?.unit as UnitValue | undefined) || selectedUnit;
+  const currentUnit = (cartItem?.unit as string | undefined) || selectedUnit;
 
-  const unitLabel = (unit: UnitValue) => {
-    const option = UNIT_OPTIONS.find((item) => item.value === unit);
+  const unitLabel = (unitStr: string) => {
+    const option = unitOptions.find((item) => item.value === unitStr);
     return isBn ? option?.labelBn : option?.labelEn;
   };
 
-  const triggerFlyToCart = (unit: UnitValue) => {
+  const triggerFlyToCart = (unitStr: string) => {
     if (!cardRef.current) return;
 
     flyToCart(cardRef.current, {
       image: product.image,
-      name: isBn ? product.nameBn : product.nameEn,
-      price: product.price,
-      unit,
+      name: isBn ? product.nameBn || product.name : product.nameEn || product.name,
+      price: activeOption.price,
+      unit: unitStr,
     });
   };
 
@@ -79,8 +82,8 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
     setIsAddFlowOpen(false);
   };
 
-  const handleSelectUnit = (unit: UnitValue) => {
-    setSelectedUnit(unit);
+  const handleSelectUnit = (unitStr: string) => {
+    setSelectedUnit(unitStr);
   };
 
   const handleAddToCart = (e?: React.MouseEvent) => {
@@ -95,20 +98,20 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
       addToCart({
         productId: product.id,
         slug: product.slug,
-        nameEn: product.nameEn,
-        nameBn: product.nameBn,
-        brand: product.brand,
-        sellingPrice: product.price,
-        mrp: product.mrp,
+        nameEn: product.nameEn || product.name,
+        nameBn: product.nameBn || product.name,
+        brand: typeof product.brand === 'object' ? product.brand?.name : product.brand,
+        sellingPrice: activeOption.price,
+        mrp: activeOption.mrp,
         image: product.image,
         unit: selectedUnit,
         quantity: pendingQuantity,
-        prescriptionRequired: product.requiresRx,
-        stock: product.stockCount,
+        prescriptionRequired: Boolean(product.requiresRx || product.requiresPrescription),
+        stock: activeOption.stock,
       })
     );
 
-    toast.success(isBn ? 'কার্টে যোগ হয়েছে' : `${product.nameEn} added to cart`);
+    toast.success(isBn ? 'কার্টে যোগ হয়েছে' : `${product.nameEn || product.name} added to cart`);
     setIsAddFlowOpen(false);
     setPendingQuantity(1);
   };
@@ -147,8 +150,8 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
       <Link href={`/product/${product.slug}`} className="block">
         <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-muted/40">
           <Image
-            src={product.image}
-            alt={isBn ? product.nameBn : product.nameEn}
+            src={product.image && product.image.trim() !== '' ? product.image : 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=400&auto=format&fit=crop'}
+            alt={isBn ? product.nameBn || (product as any).name || '' : product.nameEn || (product as any).name || ''}
             fill
             className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 250px"
@@ -160,7 +163,7 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
             </span>
           )}
 
-          {product.requiresRx && (
+          {(product.requiresRx || product.requiresPrescription) && (
             <span
               title={isBn ? 'প্রেসক্রিপশন প্রয়োজন' : 'Prescription Required'}
               className="absolute right-1.5 top-1.5 sm:right-2 sm:top-2 flex items-center gap-1 rounded-md bg-rose-500/90 px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-xs backdrop-blur-xs"
@@ -186,25 +189,30 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
 
         <div className="mt-2.5 flex flex-col gap-0.5 sm:gap-1">
           <span className="truncate text-[10px] sm:text-[11px] font-medium text-muted-foreground">
-            {product.brand}
+            {typeof product.brand === 'object' && product.brand !== null
+              ? (product.brand as any).name || ''
+              : product.brand || (product as any).brandName || ''}
           </span>
 
           <h3
-            title={isBn ? product.nameBn : product.nameEn}
+            title={isBn ? product.nameBn || product.name : product.nameEn || product.name}
             className="min-h-[2.4rem] sm:min-h-[2.5rem] text-xs font-semibold leading-snug text-foreground transition-colors group-hover:text-primary sm:text-sm line-clamp-2"
           >
-            {isBn ? product.nameBn : product.nameEn}
+            {isBn ? product.nameBn || product.name : product.nameEn || product.name}
           </h3>
 
           <div className="mt-1 flex items-baseline gap-1.5 sm:gap-2">
             <span className="text-sm sm:text-base font-extrabold text-primary">
-              {formatBDT(product.price)}
+              {formatBDT(activeOption.price)}
             </span>
-            {product.mrp > product.price && (
+            {activeOption.mrp > activeOption.price && (
               <span className="text-[11px] sm:text-xs text-muted-foreground line-through">
-                {formatBDT(product.mrp)}
+                {formatBDT(activeOption.mrp)}
               </span>
             )}
+            <span className="text-[10px] font-bold text-muted-foreground uppercase">
+              /{isBn ? activeOption.labelBn : activeOption.labelEn}
+            </span>
           </div>
         </div>
       </Link>
@@ -212,7 +220,7 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
       <div className="relative mt-auto pt-2.5">
         <AnimatePresence mode="wait" initial={false}>
           {quantityInCart > 0 ? (
-            /* Full-width clean Quantity Control when Item is in Cart */
+            /* Full-width Quantity Control when Item is in Cart */
             <motion.div
               key="quantity-bar"
               initial={{ opacity: 0, scale: 0.96 }}
@@ -277,9 +285,20 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
                       </button>
                     </div>
 
-                    {/* Unit 3-Segment Switcher */}
-                    <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted/50 p-1">
-                      {UNIT_OPTIONS.map((option) => {
+                    {/* Dynamic Unit Segment Switcher */}
+                    <div
+                      className={cn(
+                        'grid gap-1 rounded-lg bg-muted/50 p-1',
+                        unitOptions.length === 1
+                          ? 'grid-cols-1'
+                          : unitOptions.length === 2
+                          ? 'grid-cols-2'
+                          : unitOptions.length === 3
+                          ? 'grid-cols-3'
+                          : 'grid-cols-4'
+                      )}
+                    >
+                      {unitOptions.map((option) => {
                         const isSelected = selectedUnit === option.value;
                         return (
                           <button
@@ -291,9 +310,9 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
                               handleSelectUnit(option.value);
                             }}
                             className={cn(
-                              'py-1 text-center text-[10px] sm:text-[11px] font-bold rounded-md transition-all',
+                              'py-1 text-center text-[10px] sm:text-[11px] font-bold rounded-md transition-all cursor-pointer',
                               isSelected
-                                ? 'bg-primary text-white shadow-2xs'
+                                ? 'bg-primary text-white shadow-2xs font-extrabold'
                                 : 'text-muted-foreground hover:bg-background/80 hover:text-foreground'
                             )}
                           >

@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Star, ShieldCheck, Truck, CheckCircle2, ChevronRight } from 'lucide-react';
 import { Product } from '@/types/home';
-import { formatBDT } from '@/lib/utils';
+import { formatBDT, cn } from '@/lib/utils';
 import { useAppSelector } from '@/store';
 import { ProductGallery } from '@/components/pdp/ProductGallery';
 import { PrescriptionNotice } from '@/components/pdp/PrescriptionNotice';
@@ -13,6 +13,7 @@ import { AddToCartSection } from '@/components/pdp/AddToCartSection';
 import { StickyMobileBuyBar } from '@/components/pdp/StickyMobileBuyBar';
 import { ProductTabs } from '@/components/pdp/ProductTabs';
 import { CrossSellProducts } from '@/components/pdp/CrossSellProducts';
+import { getProductUnitOptions } from '@/lib/packagingUtils';
 
 interface ProductDetailClientProps {
   product: Product;
@@ -22,6 +23,28 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const [quantity, setQuantity] = useState(1);
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
+
+  const unitOptions = useMemo(() => {
+    return getProductUnitOptions(product);
+  }, [product]);
+
+  const [selectedUnit, setSelectedUnit] = useState<string>(unitOptions[0]?.value || 'pcs');
+
+  const activeOption = useMemo(() => {
+    return unitOptions.find((u) => u.value === selectedUnit) || unitOptions[0] || {
+      value: 'pcs',
+      labelBn: 'পিস',
+      labelEn: 'Piece',
+      price: product.price,
+      mrp: product.mrp,
+      stock: product.stockCount,
+      baseUnitQty: 1,
+    };
+  }, [unitOptions, selectedUnit, product]);
+
+  const effectivePrice = activeOption.price;
+  const effectiveMrp = activeOption.mrp;
+  const discountPercent = effectiveMrp > effectivePrice ? Math.round(((effectiveMrp - effectivePrice) / effectiveMrp) * 100) : 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -86,21 +109,51 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           {/* Price Block */}
           <div className="flex items-baseline gap-3 rounded-2xl bg-muted/30 p-3.5 border border-border">
             <span className="font-serif-title text-2xl sm:text-3xl font-extrabold text-primary">
-              {formatBDT(product.price * quantity)}
+              {formatBDT(effectivePrice * quantity)}
             </span>
-            {product.mrp > product.price && (
+            {effectiveMrp > effectivePrice && (
               <>
                 <span className="text-sm text-muted-foreground line-through">
-                  {formatBDT(product.mrp * quantity)}
+                  {formatBDT(effectiveMrp * quantity)}
                 </span>
                 <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-extrabold text-slate-900">
-                  {product.discountPercent}% OFF
+                  {discountPercent}% OFF
                 </span>
               </>
             )}
-            <span className="text-xs text-muted-foreground ml-auto">
-              ({product.unit})
+            <span className="text-xs font-semibold text-muted-foreground ml-auto">
+              /{isBn ? activeOption.labelBn : activeOption.labelEn}
             </span>
+          </div>
+
+          {/* Packaging Unit Switcher (Industry Standard Selector) */}
+          <div className="flex flex-col gap-2 rounded-2xl border border-primary/20 bg-primary/5 p-3.5">
+            <label className="text-xs font-extrabold text-foreground tracking-tight">
+              {isBn ? 'প্যাকেজিং একক নির্বাচন করুন:' : 'Select Packaging Unit:'}
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {unitOptions.map((opt) => {
+                const isSelected = selectedUnit === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setSelectedUnit(opt.value)}
+                    className={cn(
+                      'flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all cursor-pointer text-center',
+                      isSelected
+                        ? 'border-primary bg-primary text-white shadow-sm font-extrabold'
+                        : 'border-border bg-background text-foreground hover:border-primary/50'
+                    )}
+                  >
+                    <span className="text-xs font-bold">{isBn ? opt.labelBn : opt.labelEn}</span>
+                    <span className={cn('text-[11px] font-semibold mt-0.5', isSelected ? 'text-white/90' : 'text-primary')}>
+                      {formatBDT(opt.price)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Prescription Required Notice */}
@@ -114,7 +167,13 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           />
 
           {/* Add to Cart / Buy Now */}
-          <AddToCartSection product={product} quantity={quantity} />
+          <AddToCartSection
+            product={product}
+            quantity={quantity}
+            selectedUnit={selectedUnit}
+            price={effectivePrice}
+            mrp={effectiveMrp}
+          />
 
           {/* Trust Guarantees Bar */}
           <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border">
@@ -137,7 +196,13 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       <CrossSellProducts productId={product.id} categoryId={product.categoryId} />
 
       {/* Mobile Sticky Buy Bar */}
-      <StickyMobileBuyBar product={product} quantity={quantity} />
+      <StickyMobileBuyBar
+        product={product}
+        quantity={quantity}
+        selectedUnit={selectedUnit}
+        price={effectivePrice}
+        mrp={effectiveMrp}
+      />
     </div>
   );
 }

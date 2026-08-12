@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { UseQueryResult } from '@tanstack/react-query';
-import { Product } from '@/types/home';
+import { Product } from '@/services/product.service';
 import { SectionHeader } from './SectionHeader';
 import { ProductCard } from './ProductCard';
 import { SectionSkeleton } from './SectionSkeleton';

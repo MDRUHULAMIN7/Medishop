@@ -14,7 +14,7 @@ export function useCategories(includeInactive = true) {
   } = useQuery<Category[]>({
     queryKey: ['categories', includeInactive],
     queryFn: () => CategoryService.getAllCategories(includeInactive),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 
   const createCategoryMutation = useMutation({

@@ -10,7 +10,7 @@ import { SortDropdown } from '@/components/products/SortDropdown';
 import { ProductGridSkeleton } from '@/components/products/ProductGridSkeleton';
 import { Filter } from 'lucide-react';
 import { useAppSelector } from '@/store';
-import { FULL_MOCK_CATEGORIES } from '@/mocks/categories';
+import { useCategories } from '@/hooks/useCategories';
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
@@ -21,11 +21,12 @@ function CategoryContent({ slug }: { slug: string }) {
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
 
-  const categoryObj = FULL_MOCK_CATEGORIES.find((c) => c.slug === slug);
+  const { categories } = useCategories();
+  const categoryObj = (categories || []).find((c) => c.slug === slug);
   const categoryTitle = categoryObj
     ? isBn
-      ? categoryObj.nameBn
-      : categoryObj.nameEn
+      ? categoryObj.nameBn || categoryObj.name
+      : categoryObj.nameEn || categoryObj.name
     : slug;
 
   const {

@@ -1,22 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Tags,
   Pill,
   X,
-  ShieldCheck,
-  ChevronRight,
+  ChevronDown,
+  FolderTree,
+  Building2,
+  Package,
 } from 'lucide-react';
 import { UserRole } from '@/types';
-import {
-  RBAC_MENU_ITEMS,
-  RBAC_ROLES_CONFIG,
-  RbacTabId,
-  RbacMenuItem,
-} from '@/config/rbac.config';
+import { RbacTabId } from '@/config/rbac.config';
 
 interface RbacSidebarProps {
   currentRole: UserRole;
@@ -27,12 +25,7 @@ interface RbacSidebarProps {
   isBn?: boolean;
 }
 
-const ICON_MAP: Record<string, React.ElementType> = {
-  Tags,
-};
-
 export function RbacSidebar({
-  currentRole,
   activeTab,
   setActiveTab,
   isOpenMobile,
@@ -40,40 +33,28 @@ export function RbacSidebar({
   isBn = true,
 }: RbacSidebarProps) {
   const router = useRouter();
-  const roleConfig = RBAC_ROLES_CONFIG[currentRole] || RBAC_ROLES_CONFIG.customer;
+  const [isCatalogExpanded, setIsCatalogExpanded] = useState(true);
 
-  const allowedMenuItems = RBAC_MENU_ITEMS.filter((item) =>
-    item.roles.includes(currentRole)
-  );
-
-  const categories: {
-    key: RbacMenuItem['category'];
-    titleEn: string;
-    titleBn: string;
-  }[] = [
-    { key: 'inventory', titleEn: 'INTEGRATED CATALOG MODULES', titleBn: 'ক্যাটাগরি ও ব্রান্ড ফিচারস' },
-  ];
-
-  const handleMenuClick = (item: RbacMenuItem) => {
-    setActiveTab(item.id);
+  const handleSubItemClick = (tab: 'products' | 'categories' | 'brands') => {
+    setActiveTab(tab as RbacTabId);
     onCloseMobile();
-    router.push(item.targetRoute);
+    router.push(`/dashboard/admin?tab=${tab}&page=1`);
   };
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-background border-r border-border w-80 shrink-0 select-none shadow-xs">
-      {/* Brand Header */}
+      {/* Brand Header: Perfectly aligned h-16 (64px) height matching RbacHeader */}
       <div className="h-16 px-6 border-b border-border flex items-center justify-between shrink-0">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-white font-black shadow-md ring-4 ring-primary/10 group-hover:scale-105 transition-transform">
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white font-bold shadow-md transition-transform group-hover:scale-105 shrink-0">
             <Pill className="h-5 w-5" />
           </div>
-          <div>
-            <span className="font-serif-title text-xl font-black tracking-tight text-foreground group-hover:text-primary transition-colors">
+          <div className="flex flex-col justify-center">
+            <span className="font-serif-title text-2xl font-extrabold tracking-tight text-primary leading-none">
               mediShop
             </span>
-            <span className="block text-[10px] font-extrabold tracking-widest text-primary uppercase">
-              {isBn ? 'ডিজিটাল পোর্টাল' : 'ADMIN PORTAL'}
+            <span className="text-[10px] font-bold tracking-wider uppercase text-muted-foreground mt-0.5">
+              {isBn ? 'অনলাইন ফার্মেসি ও হেলথকেয়ার' : 'Online Pharmacy BD'}
             </span>
           </div>
         </Link>
@@ -88,66 +69,84 @@ export function RbacSidebar({
         </button>
       </div>
 
-      {/* Role Badge Banner */}
-      <div className="p-4 mx-4 mt-4 rounded-2xl border border-border bg-muted/40">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-muted-foreground">
-            {isBn ? 'আপনার রোল:' : 'Account Role:'}
-          </span>
-          <span
-            className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-black border ${roleConfig.badgeBg}`}
+      {/* Navigation Section */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+        {/* Accordion Parent Item: Categories, Brands & Products */}
+        <div className="space-y-1">
+          <button
+            type="button"
+            onClick={() => setIsCatalogExpanded(!isCatalogExpanded)}
+            className="group w-full flex items-center justify-between rounded-2xl px-3.5 py-3 text-sm font-bold bg-primary/10 text-primary transition-all cursor-pointer shadow-2xs"
           >
-            <ShieldCheck className="h-3.5 w-3.5" />
-            {isBn ? roleConfig.titleBn : roleConfig.titleEn}
-          </span>
-        </div>
-      </div>
-
-      {/* Navigation Section List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
-        {categories.map((cat) => {
-          const items = allowedMenuItems.filter((item) => item.category === cat.key);
-          if (items.length === 0) return null;
-
-          return (
-            <div key={cat.key} className="space-y-2">
-              <h4 className="px-3 text-xs font-black tracking-wider text-muted-foreground/80 uppercase">
-                {isBn ? cat.titleBn : cat.titleEn}
-              </h4>
-
-              <div className="space-y-1">
-                {items.map((item) => {
-                  const Icon = ICON_MAP[item.iconName] || Tags;
-                  const isActive = activeTab === item.id;
-
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => handleMenuClick(item)}
-                      className={`group w-full flex items-center justify-between rounded-xl px-3.5 py-3 text-sm font-bold transition-all cursor-pointer ${
-                        isActive
-                          ? 'bg-primary/10 text-primary border-l-4 border-primary font-black shadow-xs'
-                          : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <Icon
-                          className={`h-5 w-5 shrink-0 transition-transform group-hover:scale-110 ${
-                            isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
-                          }`}
-                        />
-                        <span className="truncate">{isBn ? item.labelBn : item.labelEn}</span>
-                      </div>
-
-                      {isActive && <ChevronRight className="h-4 w-4 text-primary shrink-0" />}
-                    </button>
-                  );
-                })}
-              </div>
+            <div className="flex items-center gap-3">
+              <Tags className="h-5 w-5 text-primary shrink-0 transition-transform group-hover:scale-110" />
+              <span className="font-black">
+                {isBn ? 'ফার্মাসিউটিক্যালস ক্যাটালগ' : 'Pharma Inventory'}
+              </span>
             </div>
-          );
-        })}
+            <motion.div
+              animate={{ rotate: isCatalogExpanded ? 180 : 0 }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
+            >
+              <ChevronDown className="h-4 w-4 text-primary shrink-0" />
+            </motion.div>
+          </button>
+
+          {/* Smooth Rich Animated Collapsible Sub-Buttons */}
+          <AnimatePresence initial={false}>
+            {isCatalogExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: [0.04, 0.62, 0.23, 0.98] }}
+                className="overflow-hidden pl-4 pr-1 pt-1.5 space-y-1.5"
+              >
+                {/* Sub-Button 1: Medicine Products Catalog */}
+                <button
+                  type="button"
+                  onClick={() => handleSubItemClick('products')}
+                  className={`w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === 'products'
+                      ? 'bg-primary text-white font-black shadow-md'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  <Package className="h-4 w-4 shrink-0" />
+                  <span>{isBn ? 'ওষুধ ও পণ্য ক্যাটালগ' : 'Medicine Catalog'}</span>
+                </button>
+
+                {/* Sub-Button 2: Pharmacy Categories */}
+                <button
+                  type="button"
+                  onClick={() => handleSubItemClick('categories')}
+                  className={`w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === 'categories' || activeTab === 'inventory_categories'
+                      ? 'bg-primary text-white font-black shadow-md'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  <FolderTree className="h-4 w-4 shrink-0" />
+                  <span>{isBn ? 'ফার্মেসি ক্যাটাগরি' : 'Pharmacy Categories'}</span>
+                </button>
+
+                {/* Sub-Button 3: Pharma Brands (DGDA) */}
+                <button
+                  type="button"
+                  onClick={() => handleSubItemClick('brands')}
+                  className={`w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === 'brands'
+                      ? 'bg-primary text-white font-black shadow-md'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  <Building2 className="h-4 w-4 shrink-0" />
+                  <span>{isBn ? 'ফার্মাসিউটিক্যালস ব্র্যান্ডস (DGDA)' : 'Pharma Brands (DGDA)'}</span>
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       {/* Sidebar Footer */}

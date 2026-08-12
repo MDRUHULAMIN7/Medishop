@@ -11,15 +11,25 @@ import { toast } from 'sonner';
 interface StickyMobileBuyBarProps {
   product: Product;
   quantity: number;
+  selectedUnit?: string;
+  price?: number;
+  mrp?: number;
 }
 
 export function StickyMobileBuyBar({
   product,
   quantity,
+  selectedUnit,
+  price,
+  mrp,
 }: StickyMobileBuyBarProps) {
   const dispatch = useAppDispatch();
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
+
+  const sellingPrice = price !== undefined ? price : product.price;
+  const itemMrp = mrp !== undefined ? mrp : product.mrp;
+  const unit = selectedUnit || product.unit;
 
   const handleAddToCart = () => {
     dispatch(
@@ -29,10 +39,10 @@ export function StickyMobileBuyBar({
         nameEn: product.nameEn,
         nameBn: product.nameBn,
         brand: product.brand,
-        sellingPrice: product.price,
-        mrp: product.mrp,
+        sellingPrice,
+        mrp: itemMrp,
         image: product.image,
-        unit: product.unit,
+        unit,
         quantity,
         prescriptionRequired: product.requiresRx,
         stock: product.stockCount,
@@ -41,8 +51,8 @@ export function StickyMobileBuyBar({
 
     toast.success(
       isBn
-        ? `"${product.nameBn}" কার্টে যোগ করা হয়েছে!`
-        : `"${product.nameEn}" added to cart!`
+        ? `"${product.nameBn}" (${unit}) কার্টে যোগ করা হয়েছে!`
+        : `"${product.nameEn}" (${unit}) added to cart!`
     );
   };
 

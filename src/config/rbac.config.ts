@@ -13,7 +13,7 @@ export interface RbacRoleInfo {
   iconName: string;
 }
 
-export type RbacTabId = 'inventory_categories';
+export type RbacTabId = 'products' | 'categories' | 'brands' | 'inventory_categories';
 
 export interface RbacMenuItem {
   id: RbacTabId;
@@ -92,7 +92,17 @@ export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
 };
 
 export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
-  // Integrated Backend Inventory Catalog (Categories & Brands API)
+  {
+    id: 'products',
+    labelEn: 'Pharmaceutical Products',
+    labelBn: 'ওষুধ ও পণ্য ক্যাটালগ',
+    descriptionEn: 'Live REST API for Products, Images & Inventory Stock',
+    descriptionBn: 'ওষুধ, ইমেজ ফাইল আপলোড ও স্টকে প্রোডাক্ট ক্যাটালগ',
+    iconName: 'Pill',
+    category: 'inventory',
+    roles: ['admin', 'inventory_manager', 'pharmacist', 'sales_staff', 'customer'],
+    targetRoute: '/dashboard/admin?tab=products',
+  },
   {
     id: 'inventory_categories',
     labelEn: 'Categories & Brands',

@@ -14,7 +14,7 @@ export function useBrands(includeInactive = true) {
   } = useQuery<Brand[]>({
     queryKey: ['brands', includeInactive],
     queryFn: () => BrandService.getAllBrands(includeInactive),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 
   const createBrandMutation = useMutation({
