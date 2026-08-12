@@ -1,4 +1,7 @@
-import { apiClient } from '@/lib/apiClient';
+import { apiClient, getAccessToken } from '@/lib/apiClient';
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
 
 export interface PrescriptionItem {
   id: string;
@@ -25,17 +28,18 @@ export const PrescriptionService = {
    * Upload prescription image(s) and optional note
    */
   async uploadPrescription(formData: FormData): Promise<PrescriptionItem> {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-    const response = await fetch('/api/v1/prescriptions', {
+    const token = getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/prescriptions`, {
       method: 'POST',
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: formData,
+      credentials: 'include',
     });
 
     const data = await response.json();
-    if (!response.ok) {
+    if (!response.ok || data.success === false) {
       throw new Error(data.message || 'Failed to upload prescription');
     }
     return data.data || data;
