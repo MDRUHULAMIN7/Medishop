@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/store';
 import {
@@ -7,8 +7,8 @@ import {
   selectAppliedCoupon,
   selectSubtotal,
 } from '@/store/slices/cartSlice';
-import { couponService } from '@/services/coupon.service';
-import { couponSchema } from '@/validators/coupon.schema';
+import { CouponService, PublicCoupon } from '@/services/coupon.service';
+import { AppliedCoupon } from '@/types/cart';
 import { cartEventBus } from '@/utils/cartEvents';
 import { useCartAnalytics } from './useCartAnalytics';
 
@@ -22,52 +22,63 @@ export function useCoupon() {
   const [couponCodeInput, setCouponCodeInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [publicCoupons, setPublicCoupons] = useState<PublicCoupon[]>([]);
 
   const { trackCouponApplied } = useCartAnalytics();
 
+  // Load active public coupons for promo chips
+  useEffect(() => {
+    CouponService.getValidPublicCoupons()
+      .then((data) => {
+        if (Array.isArray(data)) setPublicCoupons(data);
+      })
+      .catch(() => {
+        setPublicCoupons([]);
+      });
+  }, []);
+
   const handleApplyCoupon = useCallback(
     async (codeToApply?: string) => {
-      const targetCode = codeToApply || couponCodeInput;
+      const targetCode = (codeToApply || couponCodeInput).trim().toUpperCase();
       setErrorMsg(null);
 
-      // Validate input with Zod schema
-      const validationResult = couponSchema.safeParse({ code: targetCode });
-      if (!validationResult.success) {
-        const firstErr = validationResult.error.errors[0]?.message;
-        setErrorMsg(firstErr);
-        toast.error(firstErr);
+      if (!targetCode) {
+        const msg = isBn ? 'দয়া করে একটি কুপন কোড লিখুন' : 'Please enter a coupon code';
+        setErrorMsg(msg);
+        toast.error(msg);
         return false;
       }
 
-      const cleanCode = validationResult.data.code;
       setIsLoading(true);
 
       try {
-        const result = await couponService.validateCoupon(cleanCode, subtotal);
+        const res = await CouponService.applyCoupon(targetCode, subtotal);
 
-        if (result.success && result.coupon) {
-          dispatch(applyCouponAction(result.coupon));
-          trackCouponApplied(result.coupon);
+        const appliedCouponObj: AppliedCoupon = {
+          code: res.coupon.code,
+          type: res.coupon.discountType === 'percentage' ? 'percentage' : 'flat',
+          value: res.coupon.discountValue,
+          discountAmount: res.discountAmount,
+          descriptionEn: res.message,
+          descriptionBn: res.message,
+        };
 
-          cartEventBus.emit({
-            type: 'CouponApplied',
-            items: [],
-            coupon: result.coupon,
-            timestamp: Date.now(),
-          });
+        dispatch(applyCouponAction(appliedCouponObj));
+        trackCouponApplied(appliedCouponObj);
 
-          toast.success(isBn ? result.messageBn : result.messageEn);
-          setCouponCodeInput('');
-          setIsLoading(false);
-          return true;
-        } else {
-          setErrorMsg(isBn ? result.messageBn : result.messageEn);
-          toast.error(isBn ? result.messageBn : result.messageEn);
-          setIsLoading(false);
-          return false;
-        }
-      } catch (err) {
-        const msg = isBn ? 'কুপন যাচাই করতে সমস্যা হয়েছে' : 'Failed to validate coupon';
+        cartEventBus.emit({
+          type: 'CouponApplied',
+          items: [],
+          coupon: appliedCouponObj,
+          timestamp: Date.now(),
+        });
+
+        toast.success(res.message);
+        setCouponCodeInput('');
+        setIsLoading(false);
+        return true;
+      } catch (err: any) {
+        const msg = err?.message || (isBn ? 'কুপন কোডটি প্রযোজ্য নয়' : 'Invalid coupon code');
         setErrorMsg(msg);
         toast.error(msg);
         setIsLoading(false);
@@ -88,6 +99,12 @@ export function useCoupon() {
     toast.info(isBn ? 'কুপন সেশন বাতিল করা হয়েছে' : 'Coupon removed');
   }, [dispatch, isBn]);
 
+  const availableCoupons = publicCoupons.map((c) => ({
+    code: c.code,
+    descriptionEn: `Save ${c.discountType === 'percentage' ? `${c.discountValue}%` : `৳${c.discountValue}`}`,
+    descriptionBn: `${c.discountType === 'percentage' ? `${c.discountValue}%` : `৳${c.discountValue}`} ছাড়`,
+  }));
+
   return {
     couponCodeInput,
     setCouponCodeInput,
@@ -96,6 +113,6 @@ export function useCoupon() {
     errorMsg,
     applyCoupon: handleApplyCoupon,
     removeCoupon: handleRemoveCoupon,
-    availableCoupons: couponService.getAvailableCoupons(),
+    availableCoupons,
   };
 }

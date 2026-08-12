@@ -9,23 +9,8 @@ export interface CartState {
   isHydrated: boolean;
 }
 
-const initialMockItem: CartItem = {
-  productId: 'p-101',
-  slug: 'napa-extra-500mg-65mg',
-  nameEn: 'Napa Extra 500mg/65mg Tablet',
-  nameBn: 'নাপা এক্সট্রা ৫০০ মি.গ্রা./৬৫ মি.গ্রা. ট্যাবলেট',
-  brand: 'Beximco Pharmaceuticals',
-  image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=600&auto=format&fit=crop',
-  unit: '10 Tablets Strip',
-  sellingPrice: 25,
-  mrp: 30,
-  prescriptionRequired: false,
-  stock: 150,
-  quantity: 2,
-};
-
 const initialState: CartState = {
-  items: [initialMockItem],
+  items: [],
   appliedCoupon: null,
   isDrawerOpen: false,
   isHydrated: false,

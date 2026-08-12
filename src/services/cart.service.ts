@@ -1,54 +1,87 @@
-import { CartItem } from '@/types/cart';
-import { MOCK_PRODUCTS } from '@/mocks/products';
+import { apiClient } from '@/lib/apiClient';
 
-export interface StockValidationResult {
-  isValid: boolean;
-  availableStock: number;
-  messageEn?: string;
-  messageBn?: string;
+export interface BackendCartItem {
+  product: {
+    id: string;
+    name: string;
+    slug: string;
+    dosageForm: string;
+    unitType: string;
+    images: string[];
+    price: number;
+    discountPrice?: number;
+    effectivePrice: number;
+    stock: number;
+    inStock: boolean;
+    requiresPrescription: boolean;
+    isActive: boolean;
+  };
+  quantity: number;
+  itemTotal: number;
+  isAvailable: boolean;
+  isStockExceeded: boolean;
+  maxAvailableQuantity: number;
 }
 
-export class CartService {
-  /**
-   * Validate requested quantity against product stock inventory.
-   */
-  public async validateStock(
-    productId: string,
-    requestedQuantity: number
-  ): Promise<StockValidationResult> {
-    const product = MOCK_PRODUCTS.find((p) => p.id === productId);
-    const availableStock = product?.stockCount ?? 99;
-
-    if (requestedQuantity > availableStock) {
-      return {
-        isValid: false,
-        availableStock,
-        messageEn: `Only ${availableStock} units available in stock`,
-        messageBn: `স্টকে কেবল ${availableStock} টি প্রোডাক্ট অবশিষ্ট আছে`,
-      };
-    }
-
-    return {
-      isValid: true,
-      availableStock,
-    };
-  }
-
-  /**
-   * Reserve stock stub for checkout integration (Phase 6 ready).
-   */
-  public async reserveStock(items: CartItem[]): Promise<boolean> {
-    // Stub returns true for Phase 5
-    return true;
-  }
-
-  /**
-   * Synchronize cart with backend API stub (Future backend ready).
-   */
-  public async syncInventory(items: CartItem[]): Promise<CartItem[]> {
-    // Return current items snapshot
-    return items;
-  }
+export interface BackendCartResponse {
+  id: string;
+  userId: string;
+  items: BackendCartItem[];
+  totalItemCount: number;
+  uniqueItemCount: number;
+  subtotal: number;
+  totalDiscount: number;
+  grandTotal: number;
+  hasPrescriptionProducts: boolean;
+  hasUnavailableItems: boolean;
+  updatedAt?: string;
 }
 
-export const cartService = new CartService();
+export const CartService = {
+  /**
+   * Get current authenticated user's cart
+   */
+  async getCart(): Promise<BackendCartResponse> {
+    return apiClient<BackendCartResponse>('/cart', {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * Add product item to user's cart
+   */
+  async addItem(productId: string, quantity = 1): Promise<BackendCartResponse> {
+    return apiClient<BackendCartResponse>('/cart/items', {
+      method: 'POST',
+      body: JSON.stringify({ productId, quantity }),
+    });
+  },
+
+  /**
+   * Update item quantity in cart
+   */
+  async updateQuantity(productId: string, quantity: number): Promise<BackendCartResponse> {
+    return apiClient<BackendCartResponse>(`/cart/items/${productId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ quantity }),
+    });
+  },
+
+  /**
+   * Remove item from cart
+   */
+  async removeItem(productId: string): Promise<BackendCartResponse> {
+    return apiClient<BackendCartResponse>(`/cart/items/${productId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  /**
+   * Clear all items from cart
+   */
+  async clearCart(): Promise<BackendCartResponse> {
+    return apiClient<BackendCartResponse>('/cart', {
+      method: 'DELETE',
+    });
+  },
+};
