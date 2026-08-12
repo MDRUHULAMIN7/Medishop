@@ -2,14 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  ArrowRight,
-  ShieldCheck,
-  Truck,
-  Tag,
-  Clock,
-  HelpCircle,
-} from 'lucide-react';
+import { Lock, ArrowRight, CheckCircle2, Info } from 'lucide-react';
 import { useCartSummary } from '@/hooks/useCartSummary';
 import { formatPrice } from '@/utils/cart';
 import { useCart } from '@/hooks/useCart';
@@ -29,134 +22,89 @@ export function OrderSummary({ isBn = true }: OrderSummaryProps) {
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-background p-5 shadow-xs sticky top-24">
-      <h3 className="text-base font-bold text-foreground font-serif-title pb-3 border-b border-border flex items-center justify-between">
-        <span>{isBn ? 'অর্ডার সামারি' : 'Order Summary'}</span>
-        <span className="text-xs font-normal text-muted-foreground">
-          ({summary.totalQuantity} {isBn ? 'টি আইটেম' : 'items'})
-        </span>
+    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-xs sticky top-24 space-y-4">
+      <h3 className="text-base font-bold text-gray-900 pb-3 border-b border-gray-100">
+        {isBn ? 'অর্ডার সামারি' : 'Order Summary'}
       </h3>
 
-      {/* Total Savings Highlight Banner */}
-      {summary.totalSavings > 0 && (
-        <div className="mt-4 flex items-center justify-between rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-3.5 py-2.5 text-white shadow-xs">
-          <div className="flex items-center gap-2">
-            <Tag className="h-4 w-4 shrink-0" />
-            <span className="text-xs font-bold">
-              {isBn ? 'আপনার মোট সাশ্রয়' : 'Total Savings'}
-            </span>
-          </div>
-          <span className="text-sm font-extrabold">
-            {formatPrice(summary.totalSavings, isBn ? 'bn' : 'en')}
+      {/* Financial Breakdown matching Screenshot */}
+      <div className="space-y-3 text-xs sm:text-sm">
+        <div className="flex justify-between text-gray-600">
+          <span>
+            {isBn
+              ? `সাবটোটাল (${summary.totalQuantity} টি আইটেম)`
+              : `Subtotal (${summary.totalQuantity} items)`}
           </span>
-        </div>
-      )}
-
-      {/* Price Details */}
-      <div className="mt-4 space-y-3 text-xs sm:text-sm">
-        {/* MRP Total / Original Price */}
-        {summary.mrpDiscount > 0 && (
-          <div className="flex justify-between text-muted-foreground">
-            <span>{isBn ? 'মূল্য (MRP মোট)' : 'Original MRP Total'}</span>
-            <span className="line-through">
-              {formatPrice(summary.mrpTotal, isBn ? 'bn' : 'en')}
-            </span>
-          </div>
-        )}
-
-        {/* Subtotal */}
-        <div className="flex justify-between text-muted-foreground">
-          <span>{isBn ? 'পণ্যমূল্য (সাবটোটাল)' : 'Item Subtotal'}</span>
-          <span className="font-semibold text-foreground">
+          <span className="font-bold text-gray-900">
             {formatPrice(summary.subtotal, isBn ? 'bn' : 'en')}
           </span>
         </div>
 
-        {/* Product MRP Discount */}
-        {summary.mrpDiscount > 0 && (
-          <div className="flex justify-between text-emerald-600 font-medium">
-            <span>{isBn ? 'প্রোডাক্ট ছাড়' : 'Product MRP Discount'}</span>
-            <span>-{formatPrice(summary.mrpDiscount, isBn ? 'bn' : 'en')}</span>
-          </div>
-        )}
-
-        {/* Coupon Discount */}
-        {summary.couponDiscount > 0 && (
-          <div className="flex justify-between text-emerald-600 font-medium">
-            <span>{isBn ? 'কুপন ছাড়' : 'Coupon Discount'}</span>
-            <span>-{formatPrice(summary.couponDiscount, isBn ? 'bn' : 'en')}</span>
-          </div>
-        )}
-
-        {/* Delivery Charge */}
-        <div className="flex justify-between text-muted-foreground">
+        <div className="flex justify-between text-gray-600">
           <span className="flex items-center gap-1">
-            <Truck className="h-3.5 w-3.5 text-muted-foreground" />
-            {isBn ? 'ডেলিভারি চার্জ' : 'Delivery Charge'}
+            <span>{isBn ? 'ডেলিভারি চার্জ' : 'Delivery Charge'}</span>
+            <Info className="h-3.5 w-3.5 text-gray-400" />
           </span>
-          <span>
+          <span className="font-bold text-gray-900">
             {summary.deliveryCharge === 0 ? (
-              <span className="font-bold text-emerald-600">
-                {isBn ? 'ফ্রি' : 'FREE'}
-              </span>
+              <span className="text-blue-600">{isBn ? 'ফ্রি' : 'Free'}</span>
             ) : (
               formatPrice(summary.deliveryCharge, isBn ? 'bn' : 'en')
             )}
           </span>
         </div>
 
-        {/* Grand Total */}
-        <div className="pt-3 border-t border-border flex justify-between items-baseline">
-          <div>
-            <span className="text-base font-extrabold text-foreground">
-              {isBn ? 'সর্বমোট প্রদেয়' : 'Grand Total'}
-            </span>
-            <p className="text-[10px] text-muted-foreground">
-              {isBn ? '(সকল ট্যাক্স অন্তর্ভুক্ত)' : '(Inclusive of all taxes)'}
-            </p>
-          </div>
-          <span className="text-xl font-black text-primary">
+        <div className="flex justify-between text-emerald-600 font-medium">
+          <span>{isBn ? 'ডিসকাউন্ট' : 'Discount'}</span>
+          <span className="font-bold">
+            -{formatPrice(summary.couponDiscount + summary.mrpDiscount, isBn ? 'bn' : 'en')}
+          </span>
+        </div>
+
+        <div className="pt-3 border-t border-gray-100 flex justify-between items-baseline">
+          <span className="text-base font-bold text-gray-900">{isBn ? 'মোট পরিমাণ' : 'Total Amount'}</span>
+          <span className="text-2xl font-bold text-blue-600">
             {formatPrice(summary.grandTotal, isBn ? 'bn' : 'en')}
           </span>
         </div>
       </div>
 
-      {/* Estimated Delivery Time */}
-      <div className="mt-5 rounded-xl bg-muted/40 p-3 border border-border flex items-center gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-600">
-          <Clock className="h-4 w-4" />
-        </div>
-        <div>
-          <p className="text-[11px] font-medium text-muted-foreground">
-            {isBn ? 'আনুমানিক ডেলিভারি সময়' : 'Estimated Delivery Time'}
-          </p>
-          <p className="text-xs font-bold text-foreground">
-            {isBn ? 'ঢাকায় ২-৪ ঘণ্টার মধ্যে এক্সপ্রেস ডেলিভারি' : '2-4 Hours Express Delivery in Dhaka'}
-          </p>
-        </div>
+      {/* Savings Green Banner matching Screenshot */}
+      <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-3.5 py-2 text-emerald-800 text-xs font-semibold border border-emerald-200">
+        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+        <span>
+          {isBn
+            ? `আপনি সেভ করেছেন ${formatPrice(summary.totalSavings, 'bn')}`
+            : `You saved ${formatPrice(summary.totalSavings, 'en')}`}
+        </span>
       </div>
 
-      {/* Proceed to Checkout CTA */}
+      {/* Checkout Button matching Screenshot */}
       <button
         type="button"
         onClick={handleCheckoutClick}
         disabled={items.length === 0}
-        className="mt-5 w-full flex items-center justify-center gap-2 rounded-xl bg-primary py-3.5 px-4 text-sm font-extrabold text-white shadow-md hover:bg-primary-dark active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 px-4 text-sm font-bold text-white shadow-md hover:bg-blue-700 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
       >
-        <span>{isBn ? 'অর্ডার সম্পন্ন করুন' : 'Proceed to Checkout'}</span>
+        <Lock className="h-4 w-4" />
+        <span>{isBn ? 'চেকআউট করুন' : 'Proceed to Checkout'}</span>
         <ArrowRight className="h-4 w-4" />
       </button>
 
-      {/* Trust Badges */}
-      <div className="mt-4 pt-3 border-t border-border space-y-2 text-[11px] text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
-          <span>{isBn ? '১০০% আসল ওষুধ এবং ক্যাশ অন ডেলিভারি' : '100% Authentic Products & Cash on Delivery'}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <HelpCircle className="h-4 w-4 text-sky-600 shrink-0" />
-          <span>{isBn ? '২৪/৭ হেল্পলাইন: ১৬৭৮০' : '24/7 Helpline Support: 16780'}</span>
-        </div>
+      {/* 3 Sub-features under button matching Screenshot */}
+      <div className="flex items-center justify-between text-[11px] font-semibold text-gray-500 pt-1 border-t border-gray-100">
+        <span className="flex items-center gap-1">
+          <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
+          <span>{isBn ? '১০০% অরিজিনাল' : '100% Authentic'}</span>
+        </span>
+        <span className="flex items-center gap-1">
+          <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
+          <span>{isBn ? 'নিরাপদ পেমেন্ট' : 'Secure Payment'}</span>
+        </span>
+        <span className="flex items-center gap-1">
+          <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
+          <span>{isBn ? 'দ্রুত ডেলিভারি' : 'Fast Delivery'}</span>
+        </span>
       </div>
     </div>
   );
