@@ -21,6 +21,7 @@ export const cartSlice = createSlice({
   initialState,
   reducers: {
     addToCart: (state, action: PayloadAction<CartItem>) => {
+      state.isHydrated = true;
       const existingIndex = state.items.findIndex(
         (item) => item.productId === action.payload.productId
       );

@@ -12,11 +12,13 @@ import {
   MessageSquare,
   FileText,
 } from 'lucide-react';
-import { useAppSelector } from '@/store';
+import { useAppDispatch, useAppSelector } from '@/store';
+import { openPrescriptionModal } from '@/store/slices/uiSlice';
 import { MOCK_PRESCRIPTION_STEPS } from '@/mocks/promotions';
 import { HOTLINE_NUMBER, HOTLINE_TEL, WHATSAPP_LINK } from '@/lib/constants';
 
 export function PrescriptionCTA() {
+  const dispatch = useAppDispatch();
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
 
@@ -47,13 +49,14 @@ export function PrescriptionCTA() {
               : 'Upload your prescription, and we will deliver your medicines right to your doorstep.'}
           </p>
 
-          <Link
-            href="/upload-prescription"
-            className="mt-5 inline-flex items-center justify-center gap-2.5 rounded-2xl bg-primary px-7 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-primary-dark hover:shadow-lg active:scale-98"
+          <button
+            type="button"
+            onClick={() => dispatch(openPrescriptionModal())}
+            className="mt-5 inline-flex items-center justify-center gap-2.5 rounded-2xl bg-primary px-7 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-primary-dark hover:shadow-lg active:scale-98 cursor-pointer"
           >
             <Upload className="h-4.5 w-4.5" />
             <span>{isBn ? 'প্রেসক্রিপশন আপলোড করুন' : 'Upload Now'}</span>
-          </Link>
+          </button>
         </div>
 
         {/* Right 4-Step Explanation Column (7 cols) */}

@@ -56,36 +56,46 @@ export function useCart() {
 
   const { trackAddToCart, trackRemoveFromCart, trackBeginCheckout } = useCartAnalytics();
 
-  // Fetch Cart from Backend if Authenticated, else load from LocalStorage
+  // Hydrate Cart on Mount: Always preserve local cart if backend returns empty or network fails
   useEffect(() => {
     let isMounted = true;
-    if (isAuthenticated) {
-      CartService.getCart()
-        .then((res) => {
-          if (isMounted && res && res.items) {
-            const mappedItems = mapBackendCartToCartItems(res);
-            dispatch(hydrateCart({ items: mappedItems, appliedCoupon }));
-          }
-        })
-        .catch(() => {
-          // If network error, fallback to local storage
-          if (isMounted && !isHydrated) {
-            const stored = loadCartFromLocalStorage();
-            dispatch(hydrateCart(stored.items ? stored : { items: [], appliedCoupon: null }));
-          }
-        });
-    } else if (!isHydrated) {
+
+    if (!isHydrated) {
       const stored = loadCartFromLocalStorage();
-      dispatch(hydrateCart(stored.items ? stored : { items: [], appliedCoupon: null }));
+      const localItems = stored.items || [];
+
+      if (isAuthenticated) {
+        CartService.getCart()
+          .then((res) => {
+            if (isMounted && res && res.items) {
+              const mappedItems = mapBackendCartToCartItems(res);
+              if (mappedItems.length > 0) {
+                dispatch(hydrateCart({ items: mappedItems, appliedCoupon: stored.appliedCoupon || null }));
+              } else if (localItems.length > 0) {
+                // Keep local items if backend returns empty cart
+                dispatch(hydrateCart({ items: localItems, appliedCoupon: stored.appliedCoupon || null }));
+              } else {
+                dispatch(hydrateCart({ items: [], appliedCoupon: null }));
+              }
+            }
+          })
+          .catch(() => {
+            if (isMounted) {
+              dispatch(hydrateCart({ items: localItems, appliedCoupon: stored.appliedCoupon || null }));
+            }
+          });
+      } else {
+        dispatch(hydrateCart({ items: localItems, appliedCoupon: stored.appliedCoupon || null }));
+      }
     }
     return () => {
       isMounted = false;
     };
-  }, [dispatch, isAuthenticated, isHydrated]);
+  }, [dispatch, isAuthenticated, isHydrated, appliedCoupon]);
 
-  // Sync with LocalStorage whenever items or applied coupon change
+  // Sync with LocalStorage whenever items change
   useEffect(() => {
-    if (isHydrated) {
+    if (isHydrated && typeof window !== 'undefined') {
       saveCartToLocalStorage(items, appliedCoupon);
     }
   }, [items, appliedCoupon, isHydrated]);

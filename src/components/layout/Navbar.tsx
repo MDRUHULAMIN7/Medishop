@@ -23,6 +23,8 @@ import {
 import { useAppDispatch, useAppSelector } from '@/store';
 import { setSearchQuery, setLanguage } from '@/store/slices/uiSlice';
 import { openAuthModal, logout } from '@/store/slices/authSlice';
+import { openPrescriptionModal, closePrescriptionModal } from '@/store/slices/uiSlice';
+import { UploadPrescriptionModal } from '@/components/modals/UploadPrescriptionModal';
 import { useScrollPosition } from '@/hooks/useScrollPosition';
 import { MobileMenuDrawer } from './MobileMenuDrawer';
 import { MobileSearchOverlay } from './MobileSearchOverlay';
@@ -42,6 +44,7 @@ export function Navbar() {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const searchQuery = useAppSelector((state) => state.ui.searchQuery);
   const language = useAppSelector((state) => state.ui.language);
+  const isPrescriptionModalOpen = useAppSelector((state) => state.ui.isPrescriptionModalOpen);
 
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -234,13 +237,14 @@ export function Navbar() {
           {/* Desktop Right Actions (Unified Height h-11) */}
           <div className="hidden md:flex items-center gap-3 shrink-0 my-auto">
             {/* Upload Prescription Button */}
-            <Link
-              href="/upload-prescription"
-              className="flex h-11 items-center gap-2 rounded-2xl bg-primary/10 border border-primary/20 px-4 text-xs sm:text-sm font-bold text-primary transition-all hover:bg-primary hover:text-white shadow-2xs shrink-0"
+            <button
+              type="button"
+              onClick={() => dispatch(openPrescriptionModal())}
+              className="flex h-11 items-center gap-2 rounded-2xl bg-primary/10 border border-primary/20 px-4 text-xs sm:text-sm font-bold text-primary transition-all hover:bg-primary hover:text-white shadow-2xs shrink-0 cursor-pointer"
             >
               <Upload className="h-4.5 w-4.5" />
               <span>{isBn ? 'প্রেসক্রিপশন আপলোড' : 'Upload Prescription'}</span>
-            </Link>
+            </button>
 
             {/* Account / User Section */}
             {isAuthenticated ? (
@@ -322,6 +326,11 @@ export function Navbar() {
 
       <MobileMenuDrawer />
       <MobileSearchOverlay />
+      <UploadPrescriptionModal
+        isOpen={isPrescriptionModalOpen}
+        onClose={() => dispatch(closePrescriptionModal())}
+        isBn={isBn}
+      />
     </>
   );
 }

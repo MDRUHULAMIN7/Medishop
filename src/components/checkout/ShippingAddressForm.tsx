@@ -8,6 +8,8 @@ import { X, MapPin, Loader2 } from 'lucide-react';
 import { addressSchema, AddressFormValues } from '@/validators/address.schema';
 import { ShippingAddress, Division } from '@/types/address';
 
+import { CascadingAddressSelector, AddressCascadeValue } from '@/components/common/CascadingAddressSelector';
+
 interface ShippingAddressFormProps {
   isOpen: boolean;
   onClose: () => void;
@@ -16,17 +18,6 @@ interface ShippingAddressFormProps {
   isBn?: boolean;
 }
 
-const DIVISIONS: Division[] = [
-  'Dhaka',
-  'Chattogram',
-  'Rajshahi',
-  'Khulna',
-  'Barishal',
-  'Sylhet',
-  'Rangpur',
-  'Mymensingh',
-];
-
 export function ShippingAddressForm({
   isOpen,
   onClose,
@@ -34,9 +25,17 @@ export function ShippingAddressForm({
   initialData,
   isBn = true,
 }: ShippingAddressFormProps) {
+  const [cascadeValue, setCascadeValue] = React.useState<AddressCascadeValue>({
+    division: 'Dhaka',
+    district: 'Dhaka',
+    thana: 'Dhanmondi',
+    streetAddress: '',
+  });
+
   const {
     register,
     handleSubmit,
+    setValue,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<AddressFormValues>({
@@ -47,7 +46,7 @@ export function ShippingAddressForm({
       email: '',
       division: 'Dhaka',
       district: 'Dhaka',
-      area: '',
+      area: 'Dhanmondi',
       streetAddress: '',
       postalCode: '',
       label: 'Home',
@@ -57,26 +56,38 @@ export function ShippingAddressForm({
 
   useEffect(() => {
     if (initialData) {
+      setCascadeValue({
+        division: (initialData.division as Division) || 'Dhaka',
+        district: initialData.district || 'Dhaka',
+        thana: initialData.area || initialData.thana || 'Dhanmondi',
+        streetAddress: initialData.streetAddress || initialData.addressLine || '',
+      });
       reset({
         fullName: initialData.fullName || initialData.recipientName || '',
         phone: initialData.phone || '',
         email: initialData.email || '',
         division: (initialData.division as Division) || 'Dhaka',
-        district: initialData.district || '',
-        area: initialData.area || initialData.thana || '',
+        district: initialData.district || 'Dhaka',
+        area: initialData.area || initialData.thana || 'Dhanmondi',
         streetAddress: initialData.streetAddress || initialData.addressLine || '',
         postalCode: initialData.postalCode || '',
         label: (initialData.label as 'Home' | 'Office' | 'Other') || 'Home',
         isDefault: Boolean(initialData.isDefault),
       });
     } else {
+      setCascadeValue({
+        division: 'Dhaka',
+        district: 'Dhaka',
+        thana: 'Dhanmondi',
+        streetAddress: '',
+      });
       reset({
         fullName: '',
         phone: '',
         email: '',
         division: 'Dhaka',
         district: 'Dhaka',
-        area: '',
+        area: 'Dhanmondi',
         streetAddress: '',
         postalCode: '',
         label: 'Home',
@@ -191,91 +202,18 @@ export function ShippingAddressForm({
                 </div>
               </div>
 
-              {/* Division & District */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-foreground mb-1">
-                    {isBn ? 'বিভাগ (Division) *' : 'Division *'}
-                  </label>
-                  <select
-                    {...register('division')}
-                    className="w-full rounded-xl border border-border bg-muted/30 px-3.5 py-2.5 text-xs font-medium text-foreground focus:border-primary focus:bg-background focus:outline-hidden focus:ring-2 focus:ring-primary/20"
-                  >
-                    {DIVISIONS.map((div) => (
-                      <option key={div} value={div}>
-                        {div}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-foreground mb-1">
-                    {isBn ? 'জেলা (District) *' : 'District *'}
-                  </label>
-                  <input
-                    type="text"
-                    {...register('district')}
-                    placeholder={isBn ? 'যেমন: ঢাকা' : 'e.g. Dhaka'}
-                    className="w-full rounded-xl border border-border bg-muted/30 px-3.5 py-2.5 text-xs font-medium text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-background focus:outline-hidden focus:ring-2 focus:ring-primary/20"
-                  />
-                  {errors.district && (
-                    <p className="mt-1 text-[11px] font-semibold text-red-600">
-                      {errors.district.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Area & Street Address */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-foreground mb-1">
-                    {isBn ? 'এলাকা / থানা *' : 'Area / Thana *'}
-                  </label>
-                  <input
-                    type="text"
-                    {...register('area')}
-                    placeholder={isBn ? 'যেমন: ধানমন্ডি' : 'e.g. Dhanmondi'}
-                    className="w-full rounded-xl border border-border bg-muted/30 px-3.5 py-2.5 text-xs font-medium text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-background focus:outline-hidden focus:ring-2 focus:ring-primary/20"
-                  />
-                  {errors.area && (
-                    <p className="mt-1 text-[11px] font-semibold text-red-600">
-                      {errors.area.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-foreground mb-1">
-                    {isBn ? 'পোস্ট কোড' : 'Postal Code'}
-                  </label>
-                  <input
-                    type="text"
-                    {...register('postalCode')}
-                    placeholder="1209"
-                    className="w-full rounded-xl border border-border bg-muted/30 px-3.5 py-2.5 text-xs font-medium text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-background focus:outline-hidden focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
-              </div>
-
-              {/* Street Address */}
-              <div>
-                <label className="block text-xs font-bold text-foreground mb-1">
-                  {isBn ? 'পূর্ণাঙ্গ রাস্তার ঠিকানা (বাসা/রোড নম্বর) *' : 'Street Address *'}
-                </label>
-                <input
-                  type="text"
-                  {...register('streetAddress')}
-                  placeholder={isBn ? 'যেমন: বাসা ৪২, রোড ১০/এ' : 'e.g. House 42, Road 10/A'}
-                  className="w-full rounded-xl border border-border bg-muted/30 px-3.5 py-2.5 text-xs font-medium text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-background focus:outline-hidden focus:ring-2 focus:ring-primary/20"
-                />
-                {errors.streetAddress && (
-                  <p className="mt-1 text-[11px] font-semibold text-red-600">
-                    {errors.streetAddress.message}
-                  </p>
-                )}
-              </div>
+              {/* Cascading Address Dropdowns (Division -> District -> Thana -> Street Address) */}
+              <CascadingAddressSelector
+                value={cascadeValue}
+                onChange={(updated) => {
+                  setCascadeValue(updated);
+                  setValue('division', updated.division as any);
+                  setValue('district', updated.district);
+                  setValue('area', updated.thana);
+                  setValue('streetAddress', updated.streetAddress);
+                }}
+                isBn={isBn}
+              />
 
               {/* Label & IsDefault Checkbox */}
               <div className="flex flex-wrap items-center justify-between gap-4 pt-2">

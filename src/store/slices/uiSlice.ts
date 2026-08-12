@@ -5,6 +5,7 @@ interface UiState {
   isMobileMenuOpen: boolean;
   isMobileSearchOpen: boolean;
   isQuickContactOpen: boolean;
+  isPrescriptionModalOpen: boolean;
   searchQuery: string;
   language: Language;
 }
@@ -13,6 +14,7 @@ const initialState: UiState = {
   isMobileMenuOpen: false,
   isMobileSearchOpen: false,
   isQuickContactOpen: false,
+  isPrescriptionModalOpen: false,
   searchQuery: '',
   language: 'bn',
 };
@@ -39,6 +41,15 @@ export const uiSlice = createSlice({
     setQuickContactOpen: (state, action: PayloadAction<boolean>) => {
       state.isQuickContactOpen = action.payload;
     },
+    openPrescriptionModal: (state) => {
+      state.isPrescriptionModalOpen = true;
+    },
+    closePrescriptionModal: (state) => {
+      state.isPrescriptionModalOpen = false;
+    },
+    togglePrescriptionModal: (state) => {
+      state.isPrescriptionModalOpen = !state.isPrescriptionModalOpen;
+    },
     setSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload;
     },
@@ -55,6 +66,9 @@ export const {
   setMobileSearch,
   toggleQuickContact,
   setQuickContactOpen,
+  openPrescriptionModal,
+  closePrescriptionModal,
+  togglePrescriptionModal,
   setSearchQuery,
   setLanguage,
 } = uiSlice.actions;
