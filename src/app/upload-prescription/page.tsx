@@ -19,14 +19,19 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppSelector } from '@/store';
-import { usePrescriptions, SavedPrescription } from '@/hooks/usePrescriptions';
+import { PrescriptionService } from '@/services/prescription.service';
 import { HOTLINE_NUMBER, HOTLINE_TEL, WHATSAPP_LINK } from '@/lib/constants';
+
+import { useQuery } from '@tanstack/react-query';
 
 export default function UploadPrescriptionPage() {
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
 
-  const { prescriptions, addPrescription, deletePrescription } = usePrescriptions();
+  const { data: prescriptions = [], isLoading: isHistoryLoading } = useQuery({
+    queryKey: ['my-prescriptions'],
+    queryFn: () => PrescriptionService.getMyPrescriptions(),
+  });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -35,6 +40,7 @@ export default function UploadPrescriptionPage() {
     size: string;
     type: string;
     url: string;
+    rawFile?: File;
   } | null>(null);
 
   const [patientName, setPatientName] = useState('');
@@ -75,6 +81,7 @@ export default function UploadPrescriptionPage() {
         size: `${fileSizeInMB} MB`,
         type: file.type.includes('pdf') ? 'PDF Document' : 'Image File',
         url,
+        rawFile: file,
       });
       if (!title) {
         setTitle(file.name.replace(/\.[^/.]+$/, ''));
@@ -89,12 +96,13 @@ export default function UploadPrescriptionPage() {
       size: preset.size,
       type: preset.type,
       url: preset.url,
+      rawFile: undefined,
     });
     setTitle(preset.title);
     toast.info(isBn ? 'নমুনা প্রেসক্রিপশন যোগ করা হয়েছে' : 'Sample prescription attached');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!selectedFile) {
@@ -109,15 +117,24 @@ export default function UploadPrescriptionPage() {
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      addPrescription({
-        title: title || (isBn ? 'নতুন প্রেসক্রিপশন অর্ডার' : 'New Prescription Order'),
-        patientName,
-        doctorName: doctorName || (isBn ? 'ফার্মাসিস্ট রিভিউ' : 'Pharmacist Review'),
-        fileSize: selectedFile.size,
-        fileType: selectedFile.type,
-        fileUrl: selectedFile.url,
-      });
+    try {
+      const formData = new FormData();
+      if (selectedFile.rawFile) {
+        formData.append('images', selectedFile.rawFile);
+      } else {
+        // Fallback for preset image URL
+        formData.append('images', selectedFile.url);
+      }
+      const noteText = `Patient: ${patientName}, Phone: ${phone}${doctorName ? `, Doctor: ${doctorName}` : ''}${notes ? `, Notes: ${notes}` : ''}`;
+      formData.append('note', noteText);
+
+      await PrescriptionService.uploadPrescription(formData);
+
+      toast.success(
+        isBn
+          ? 'প্রেসক্রিপশন সফলভাবে জমা দেওয়া হয়েছে! লাইসেন্সকৃত ফার্মাসিস্ট পর্যালোচনা করে ভেরিফাই করবেন।'
+          : 'Prescription uploaded successfully! A licensed pharmacist will review and verify it.'
+      );
 
       setIsSubmitting(false);
       setSelectedFile(null);
@@ -127,7 +144,10 @@ export default function UploadPrescriptionPage() {
       setNotes('');
       setTitle('');
       setActiveTab('history');
-    }, 1000);
+    } catch (err: any) {
+      toast.error(err?.message || (isBn ? 'প্রেসক্রিপশন আপলোড করতে সমস্যা হয়েছে' : 'Failed to upload prescription'));
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -447,47 +467,51 @@ export default function UploadPrescriptionPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {prescriptions.map((item: SavedPrescription) => (
+                {prescriptions.map((item: any) => (
                   <div
-                    key={item.id}
+                    key={item._id || item.id}
                     className="rounded-2xl border border-border bg-background p-5 space-y-3 shadow-xs hover:border-primary/40 transition-all"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <h4 className="text-sm font-bold text-foreground">{item.title}</h4>
-                        <p className="text-xs text-muted-foreground mt-0.5">{isBn ? 'রোগী:' : 'Patient:'} {item.patientName}</p>
+                        <h4 className="text-sm font-bold text-foreground">
+                          {isBn ? 'প্রেসক্রিপশন আপলোড' : 'Uploaded Prescription'}
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-0.5 font-medium line-clamp-2">
+                          {item.note || (isBn ? 'কোনো নোট দেওয়া হয়নি' : 'No notes provided')}
+                        </p>
                       </div>
-                      <span className="rounded-full bg-success-light px-2.5 py-0.5 text-[10px] font-bold text-success">
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                          item.status === 'approved'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : item.status === 'rejected'
+                            ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                            : 'bg-amber-50 text-amber-700 border border-amber-200'
+                        }`}
+                      >
                         {item.status}
                       </span>
                     </div>
 
-                    {item.doctorName && (
-                      <p className="text-xs text-muted-foreground italic">
-                        {isBn ? 'ডাক্তার:' : 'Doctor:'} {item.doctorName}
+                    {item.rejectionReason && (
+                      <p className="text-xs font-semibold text-rose-600 bg-rose-50 p-2 rounded-xl border border-rose-100">
+                        {isBn ? 'বাতিলের কারণ: ' : 'Reason: '}{item.rejectionReason}
                       </p>
                     )}
 
                     <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-2 border-t border-border">
-                      <span>{item.uploadDate} • {item.fileSize}</span>
-                      <div className="flex items-center gap-2">
+                      <span>{new Date(item.createdAt).toLocaleDateString()}</span>
+                      {item.images && item.images.length > 0 && (
                         <button
                           type="button"
-                          onClick={() => setPreviewModalUrl(item.fileUrl)}
-                          className="text-primary hover:underline font-semibold flex items-center gap-1"
+                          onClick={() => setPreviewModalUrl(item.images[0])}
+                          className="text-primary hover:underline font-semibold flex items-center gap-1 cursor-pointer"
                         >
                           <Eye className="h-3.5 w-3.5" />
-                          <span>{isBn ? 'দেখুন' : 'View'}</span>
+                          <span>{isBn ? 'প্রিভিউ' : 'Preview'}</span>
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => deletePrescription(item.id)}
-                          className="text-danger hover:underline font-semibold flex items-center gap-1"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          <span>{isBn ? 'ডিলিট' : 'Delete'}</span>
-                        </button>
-                      </div>
+                      )}
                     </div>
                   </div>
                 ))}

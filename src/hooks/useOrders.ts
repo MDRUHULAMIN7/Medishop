@@ -23,8 +23,8 @@ export function useOrders() {
   const fetchOrders = useCallback(async () => {
     dispatch(setOrdersLoading(true));
     try {
-      const data = await orderService.getOrders();
-      dispatch(setOrders(data));
+      const data = await orderService.getMyOrders();
+      dispatch(setOrders(data || []));
     } catch (e) {
       console.error('Failed to fetch orders:', e);
     } finally {

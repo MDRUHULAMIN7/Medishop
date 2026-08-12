@@ -107,31 +107,40 @@ export function useCheckout() {
     dispatch(setSubmitting(true));
 
     try {
-      const createdOrder = await orderService.createOrder({
-        items,
-        shippingAddress: selectedAddress,
-        deliveryMethod,
-        paymentMethod,
-        summary,
-        notes,
+      const response = await orderService.checkout({
+        shippingAddressId: (selectedAddress as any)._id || selectedAddress.id,
+        shippingAddress: {
+          recipientName: selectedAddress.recipientName || '',
+          phone: selectedAddress.phone || '',
+          district: selectedAddress.district || '',
+          thana: selectedAddress.thana || '',
+          addressLine: selectedAddress.addressLine || '',
+          division: selectedAddress.division,
+          postalCode: selectedAddress.postalCode,
+        },
+        paymentMethod: paymentMethod.id as any,
+        couponCode: appliedCoupon?.code,
+        note: notes,
       });
 
-      dispatch(addOrder(createdOrder));
+      const createdOrder = response.order || response.data || response;
+      const orderNum = createdOrder?.orderNumber || 'MS-ORDER';
+
       dispatch(clearCart());
       dispatch(resetCheckout());
 
       toast.success(
         isBn
-          ? `ধন্যবাদ! আপনার অর্ডার (${createdOrder.orderNumber}) সফলভাবে সম্পন্ন হয়েছে`
-          : `Success! Order (${createdOrder.orderNumber}) placed successfully!`
+          ? `ধন্যবাদ! আপনার অর্ডার (${orderNum}) সফলভাবে সম্পন্ন হয়েছে`
+          : `Success! Order (${orderNum}) placed successfully!`
       );
 
-      router.push('/order/success');
+      router.push(`/order/success?orderId=${createdOrder?._id || createdOrder?.id || ''}`);
       return createdOrder;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Order creation error:', error);
       toast.error(
-        isBn ? 'অর্ডার তৈরি করতে ব্যর্থ হয়েছে' : 'Failed to place order'
+        error?.message || (isBn ? 'অর্ডার তৈরি করতে ব্যর্থ হয়েছে' : 'Failed to place order')
       );
       return null;
     } finally {
