@@ -1,17 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAppSelector } from '@/store';
 import { UserRole } from '@/types';
 import { RBAC_ROLES_CONFIG, RbacTabId } from '@/config/rbac.config';
 import { RbacSidebar } from '@/components/dashboard/RbacSidebar';
 import { RbacHeader } from '@/components/dashboard/RbacHeader';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlTab = (searchParams?.get('tab') || 'overview') as RbacTabId;
   const reduxUser = useAppSelector((state) => state.auth.user);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const isInitialized = useAppSelector((state) => state.auth.isInitialized);
@@ -19,21 +22,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isBn = language === 'bn';
 
   const [currentRole, setCurrentRole] = useState<UserRole>('customer');
-  const [activeTab, setActiveTab] = useState<RbacTabId>('inventory_categories');
+  const [activeTab, setActiveTab] = useState<RbacTabId>(urlTab);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  // Sync role & active tab with current URL sub-route
+  // Sync role & active tab with current URL sub-route & search params
   useEffect(() => {
+    setActiveTab(urlTab);
     if (pathname?.includes('/dashboard/admin') || pathname?.includes('/dashboard/inventory')) {
       setCurrentRole(reduxUser?.role || 'admin');
-      setActiveTab('inventory_categories');
     } else if (pathname?.includes('/dashboard/customer')) {
       setCurrentRole('customer');
-      setActiveTab('inventory_categories');
     } else if (reduxUser?.role) {
       setCurrentRole(reduxUser.role);
     }
-  }, [pathname, reduxUser]);
+  }, [pathname, urlTab, reduxUser]);
 
   // RBAC Guard Protection: Enforce strict role-based access control
   useEffect(() => {
@@ -94,5 +96,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
       </div>
     </div>
+  );
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen w-full items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      }
+    >
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </Suspense>
   );
 }

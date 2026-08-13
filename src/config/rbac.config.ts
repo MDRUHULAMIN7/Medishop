@@ -13,7 +13,24 @@ export interface RbacRoleInfo {
   iconName: string;
 }
 
-export type RbacTabId = 'products' | 'categories' | 'brands' | 'inventory_categories';
+export type RbacTabId =
+  | 'overview'
+  | 'products'
+  | 'categories'
+  | 'brands'
+  | 'inventory_categories'
+  | 'inventory'
+  | 'ledger'
+  | 'pos_sales'
+  | 'orders'
+  | 'prescriptions'
+  | 'coupons'
+  | 'banners'
+  | 'reviews'
+  | 'reports'
+  | 'staff'
+  | 'users'
+  | 'settings';
 
 export interface RbacMenuItem {
   id: RbacTabId;
