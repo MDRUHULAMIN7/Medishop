@@ -43,6 +43,17 @@ export interface DashboardSummaryResponse {
   lowStockItemsCount: number;
 }
 
+export interface AdminUserListItem {
+  id: string;
+  _id?: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  role: string;
+  status: 'active' | 'blocked';
+  createdAt?: string;
+}
+
 export const adminService = {
   /**
    * Fetch aggregated dashboard summary overview KPIs
@@ -71,5 +82,36 @@ export const adminService = {
   async getLowStockReport(threshold = 10): Promise<LowStockItemData[]> {
     const res = await apiClient<LowStockItemData[]>(`/admin/dashboard/low-stock?threshold=${threshold}`);
     return res || [];
+  },
+
+  /**
+   * List all registered users for Admin User Management table
+   */
+  async listUsers(params?: string): Promise<{ users: AdminUserListItem[]; total: number }> {
+    const query = params ? `?${params}` : '';
+    const res = await apiClient<any>(`/users${query}`);
+    const items = Array.isArray(res) ? res : res?.data || [];
+    return {
+      users: items.map((u: any) => ({
+        id: u.id || u._id,
+        name: u.name,
+        email: u.email || 'N/A',
+        phone: u.phone || 'N/A',
+        role: u.role || 'customer',
+        status: u.status || 'active',
+        createdAt: u.createdAt,
+      })),
+      total: items.length,
+    };
+  },
+
+  /**
+   * Toggle or update user account status (active / blocked)
+   */
+  async updateUserStatus(userId: string, status: 'active' | 'blocked'): Promise<any> {
+    return apiClient<any>(`/users/${userId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
   },
 };

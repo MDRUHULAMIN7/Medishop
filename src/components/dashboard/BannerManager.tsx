@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+'use client';
+
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Image as ImageIcon, Plus, ArrowUp, ArrowDown, Eye, CheckCircle2, X, Upload } from 'lucide-react';
+import { Image as ImageIcon, Plus, Eye, X, Upload, Save, Loader2, RefreshCw } from 'lucide-react';
 import { useAppSelector } from '@/store';
+import { settingsService } from '@/services/settings.service';
 import { toast } from 'sonner';
 
-interface BannerSlide {
+export interface BannerSlide {
   id: string;
   titleBn: string;
   titleEn: string;
@@ -15,7 +18,6 @@ interface BannerSlide {
   ctaTextBn: string;
   ctaTextEn: string;
   ctaLink: string;
-  bgGradient: string;
   isActive: boolean;
   priority: number;
   image?: string;
@@ -26,6 +28,8 @@ export function BannerManager() {
   const isBn = language === 'bn';
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   const [banners, setBanners] = useState<BannerSlide[]>([
     {
@@ -39,7 +43,6 @@ export function BannerManager() {
       ctaTextBn: 'ডাক্তার দেখান',
       ctaTextEn: 'Consult Now',
       ctaLink: '/consultation',
-      bgGradient: 'from-slate-950/85 via-slate-900/60 to-primary-dark/80',
       isActive: true,
       priority: 1,
     },
@@ -54,7 +57,6 @@ export function BannerManager() {
       ctaTextBn: 'ওষুধ অর্ডার করুন',
       ctaTextEn: 'Order Medicine',
       ctaLink: '/products',
-      bgGradient: 'from-blue-950/90 via-slate-900/65 to-sky-900/75',
       isActive: true,
       priority: 2,
     },
@@ -69,7 +71,6 @@ export function BannerManager() {
       ctaTextBn: 'প্রেসক্রিপশন আপলোড',
       ctaTextEn: 'Upload Prescription',
       ctaLink: '/upload-prescription',
-      bgGradient: 'from-slate-950/90 via-indigo-950/70 to-blue-950/80',
       isActive: true,
       priority: 3,
     },
@@ -89,11 +90,47 @@ export function BannerManager() {
     image: '',
   });
 
+  const fetchBanners = useCallback(async () => {
+    setLoading(true);
+    try {
+      const fullSettings = await settingsService.getFullSettings();
+      if (fullSettings?.seo && (fullSettings as any).banners) {
+        setBanners((fullSettings as any).banners);
+      }
+    } catch (err: any) {
+      console.error('Failed to load site banners:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchBanners();
+  }, [fetchBanners]);
+
   const handleToggleActive = (id: string) => {
     setBanners((prev) =>
       prev.map((b) => (b.id === id ? { ...b, isActive: !b.isActive } : b))
     );
-    toast.success(isBn ? 'ব্যানার স্ট্যাটাস পরিবর্তিত হয়েছে' : 'Banner active status toggled');
+    toast.success(isBn ? 'ব্যানার স্ট্যাটাস পরিবর্তন করা হয়েছে' : 'Banner status updated');
+  };
+
+  const handleSaveToDB = async () => {
+    setSaving(true);
+    try {
+      await settingsService.updateSettings({
+        banners,
+      } as any);
+      toast.success(
+        isBn
+          ? 'সকল ব্যানার ডাটাবেজে সফলভাবে সংরক্ষিত ও লাইভ হয়েছে!'
+          : 'Banners saved to database & published live!'
+      );
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to save banners to DB');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleAddSubmit = (e: React.FormEvent) => {
@@ -114,13 +151,12 @@ export function BannerManager() {
       ctaTextEn: formData.ctaTextEn,
       ctaTextBn: formData.ctaTextBn,
       ctaLink: formData.ctaLink || '/products',
-      bgGradient: 'from-slate-950/90 via-slate-900/70 to-primary-dark/80',
       isActive: true,
       priority: Number(formData.priority) || 4,
       image: formData.image,
     };
 
-    setBanners([...banners, newSlide]);
+    setBanners((prev) => [...prev, newSlide]);
     setIsAddModalOpen(false);
     setFormData({
       titleEn: '',
@@ -135,7 +171,7 @@ export function BannerManager() {
       priority: '4',
       image: '',
     });
-    toast.success(isBn ? 'নতুন হিরো ব্যানার স্লাইড যোগ হয়েছে!' : 'New Banner Slide added successfully!');
+    toast.success(isBn ? 'নতুন হিরো ব্যানার স্লাইড যোগ হয়েছে!' : 'New Banner Slide added!');
   };
 
   return (
@@ -143,23 +179,40 @@ export function BannerManager() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4 gap-4">
         <div>
-          <h2 className="text-xl font-black text-foreground">
-            {isBn ? 'হিরো ব্যানার ও প্রমোশনাল স্লাইডার' : 'Hero Banner Manager'}
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-700 border border-blue-200">
+            <ImageIcon className="h-3.5 w-3.5" />
+            <span>{isBn ? 'ডাইনামিক প্রমোশনাল ব্যানার' : 'Live Banner Management'}</span>
+          </span>
+          <h2 className="text-xl font-extrabold text-foreground mt-1">
+            {isBn ? 'হিরো ব্যানার ও স্লাইডার ম্যানেজার' : 'Hero Banner Manager'}
           </h2>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mt-0.5">
             {isBn
-              ? 'হোমপেজ স্লাইডার টেক্সট, ব্যাকগ্রাউন্ড ও পজিশন কন্ট্রোল করুন'
-              : 'Control homepage hero slide sequence, headline text and CTA targets'}
+              ? 'হোমপেজ স্লাইডার টেক্সট, পিকচার ও প্রমোশনাল বাটন লিংক কাস্টমাইজ করুন'
+              : 'Control homepage hero slide sequence, headline text, and CTA targets.'}
           </p>
         </div>
 
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-xs font-bold text-white shadow-md hover:bg-primary-dark transition-all shrink-0"
-        >
-          <Plus className="h-4 w-4" />
-          <span>{isBn ? 'নতুন ব্যানার স্লাইড যোগ' : 'Add New Banner Slide'}</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setIsAddModalOpen(true)}
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-2xs hover:bg-primary-dark transition-all cursor-pointer shrink-0"
+          >
+            <Plus className="h-4 w-4" />
+            <span>{isBn ? 'নতুন ব্যানার স্লাইড' : 'Add New Banner'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleSaveToDB}
+            disabled={saving}
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-2xs hover:bg-emerald-700 transition-all cursor-pointer shrink-0 disabled:opacity-50"
+          >
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            <span>{isBn ? 'লাইভ সেভ করুন' : 'Publish Live'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Banner Cards List */}
@@ -176,7 +229,7 @@ export function BannerManager() {
                   Priority #{slide.priority}
                 </span>
                 {slide.badgeEn && (
-                  <span className="rounded-full bg-accent/20 px-2.5 py-0.5 text-[10px] font-bold text-amber-900">
+                  <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200">
                     {isBn ? slide.badgeBn : slide.badgeEn}
                   </span>
                 )}
@@ -198,19 +251,21 @@ export function BannerManager() {
             {/* Actions */}
             <div className="flex items-center gap-3 shrink-0">
               <button
+                type="button"
                 onClick={() => handleToggleActive(slide.id)}
-                className={`rounded-full px-3 py-1 text-xs font-bold transition-colors ${
+                className={`rounded-full px-3.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
                   slide.isActive
                     ? 'bg-emerald-100 text-emerald-800'
                     : 'bg-slate-100 text-slate-800'
                 }`}
               >
-                {slide.isActive ? 'Active on Home' : 'Disabled'}
+                {slide.isActive ? (isBn ? 'হোমপেজে সচল' : 'Active on Home') : (isBn ? 'বন্ধ আছে' : 'Disabled')}
               </button>
 
               <button
+                type="button"
                 onClick={() => toast.info(isBn ? 'স্লাইড লাইভ প্রিভিউ' : 'Live Preview')}
-                className="rounded-xl border border-border p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="rounded-xl border border-border p-2 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
                 title="Preview Slide"
               >
                 <Eye className="h-4 w-4" />

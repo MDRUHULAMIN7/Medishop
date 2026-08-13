@@ -1,146 +1,208 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Users, Shield, UserCheck, ShieldAlert, UserX } from 'lucide-react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Users, Shield, UserCheck, ShieldAlert, UserX, RefreshCw } from 'lucide-react';
 import { useAppSelector } from '@/store';
+import { adminService, AdminUserListItem } from '@/services/admin.service';
+import { DataTable, Column } from './DataTable';
 import { toast } from 'sonner';
-
-interface UserRecord {
-  id: string;
-  name: string;
-  phone: string;
-  email: string;
-  role: 'SUPER_ADMIN' | 'PHARMACIST' | 'CUSTOMER';
-  status: 'ACTIVE' | 'BLOCKED';
-  joinedDate: string;
-}
 
 export function UserManager() {
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
 
-  const [users, setUsers] = useState<UserRecord[]>([
-    {
-      id: 'u-1',
-      name: 'এডমিন তানভীর আহমেদ',
-      phone: '+880 1742-643763',
-      email: 'admin@medishop.com.bd',
-      role: 'SUPER_ADMIN',
-      status: 'ACTIVE',
-      joinedDate: '2025-01-10',
-    },
-    {
-      id: 'u-2',
-      name: 'ডঃ ফার্মাসিস্ট সাইফুর রহমান',
-      phone: '+880 1812-998877',
-      email: 'rx@medishop.com.bd',
-      role: 'PHARMACIST',
-      status: 'ACTIVE',
-      joinedDate: '2025-03-15',
-    },
-    {
-      id: 'u-3',
-      name: 'মাহমুদুল হাসান',
-      phone: '+880 1911-223344',
-      email: 'mahmud@gmail.com',
-      role: 'CUSTOMER',
-      status: 'ACTIVE',
-      joinedDate: '2026-02-01',
-    },
-  ]);
+  const [users, setUsers] = useState<AdminUserListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [search, setSearch] = useState('');
 
-  const handleToggleStatus = (id: string) => {
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === id
-          ? { ...u, status: u.status === 'ACTIVE' ? 'BLOCKED' : 'ACTIVE' }
-          : u
-      )
-    );
-    toast.success(isBn ? 'ইউজার স্ট্যাটাস পরিবর্তন করা হয়েছে' : 'User status toggled');
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', '15');
+      if (search.trim()) params.append('search', search.trim());
+
+      const res = await adminService.listUsers(params.toString());
+      setUsers(res.users);
+      setTotalCount(res.total);
+    } catch (err: any) {
+      console.error('Failed to load user directory:', err);
+      toast.error(err?.message || 'Failed to fetch registered users');
+    } finally {
+      setLoading(false);
+    }
+  }, [page, search]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const handleToggleStatus = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'active' ? 'blocked' : 'active';
+    try {
+      await adminService.updateUserStatus(id, newStatus);
+      toast.success(
+        newStatus === 'blocked'
+          ? isBn
+            ? 'ইউজার অ্যাকাউন্ট সফলভাবে ব্লক করা হয়েছে'
+            : 'User account blocked successfully'
+          : isBn
+          ? 'ইউজার অ্যাকাউন্ট আনব্লক করা হয়েছে'
+          : 'User account unblocked successfully'
+      );
+      fetchUsers();
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update user status');
+    }
   };
+
+  const columns: Column<AdminUserListItem>[] = [
+    {
+      key: 'name',
+      headerBn: 'ইউজার নাম',
+      headerEn: 'User Name',
+      render: (row) => (
+        <div className="flex flex-col">
+          <span className="font-bold text-foreground sm:text-sm">{row.name}</span>
+          <span className="text-[10px] text-muted-foreground font-mono">ID: #{row.id.slice(-6)}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'phone',
+      headerBn: 'যোগাযোগের তথ্য',
+      headerEn: 'Contact Details',
+      render: (row) => (
+        <div className="flex flex-col text-xs">
+          <span className="font-semibold text-primary">{row.phone || 'No phone'}</span>
+          <span className="text-[11px] text-muted-foreground">{row.email || 'No email'}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'role',
+      headerBn: 'অ্যাসাইনকৃত রোল',
+      headerEn: 'Assigned Role',
+      render: (row) => (
+        <span
+          className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase ${
+            row.role === 'admin' || row.role === 'super_admin'
+              ? 'bg-purple-100 text-purple-800'
+              : row.role === 'pharmacist' || row.role === 'pharmacist_verifier'
+              ? 'bg-sky-100 text-sky-800'
+              : row.role === 'inventory_manager'
+              ? 'bg-indigo-100 text-indigo-800'
+              : 'bg-slate-100 text-slate-800'
+          }`}
+        >
+          {row.role}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      headerBn: 'স্ট্যাটাস',
+      headerEn: 'Status',
+      render: (row) => (
+        <span
+          className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${
+            row.status === 'active'
+              ? 'bg-emerald-100 text-emerald-800'
+              : 'bg-rose-100 text-rose-800'
+          }`}
+        >
+          {row.status}
+        </span>
+      ),
+    },
+    {
+      key: 'createdAt',
+      headerBn: 'নিবন্ধনের তারিখ',
+      headerEn: 'Joined Date',
+      render: (row) => (
+        <span className="text-muted-foreground font-medium">
+          {row.createdAt
+            ? new Date(row.createdAt).toLocaleDateString(isBn ? 'bn-BD' : 'en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              })
+            : 'N/A'}
+        </span>
+      ),
+    },
+    {
+      key: 'action',
+      headerBn: 'অ্যাকশন',
+      headerEn: 'Action',
+      render: (row) => (
+        <div className="text-right">
+          <button
+            type="button"
+            onClick={() => handleToggleStatus(row.id, row.status)}
+            className={`rounded-xl border border-border px-3 py-1 text-xs font-bold transition-colors cursor-pointer ${
+              row.status === 'active'
+                ? 'border-rose-200 text-rose-600 hover:bg-rose-50'
+                : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
+            }`}
+          >
+            {row.status === 'active' ? (isBn ? 'ব্লক করুন' : 'Block User') : (isBn ? 'আনব্লক' : 'Unblock')}
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4 gap-4">
         <div>
-          <h2 className="text-xl font-black text-foreground">
-            {isBn ? 'ইউজার ডিরেক্টরি ও রোল অ্যাসাইনমেন্ট' : 'User Management Directory'}
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-bold text-indigo-700 border border-indigo-200">
+            <Users className="h-3.5 w-3.5" />
+            <span>{isBn ? 'লাইব ডাটাবেজ কাস্টমার তালিকা' : 'Live User Directory'}</span>
+          </span>
+          <h2 className="text-xl font-extrabold text-foreground mt-1">
+            {isBn ? 'ইউজার ডিরেক্টরি ও একাউন্ট স্ট্যাটাস' : 'User Management Directory'}
           </h2>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mt-0.5">
             {isBn
-              ? 'গ্রাহক, ফার্মাসিস্ট ও এডমিন একাউন্ট রোল নিয়ন্ত্রণ করুন'
-              : 'Manage customer accounts, pharmacist roles, and admin access'}
+              ? 'নিবন্ধিত গ্রাহকদের তথ্য দেখুন এবং প্রয়োজন অনুযায়ী অ্যাকাউন্ট সচল/ব্লক করুন'
+              : 'View live registered accounts and control active/blocked status.'}
           </p>
         </div>
+
+        <button
+          type="button"
+          onClick={fetchUsers}
+          disabled={loading}
+          className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-3.5 py-2 text-xs font-bold text-foreground shadow-2xs hover:bg-muted transition-colors cursor-pointer disabled:opacity-50"
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          <span>{isBn ? 'রিফ্রেশ ডাটা' : 'Refresh Users'}</span>
+        </button>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-2xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-border bg-muted/40 font-bold uppercase tracking-wider text-muted-foreground">
-                <th className="py-3 px-4">User Name</th>
-                <th className="py-3 px-4">Contact Info</th>
-                <th className="py-3 px-4">Role</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4">Joined</th>
-                <th className="py-3 px-4 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/60">
-              {users.map((u) => (
-                <tr key={u.id} className="hover:bg-muted/30 transition-colors">
-                  <td className="py-3 px-4 font-bold text-foreground sm:text-sm">
-                    {u.name}
-                  </td>
-                  <td className="py-3 px-4">
-                    <span className="font-semibold text-primary block">{u.phone}</span>
-                    <span className="text-[11px] text-muted-foreground">{u.email}</span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <span
-                      className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
-                        u.role === 'SUPER_ADMIN'
-                          ? 'bg-purple-100 text-purple-800'
-                          : u.role === 'PHARMACIST'
-                          ? 'bg-sky-100 text-sky-800'
-                          : 'bg-slate-100 text-slate-800'
-                      }`}
-                    >
-                      {u.role}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <span
-                      className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                        u.status === 'ACTIVE'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-rose-100 text-rose-800'
-                      }`}
-                    >
-                      {u.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-muted-foreground">{u.joinedDate}</td>
-                  <td className="py-3 px-4 text-right">
-                    <button
-                      onClick={() => handleToggleStatus(u.id)}
-                      className={`rounded-xl border border-border px-3 py-1 text-xs font-bold transition-colors ${
-                        u.status === 'ACTIVE'
-                          ? 'text-danger hover:bg-danger-light/30'
-                          : 'text-success hover:bg-success/20'
-                      }`}
-                    >
-                      {u.status === 'ACTIVE' ? 'Block User' : 'Unblock'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* Server Paginated DataTable */}
+      <DataTable
+        columns={columns}
+        data={users}
+        loading={loading}
+        mode="server"
+        currentPage={page}
+        pageSize={15}
+        totalCount={totalCount}
+        onPageChange={(p) => setPage(p)}
+        onSearchChange={(q) => {
+          setSearch(q);
+          setPage(1);
+        }}
+        searchPlaceholderBn="কাস্টমারের নাম, ফোন বা ইমেইল খুঁজুন..."
+        searchPlaceholderEn="Search user name, phone, or email..."
+      />
     </div>
   );
 }

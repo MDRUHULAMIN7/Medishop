@@ -25,6 +25,8 @@ import {
   ShieldCheck,
   Settings,
   History,
+  Stethoscope,
+  Megaphone,
 } from 'lucide-react';
 import { UserRole } from '@/types';
 import { RbacTabId } from '@/config/rbac.config';
@@ -47,7 +49,23 @@ export function RbacSidebar({
   isBn = true,
 }: RbacSidebarProps) {
   const router = useRouter();
-  const [isCatalogExpanded, setIsCatalogExpanded] = useState(true);
+
+  // Category Accordion Expanded States
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
+    catalog: true,
+    clinical: true,
+    sales: true,
+    marketing: false,
+    analytics: false,
+    system: false,
+  });
+
+  const toggleCategory = (key: string) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
 
   const handleSubItemClick = (tab: string, targetPath?: string) => {
     setActiveTab(tab as RbacTabId);
@@ -58,6 +76,72 @@ export function RbacSidebar({
       router.push(`/dashboard/admin?tab=${tab}`);
     }
   };
+
+  const CATEGORIES = [
+    {
+      key: 'catalog',
+      titleBn: 'ফার্মা ক্যাটালগ ও স্টক',
+      titleEn: 'Pharma Catalog & Stock',
+      icon: Package,
+      items: [
+        { id: 'products', labelBn: 'ওষুধ ও পণ্য ক্যাটালগ', labelEn: 'Medicine Catalog', icon: Pill },
+        { id: 'categories', labelBn: 'ফার্মেসি ক্যাটাগরি', labelEn: 'Pharmacy Categories', icon: FolderTree },
+        { id: 'brands', labelBn: 'ফার্মাসিউটিক্যালস ব্র্যান্ডস', labelEn: 'Pharma Brands (DGDA)', icon: Building2 },
+        { id: 'inventory', labelBn: 'শেয়ার্ড ইনভেন্টরি ও ব্যাচ', labelEn: 'Inventory & Batches', icon: Boxes, targetPath: '/dashboard/inventory' },
+        { id: 'ledger', labelBn: 'অডিট লেজার ট্রেইল', labelEn: 'Stock Audit Ledger', icon: History },
+      ],
+    },
+    {
+      key: 'clinical',
+      titleBn: 'ক্লিনিক্যাল ও পিওএস সেলস',
+      titleEn: 'Clinical & POS Operations',
+      icon: Stethoscope,
+      items: [
+        { id: 'pos_sales', labelBn: 'কাউন্টার পজ বিক্রয় (POS)', labelEn: 'In-Store POS Terminal', icon: Store, targetPath: '/dashboard/sales', color: 'bg-emerald-600' },
+        { id: 'prescriptions', labelBn: 'প্রেসক্রিপশন অডিট কিউ', labelEn: 'Prescription Queue', icon: FileCheck2, color: 'bg-amber-600' },
+      ],
+    },
+    {
+      key: 'sales',
+      titleBn: 'সেলস ও কাস্টমার ডিরেক্টরি',
+      titleEn: 'Orders & Customers',
+      icon: ShoppingBag,
+      items: [
+        { id: 'orders', labelBn: 'সকল কাস্টমার অর্ডার', labelEn: 'Customer Orders', icon: ShoppingBag },
+        { id: 'users', labelBn: 'লাইভ কাস্টমার ডিরেক্টরি', labelEn: 'User Directory (Live DB)', icon: Users },
+      ],
+    },
+    {
+      key: 'marketing',
+      titleBn: 'মার্কেটিং ও অফার প্রমোশন',
+      titleEn: 'Marketing & Offers',
+      icon: Megaphone,
+      items: [
+        { id: 'coupons', labelBn: 'ডিসকাউন্ট কুপন ও কোড', labelEn: 'Coupons & Promo Codes', icon: Ticket },
+        { id: 'banners', labelBn: 'হিরো ব্যানার ও স্লাইডার', labelEn: 'Hero Banner Slider', icon: ImageIcon },
+        { id: 'reviews', labelBn: 'রিভিউ ও রেটিং মোডারেশন', labelEn: 'Reviews & Rating', icon: Star },
+      ],
+    },
+    {
+      key: 'analytics',
+      titleBn: 'রিপোর্টস ও বিজনেস ফাইন্যান্স',
+      titleEn: 'Reports & Analytics',
+      icon: BarChart3,
+      items: [
+        { id: 'reports', labelBn: 'সেলস ও সম্পদ ভ্যালুয়েশন', labelEn: 'Reports & Valuation', icon: BarChart3 },
+      ],
+    },
+    {
+      key: 'system',
+      titleBn: 'সিস্টেম ও স্টাফ পারমিশন',
+      titleEn: 'System Control & RBAC',
+      icon: ShieldCheck,
+      items: [
+        { id: 'staff', labelBn: 'স্টাফ অ্যাকাউন্ট ও রোলস (RBAC)', labelEn: 'Staff & Roles (RBAC)', icon: ShieldCheck },
+        { id: 'settings', labelBn: 'সাইট সেটিংস ও ব্র্যান্ডিং', labelEn: 'Site Settings & Dynamic Branding', icon: Settings },
+      ],
+    },
+  ];
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-background border-r border-border w-80 shrink-0 select-none shadow-xs">
@@ -72,7 +156,7 @@ export function RbacSidebar({
               mediShop
             </span>
             <span className="text-[10px] font-bold tracking-wider uppercase text-muted-foreground mt-0.5">
-              {isBn ? 'এডমিন প্যানেল v2.0' : 'Pharmacy Admin Panel'}
+              {isBn ? 'ফার্মেসি এডমিন প্যানেল v2.0' : 'Pharmacy Admin Panel'}
             </span>
           </div>
         </Link>
@@ -87,288 +171,94 @@ export function RbacSidebar({
         </button>
       </div>
 
-      {/* Navigation Section */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-        {/* 1. Overview */}
-        <div className="space-y-1">
-          <button
-            type="button"
-            onClick={() => handleSubItemClick('overview')}
-            className={`w-full flex items-center gap-3 rounded-2xl px-3.5 py-3 text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'overview'
-                ? 'bg-primary text-white font-black shadow-md'
-                : 'text-foreground hover:bg-muted/70'
-            }`}
-          >
+      {/* Navigation Scrollable Body */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+        {/* Top Overview Button */}
+        <button
+          type="button"
+          onClick={() => handleSubItemClick('overview')}
+          className={`w-full flex items-center justify-between rounded-2xl px-4 py-3 text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'overview'
+              ? 'bg-primary text-white font-black shadow-md'
+              : 'bg-muted/40 text-foreground hover:bg-muted/80'
+          }`}
+        >
+          <div className="flex items-center gap-3">
             <LayoutDashboard className="h-4.5 w-4.5 shrink-0" />
             <span>{isBn ? 'ওভারভিউ ও অ্যানালিটিক্স' : 'Overview & Analytics'}</span>
-          </button>
-        </div>
+          </div>
+          <span className="rounded-full bg-emerald-500/20 text-emerald-600 px-2 py-0.5 text-[10px] font-bold">
+            Live
+          </span>
+        </button>
 
-        {/* 2. Accordion Parent Item: Pharma Operations */}
-        <div className="space-y-1">
-          <button
-            type="button"
-            onClick={() => setIsCatalogExpanded(!isCatalogExpanded)}
-            className="group w-full flex items-center justify-between rounded-2xl px-3.5 py-2.5 text-xs font-bold bg-primary/10 text-primary transition-all cursor-pointer shadow-2xs"
-          >
-            <div className="flex items-center gap-3">
-              <Tags className="h-4.5 w-4.5 text-primary shrink-0 transition-transform group-hover:scale-110" />
-              <span className="font-black">
-                {isBn ? 'ফার্মাসিউটিক্যালস অপারেশন্স' : 'Pharma Operations'}
-              </span>
-            </div>
-            <motion.div
-              animate={{ rotate: isCatalogExpanded ? 180 : 0 }}
-              transition={{ duration: 0.2, ease: 'easeInOut' }}
-            >
-              <ChevronDown className="h-4 w-4 text-primary shrink-0" />
-            </motion.div>
-          </button>
+        {/* Accordion Categories */}
+        {CATEGORIES.map((cat) => {
+          const CatIcon = cat.icon;
+          const isExpanded = !!expandedCategories[cat.key];
+          const hasActiveItem = cat.items.some((it) => it.id === activeTab);
 
-          {/* Sub-Buttons */}
-          <AnimatePresence initial={false}>
-            {isCatalogExpanded && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25, ease: [0.04, 0.62, 0.23, 0.98] }}
-                className="overflow-hidden pl-3 pr-1 pt-1 space-y-1"
+          return (
+            <div key={cat.key} className="space-y-1">
+              <button
+                type="button"
+                onClick={() => toggleCategory(cat.key)}
+                className={`group w-full flex items-center justify-between rounded-2xl px-3.5 py-2.5 text-xs font-bold transition-all cursor-pointer shadow-2xs ${
+                  hasActiveItem
+                    ? 'bg-primary/10 text-primary border border-primary/20'
+                    : 'bg-muted/20 text-foreground hover:bg-muted/60'
+                }`}
               >
-                {/* POS Sales Counter */}
-                <button
-                  type="button"
-                  onClick={() => handleSubItemClick('pos_sales', '/dashboard/sales')}
-                  className={`w-full flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === 'pos_sales'
-                      ? 'bg-emerald-600 text-white font-black shadow-md'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
+                <div className="flex items-center gap-2.5">
+                  <CatIcon className="h-4 w-4 text-primary shrink-0 transition-transform group-hover:scale-110" />
+                  <span className="font-black">
+                    {isBn ? cat.titleBn : cat.titleEn}
+                  </span>
+                </div>
+                <motion.div
+                  animate={{ rotate: isExpanded ? 180 : 0 }}
+                  transition={{ duration: 0.2, ease: 'easeInOut' }}
                 >
-                  <Store className="h-4 w-4 shrink-0" />
-                  <span>{isBn ? 'কাউন্টার পজ বিক্রয় (POS)' : 'In-Store POS Terminal'}</span>
-                </button>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-primary shrink-0" />
+                </motion.div>
+              </button>
 
-                {/* Shared Central Inventory */}
-                <button
-                  type="button"
-                  onClick={() => handleSubItemClick('inventory', '/dashboard/inventory')}
-                  className={`w-full flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === 'inventory'
-                      ? 'bg-indigo-600 text-white font-black shadow-md'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
-                >
-                  <Boxes className="h-4 w-4 shrink-0" />
-                  <span>{isBn ? 'শেয়ার্ড ইনভেন্টরি ও ব্যাচ' : 'Inventory & Batches'}</span>
-                </button>
+              {/* Collapsible Sub Items with Framer Motion */}
+              <AnimatePresence initial={false}>
+                {isExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.22, ease: [0.04, 0.62, 0.23, 0.98] }}
+                    className="overflow-hidden pl-3 pr-1 pt-1 space-y-1"
+                  >
+                    {cat.items.map((subItem) => {
+                      const SubIcon = subItem.icon;
+                      const isActive = activeTab === subItem.id;
 
-                {/* Stock Audit Ledger */}
-                <button
-                  type="button"
-                  onClick={() => handleSubItemClick('ledger')}
-                  className={`w-full flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === 'ledger'
-                      ? 'bg-purple-600 text-white font-black shadow-md'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
-                >
-                  <History className="h-4 w-4 shrink-0" />
-                  <span>{isBn ? 'অডিট লেজার ট্রেইল' : 'Stock Audit Ledger'}</span>
-                </button>
-
-                {/* Prescription Audit Queue */}
-                <button
-                  type="button"
-                  onClick={() => handleSubItemClick('prescriptions')}
-                  className={`w-full flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === 'prescriptions'
-                      ? 'bg-amber-600 text-white font-black shadow-md'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
-                >
-                  <FileCheck2 className="h-4 w-4 shrink-0 text-amber-500" />
-                  <span>{isBn ? 'প্রেসক্রিপশন অডিট কিউ' : 'Prescription Queue'}</span>
-                </button>
-
-                {/* Medicine Products Catalog */}
-                <button
-                  type="button"
-                  onClick={() => handleSubItemClick('products')}
-                  className={`w-full flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === 'products'
-                      ? 'bg-primary text-white font-black shadow-md'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
-                >
-                  <Package className="h-4 w-4 shrink-0" />
-                  <span>{isBn ? 'ওষুধ ও পণ্য ক্যাটালগ' : 'Medicine Catalog'}</span>
-                </button>
-
-                {/* Pharmacy Categories */}
-                <button
-                  type="button"
-                  onClick={() => handleSubItemClick('categories')}
-                  className={`w-full flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === 'categories' || activeTab === 'inventory_categories'
-                      ? 'bg-primary text-white font-black shadow-md'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
-                >
-                  <FolderTree className="h-4 w-4 shrink-0" />
-                  <span>{isBn ? 'ফার্মেসি ক্যাটাগরি' : 'Pharmacy Categories'}</span>
-                </button>
-
-                {/* Pharma Brands (DGDA) */}
-                <button
-                  type="button"
-                  onClick={() => handleSubItemClick('brands')}
-                  className={`w-full flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === 'brands'
-                      ? 'bg-primary text-white font-black shadow-md'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
-                >
-                  <Building2 className="h-4 w-4 shrink-0" />
-                  <span>{isBn ? 'ফার্মাসিউটিক্যালস ব্র্যান্ডস' : 'Pharma Brands'}</span>
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* 3. Section: Orders & Customers */}
-        <div className="space-y-1">
-          <span className="px-3 text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
-            {isBn ? 'অর্ডার ও কাস্টমার' : 'Orders & Customers'}
-          </span>
-
-          <button
-            type="button"
-            onClick={() => handleSubItemClick('orders')}
-            className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'orders'
-                ? 'bg-primary text-white font-black shadow-md'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
-          >
-            <ShoppingBag className="h-4 w-4 shrink-0" />
-            <span>{isBn ? 'সকল কাস্টমার অর্ডার' : 'Customer Orders'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSubItemClick('users')}
-            className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'users'
-                ? 'bg-primary text-white font-black shadow-md'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
-          >
-            <Users className="h-4 w-4 shrink-0" />
-            <span>{isBn ? 'কাস্টমার ডিরেক্টরি' : 'Customer Directory'}</span>
-          </button>
-        </div>
-
-        {/* 4. Section: Marketing & Reviews */}
-        <div className="space-y-1">
-          <span className="px-3 text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
-            {isBn ? 'মার্কেটিং ও প্রমোশন' : 'Marketing & Offers'}
-          </span>
-
-          <button
-            type="button"
-            onClick={() => handleSubItemClick('coupons')}
-            className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'coupons'
-                ? 'bg-primary text-white font-black shadow-md'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
-          >
-            <Ticket className="h-4 w-4 shrink-0" />
-            <span>{isBn ? 'ডিসকাউন্ট কুপন ও কোড' : 'Coupons & Promo Codes'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSubItemClick('banners')}
-            className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'banners'
-                ? 'bg-primary text-white font-black shadow-md'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
-          >
-            <ImageIcon className="h-4 w-4 shrink-0" />
-            <span>{isBn ? 'ব্যানার ও স্লাইডার' : 'Hero Banners'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSubItemClick('reviews')}
-            className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'reviews'
-                ? 'bg-primary text-white font-black shadow-md'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
-          >
-            <Star className="h-4 w-4 shrink-0" />
-            <span>{isBn ? 'রিভিউ ও রেটিং' : 'Reviews & Rating'}</span>
-          </button>
-        </div>
-
-        {/* 5. Section: Reports & Analytics */}
-        <div className="space-y-1">
-          <span className="px-3 text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
-            {isBn ? 'রিপোর্টস ও বিজনেস এ্যানালিটিক্স' : 'Analytics & Finance'}
-          </span>
-
-          <button
-            type="button"
-            onClick={() => handleSubItemClick('reports')}
-            className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'reports'
-                ? 'bg-primary text-white font-black shadow-md'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
-          >
-            <BarChart3 className="h-4 w-4 shrink-0" />
-            <span>{isBn ? 'সেলস ও সম্পদ ভ্যালুয়েশন' : 'Reports & Valuation'}</span>
-          </button>
-        </div>
-
-        {/* 6. Section: System & Settings */}
-        <div className="space-y-1">
-          <span className="px-3 text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
-            {isBn ? 'সিস্টেম ও স্টাফ পারমিশন' : 'System Control & RBAC'}
-          </span>
-
-          <button
-            type="button"
-            onClick={() => handleSubItemClick('staff')}
-            className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'staff'
-                ? 'bg-primary text-white font-black shadow-md'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
-          >
-            <ShieldCheck className="h-4 w-4 shrink-0" />
-            <span>{isBn ? 'স্টাফ অ্যাকাউন্ট ও রোলস (RBAC)' : 'Staff & Roles RBAC'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSubItemClick('settings')}
-            className={`w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'settings'
-                ? 'bg-primary text-white font-black shadow-md'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
-          >
-            <Settings className="h-4 w-4 shrink-0" />
-            <span>{isBn ? 'সাইট সেটিংস ও ব্র্যান্ডিং' : 'Site Settings & Dynamic Branding'}</span>
-          </button>
-        </div>
+                      return (
+                        <button
+                          key={subItem.id}
+                          type="button"
+                          onClick={() => handleSubItemClick(subItem.id, subItem.targetPath)}
+                          className={`w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
+                            isActive
+                              ? `${(subItem as any).color || 'bg-primary'} text-white font-black shadow-md`
+                              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                          }`}
+                        >
+                          <SubIcon className="h-4 w-4 shrink-0" />
+                          <span>{isBn ? subItem.labelBn : subItem.labelEn}</span>
+                        </button>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
       </div>
 
       {/* Sidebar Footer */}
