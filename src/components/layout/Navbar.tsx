@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,12 +19,15 @@ import {
   Truck,
   Globe,
   LayoutDashboard,
+  Bell,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { setSearchQuery, setLanguage } from '@/store/slices/uiSlice';
 import { openAuthModal, logout } from '@/store/slices/authSlice';
 import { openPrescriptionModal, closePrescriptionModal } from '@/store/slices/uiSlice';
 import { UploadPrescriptionModal } from '@/components/modals/UploadPrescriptionModal';
+import { NotificationDrawer } from '@/components/notifications/NotificationDrawer';
+import { notificationService } from '@/services/notification.service';
 import { useScrollPosition } from '@/hooks/useScrollPosition';
 import { MobileMenuDrawer } from './MobileMenuDrawer';
 import { MobileSearchOverlay } from './MobileSearchOverlay';
@@ -45,15 +48,28 @@ export function Navbar() {
   const searchQuery = useAppSelector((state) => state.ui.searchQuery);
   const language = useAppSelector((state) => state.ui.language);
   const isPrescriptionModalOpen = useAppSelector((state) => state.ui.isPrescriptionModalOpen);
+  const isBn = language === 'bn';
 
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const fetchUnreadCount = useCallback(async () => {
+    if (!isAuthenticated) return;
+    const count = await notificationService.getUnreadCount();
+    setUnreadCount(count);
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, [fetchUnreadCount]);
 
   if (pathname?.startsWith('/dashboard')) {
     return null;
   }
-
-  const isBn = language === 'bn';
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -246,6 +262,23 @@ export function Navbar() {
               <span>{isBn ? 'প্রেসক্রিপশন আপলোড' : 'Upload Prescription'}</span>
             </button>
 
+            {/* Notifications Bell Button */}
+            {isAuthenticated && (
+              <button
+                type="button"
+                onClick={() => setIsNotificationsOpen(true)}
+                aria-label="Notifications"
+                className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-muted/30 text-foreground hover:bg-muted transition-colors cursor-pointer shrink-0"
+              >
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[9px] font-extrabold text-white animate-pulse">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </button>
+            )}
+
             {/* Account / User Section */}
             {isAuthenticated ? (
               <div className="relative">
@@ -330,6 +363,11 @@ export function Navbar() {
         isOpen={isPrescriptionModalOpen}
         onClose={() => dispatch(closePrescriptionModal())}
         isBn={isBn}
+      />
+      <NotificationDrawer
+        isOpen={isNotificationsOpen}
+        onClose={() => setIsNotificationsOpen(false)}
+        onNotificationsUpdated={fetchUnreadCount}
       />
     </>
   );

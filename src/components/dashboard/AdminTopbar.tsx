@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Menu,
@@ -18,6 +18,8 @@ import { useAppDispatch, useAppSelector } from '@/store';
 import { setLanguage } from '@/store/slices/uiSlice';
 import { logout } from '@/store/slices/authSlice';
 import { toast } from 'sonner';
+import { notificationService } from '@/services/notification.service';
+import { NotificationDrawer } from '../notifications/NotificationDrawer';
 
 interface AdminTopbarProps {
   onToggleMobileSidebar: () => void;
@@ -31,10 +33,25 @@ export function AdminTopbar({
   const dispatch = useAppDispatch();
   const language = useAppSelector((state) => state.ui.language);
   const user = useAppSelector((state) => state.auth.user);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const isBn = language === 'bn';
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [searchVal, setSearchVal] = useState('');
+
+  const fetchUnreadCount = useCallback(async () => {
+    if (!isAuthenticated) return;
+    const count = await notificationService.getUnreadCount();
+    setUnreadCount(count);
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, [fetchUnreadCount]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,72 +65,71 @@ export function AdminTopbar({
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-border bg-background/98 px-4 backdrop-blur-md sm:px-6">
-      {/* Left: Mobile Toggle & Global Search Input */}
-      <div className="flex items-center gap-3 flex-1 max-w-xl">
-        <button
-          onClick={onToggleMobileSidebar}
-          aria-label="Open Mobile Menu"
-          className="rounded-xl border border-border bg-muted/40 p-2 text-foreground md:hidden hover:bg-muted"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-
-        {/* Global Admin Search Bar */}
-        <form onSubmit={handleSearchSubmit} className="relative w-full">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="search"
-            value={searchVal}
-            onChange={(e) => setSearchVal(e.target.value)}
-            placeholder={
-              isBn
-                ? 'মেডিসিন, কাস্টমার, অর্ডার বা ট্র্যাকিং খুঁজুন...'
-                : 'Search medicine, customer, order ID or tracking...'
-            }
-            className="h-10 w-full rounded-2xl border border-border bg-muted/30 pl-10 pr-4 text-xs font-medium text-foreground placeholder:text-muted-foreground transition-all focus:border-primary focus:bg-background focus:outline-none"
-          />
-        </form>
-      </div>
-
-      {/* Right Actions & Admin Profile */}
-      <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
-        {/* Quick Add Button */}
-        {onOpenQuickAdd && (
+    <>
+      <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-border bg-background/98 px-4 backdrop-blur-md sm:px-6">
+        {/* Left: Mobile Toggle & Global Search Input */}
+        <div className="flex items-center gap-3 flex-1 max-w-xl">
           <button
-            onClick={onOpenQuickAdd}
-            className="hidden sm:flex h-9 items-center gap-1.5 rounded-xl bg-primary px-3 text-xs font-bold text-white shadow-2xs hover:bg-primary-dark transition-all active:scale-95"
+            onClick={onToggleMobileSidebar}
+            aria-label="Open Mobile Menu"
+            className="rounded-xl border border-border bg-muted/40 p-2 text-foreground md:hidden hover:bg-muted"
           >
-            <Plus className="h-4 w-4" />
-            <span>{isBn ? 'নতুন ওষুধ যোগ' : 'Add Medicine'}</span>
+            <Menu className="h-5 w-5" />
           </button>
-        )}
 
-        {/* Language Switcher */}
-        <button
-          onClick={() => dispatch(setLanguage(isBn ? 'en' : 'bn'))}
-          aria-label="Toggle Language"
-          className="flex h-9 items-center gap-1 rounded-xl border border-border/80 bg-muted/50 px-2.5 text-xs font-bold text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-        >
-          <Globe className="h-3.5 w-3.5 text-primary" />
-          <span>{isBn ? 'EN' : 'বাং'}</span>
-        </button>
+          {/* Global Admin Search Bar */}
+          <form onSubmit={handleSearchSubmit} className="relative w-full">
+            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="search"
+              value={searchVal}
+              onChange={(e) => setSearchVal(e.target.value)}
+              placeholder={
+                isBn
+                  ? 'মেডিসিন, কাস্টমার, অর্ডার বা ট্র্যাকিং খুঁজুন...'
+                  : 'Search medicine, customer, order ID or tracking...'
+              }
+              className="h-10 w-full rounded-2xl border border-border bg-muted/30 pl-10 pr-4 text-xs font-medium text-foreground placeholder:text-muted-foreground transition-all focus:border-primary focus:bg-background focus:outline-none"
+            />
+          </form>
+        </div>
 
-        {/* Notifications Icon with Badge */}
-        <button
-          onClick={() =>
-            toast.info(
-              isBn ? '৩টি নতুন প্রেসক্রিপশন পেন্ডিং রয়েছে' : '3 New Prescriptions Pending'
-            )
-          }
-          aria-label="Notifications"
-          className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-muted/30 text-foreground hover:bg-muted transition-colors"
-        >
-          <Bell className="h-4.5 w-4.5" />
-          <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[9px] font-extrabold text-white">
-            3
-          </span>
-        </button>
+        {/* Right Actions & Admin Profile */}
+        <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
+          {/* Quick Add Button */}
+          {onOpenQuickAdd && (
+            <button
+              onClick={onOpenQuickAdd}
+              className="hidden sm:flex h-9 items-center gap-1.5 rounded-xl bg-primary px-3 text-xs font-bold text-white shadow-2xs hover:bg-primary-dark transition-all active:scale-95"
+            >
+              <Plus className="h-4 w-4" />
+              <span>{isBn ? 'নতুন ওষুধ যোগ' : 'Add Medicine'}</span>
+            </button>
+          )}
+
+          {/* Language Switcher */}
+          <button
+            onClick={() => dispatch(setLanguage(isBn ? 'en' : 'bn'))}
+            aria-label="Toggle Language"
+            className="flex h-9 items-center gap-1 rounded-xl border border-border/80 bg-muted/50 px-2.5 text-xs font-bold text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+          >
+            <Globe className="h-3.5 w-3.5 text-primary" />
+            <span>{isBn ? 'EN' : 'বাং'}</span>
+          </button>
+
+          {/* Notifications Icon with Badge */}
+          <button
+            onClick={() => setIsNotificationsOpen(true)}
+            aria-label="Notifications"
+            className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-muted/30 text-foreground hover:bg-muted transition-colors cursor-pointer"
+          >
+            <Bell className="h-4.5 w-4.5" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[9px] font-extrabold text-white animate-pulse">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </button>
 
         {/* Admin Profile Dropdown */}
         <div className="relative">
@@ -170,5 +186,12 @@ export function AdminTopbar({
         </div>
       </div>
     </header>
-  );
+
+    <NotificationDrawer
+      isOpen={isNotificationsOpen}
+      onClose={() => setIsNotificationsOpen(false)}
+      onNotificationsUpdated={fetchUnreadCount}
+    />
+  </>
+);
 }
