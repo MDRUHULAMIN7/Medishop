@@ -35,6 +35,7 @@ import { SearchAutocomplete } from '@/components/search/SearchAutocomplete';
 import { HOTLINE_NUMBER, HOTLINE_TEL } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
+import { useBranding } from '@/context/BrandingContext';
 import { useAuth } from '@/hooks/useAuth';
 
 export function Navbar() {
@@ -42,6 +43,7 @@ export function Navbar() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { logout: executeLogout } = useAuth();
+  const { settings } = useBranding();
   const isScrolled = useScrollPosition(8);
 
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
@@ -136,10 +138,10 @@ export function Navbar() {
               </div>
               <div className="flex flex-col justify-center">
                 <span className="font-serif-title text-2xl md:text-3xl font-extrabold tracking-tight text-primary leading-none">
-                  mediShop
+                  {settings.general?.siteName || 'mediShop'}
                 </span>
                 <span className="hidden sm:inline-block text-[10px] font-bold tracking-wider uppercase text-muted-foreground mt-0.5">
-                  {isBn ? 'অনলাইন ফার্মেসি ও হেলথকেয়ার' : 'Online Pharmacy BD'}
+                  {isBn ? 'অনলাইন ফার্মেসি ও হেলথকেয়ার' : (settings.general?.tagline || 'Online Pharmacy BD')}
                 </span>
               </div>
             </Link>

@@ -5,6 +5,8 @@ import { AppProviders } from '@/components/providers';
 import { LayoutWrapper } from '@/components/layout/LayoutWrapper';
 import '@/app/globals.css';
 
+import { settingsService } from '@/services/settings.service';
+
 export const metadata: Metadata = {
   title: {
     default: 'mediShop — Online Pharmacy & Digital Healthcare Platform',
@@ -16,32 +18,12 @@ export const metadata: Metadata = {
     'mediShop',
     'online pharmacy BD',
     'buy medicine Bangladesh',
-    'MedEasy alternative',
     'express medicine delivery Dhaka',
     'DGDA licensed pharmacy',
-    'bKash medicine order',
   ],
   authors: [{ name: 'mediShop Healthcare Team' }],
   creator: 'mediShop',
   publisher: 'mediShop Ltd.',
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  openGraph: {
-    title: 'mediShop — Online Pharmacy & Digital Healthcare Platform',
-    description:
-      'Order authentic medicines, OTC healthcare items, and upload prescriptions online in Bangladesh.',
-    url: 'https://medishop.com.bd',
-    siteName: 'mediShop',
-    locale: 'bn_BD',
-    type: 'website',
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
 };
 
 export const viewport: Viewport = {
@@ -51,11 +33,15 @@ export const viewport: Viewport = {
   themeColor: '#1D4ED8',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await settingsService.getPublicSettings();
+  const primaryColor = settings.branding?.primaryColor || '#1D4ED8';
+  const accentColor = settings.branding?.accentColor || '#F59E0B';
+
   return (
     <html
       lang="bn"
@@ -64,6 +50,12 @@ export default function RootLayout({
     >
       <head>
         <link rel="stylesheet" href="https://fonts.maateen.me/solaiman-lipi/font.css" />
+        <style
+          id="dynamic-branding"
+          dangerouslySetInnerHTML={{
+            __html: `:root { --site-primary: ${primaryColor}; --site-accent: ${accentColor}; }`,
+          }}
+        />
       </head>
       <body
         className="flex min-h-screen flex-col bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary"

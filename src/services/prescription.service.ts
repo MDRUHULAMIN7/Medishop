@@ -78,12 +78,15 @@ export const PrescriptionService = {
    */
   async reviewPrescription(
     id: string,
-    status: 'approved' | 'rejected',
+    input: { status: 'approved' | 'rejected'; rejectionReason?: string } | 'approved' | 'rejected',
     rejectionReason?: string
   ): Promise<PrescriptionItem> {
+    const payload = typeof input === 'object' ? input : { status: input, rejectionReason };
     return apiClient<PrescriptionItem>(`/prescriptions/${id}/review`, {
       method: 'PATCH',
-      body: JSON.stringify({ status, rejectionReason }),
+      body: JSON.stringify(payload),
     });
   },
 };
+
+export const prescriptionService = PrescriptionService;

@@ -17,6 +17,10 @@ import { SupportManager } from '@/components/dashboard/SupportManager';
 import { UserManager } from '@/components/dashboard/UserManager';
 import { SettingsManager } from '@/components/dashboard/SettingsManager';
 import { BannerManager } from '@/components/dashboard/BannerManager';
+import { PrescriptionQueue } from '@/components/dashboard/PrescriptionQueue';
+import { StockLedgerManager } from '@/components/dashboard/StockLedgerManager';
+import { ReportsManager } from '@/components/dashboard/ReportsManager';
+import { StaffManager } from '@/components/dashboard/StaffManager';
 import { Loader2 } from 'lucide-react';
 
 function AdminContent() {
@@ -31,6 +35,10 @@ function AdminContent() {
 
   if (tab === 'inventory') {
     return <InventoryProductsModule isBn={isBn} />;
+  }
+
+  if (tab === 'ledger') {
+    return <StockLedgerManager />;
   }
 
   if (tab === 'pos_sales') {
@@ -57,12 +65,24 @@ function AdminContent() {
     return <OrderManager />;
   }
 
+  if (tab === 'prescriptions') {
+    return <PrescriptionQueue />;
+  }
+
   if (tab === 'payments') {
     return <PaymentManager />;
   }
 
   if (tab === 'reviews') {
     return <ReviewManager />;
+  }
+
+  if (tab === 'reports') {
+    return <ReportsManager />;
+  }
+
+  if (tab === 'staff') {
+    return <StaffManager />;
   }
 
   if (tab === 'support') {

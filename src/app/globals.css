@@ -1,14 +1,19 @@
 @import url('https://fonts.maateen.me/solaiman-lipi/font.css');
 @import "tailwindcss";
 
+:root {
+  --site-primary: #1D4ED8;
+  --site-accent: #F59E0B;
+}
+
 @theme {
-  --color-primary: #1D4ED8;
-  --color-primary-dark: #1E3A8A;
-  --color-primary-light: #3B82F6;
+  --color-primary: var(--site-primary, #1D4ED8);
+  --color-primary-dark: var(--site-primary, #1D4ED8);
+  --color-primary-light: var(--site-primary, #1D4ED8);
   --color-primary-soft: #EFF6FF;
 
-  --color-accent: #F59E0B;
-  --color-accent-dark: #D97706;
+  --color-accent: var(--site-accent, #F59E0B);
+  --color-accent-dark: var(--site-accent, #F59E0B);
   --color-accent-light: #FEF3C7;
 
   --color-background: #FFFFFF;

@@ -108,3 +108,5 @@ export const PosService = {
     return apiClient<PosSaleRecord>(`/pos/sales/invoice/${invoiceNumber}/void`, { method: 'POST' });
   },
 };
+
+export const posService = PosService;

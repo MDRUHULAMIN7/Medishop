@@ -19,6 +19,10 @@ import {
   Boxes,
   Store,
   X,
+  FileText,
+  Tag,
+  BarChart3,
+  ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppSelector } from '@/store';
@@ -27,13 +31,18 @@ export type DashboardTab =
   | 'overview'
   | 'products'
   | 'inventory'
+  | 'ledger'
   | 'pos_sales'
   | 'categories'
   | 'brands'
   | 'banners'
+  | 'coupons'
   | 'orders'
+  | 'prescriptions'
   | 'payments'
   | 'reviews'
+  | 'reports'
+  | 'staff'
   | 'support'
   | 'users'
   | 'settings';
@@ -96,22 +105,30 @@ export function AdminSidebar({
       icon: Building2,
     },
     {
-      id: 'banners' as DashboardTab,
-      labelBn: 'ব্যানার ও হিরো স্লাইডার',
-      labelEn: 'Banners & Hero',
-      icon: ImageIcon,
+      id: 'prescriptions' as DashboardTab,
+      labelBn: 'প্রেসক্রিপশন ভেরিফিকেশন কিউ',
+      labelEn: 'Prescription Queue',
+      icon: FileText,
+      badge: 'Rx',
+      badgeColor: 'bg-amber-500 text-white font-bold',
     },
     {
       id: 'orders' as DashboardTab,
-      labelBn: 'অর্ডার ও ট্র্যাকিং',
-      labelEn: 'Orders & Tracking',
+      labelBn: 'অর্ডার ও ডেলিভারি',
+      labelEn: 'Orders & Logistics',
       icon: ShoppingBag,
     },
     {
-      id: 'payments' as DashboardTab,
-      labelBn: 'পেমেন্ট ও রিফান্ড',
-      labelEn: 'Payments & Refunds',
-      icon: CreditCard,
+      id: 'coupons' as DashboardTab,
+      labelBn: 'কুপন ম্যানেজমেন্ট',
+      labelEn: 'Coupons & Offers',
+      icon: Tag,
+    },
+    {
+      id: 'banners' as DashboardTab,
+      labelBn: 'ব্যানার ও স্লাইডার',
+      labelEn: 'Banners & Hero',
+      icon: ImageIcon,
     },
     {
       id: 'reviews' as DashboardTab,
@@ -120,15 +137,21 @@ export function AdminSidebar({
       icon: Star,
     },
     {
-      id: 'support' as DashboardTab,
-      labelBn: 'কাস্টমার সাপোর্ট',
-      labelEn: 'Customer Support',
-      icon: Headphones,
+      id: 'reports' as DashboardTab,
+      labelBn: 'রিপোর্টস ও এ্যানালিটিক্স',
+      labelEn: 'Reports & Analytics',
+      icon: BarChart3,
+    },
+    {
+      id: 'staff' as DashboardTab,
+      labelBn: 'স্টাফ ও পারমিশন (RBAC)',
+      labelEn: 'Staff & Roles (RBAC)',
+      icon: ShieldCheck,
     },
     {
       id: 'users' as DashboardTab,
-      labelBn: 'ইউজার ম্যানেজমেন্ট',
-      labelEn: 'User Directory',
+      labelBn: 'কাস্টমার ডিরেক্টরি',
+      labelEn: 'Customer Directory',
       icon: Users,
     },
     {
