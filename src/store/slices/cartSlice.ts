@@ -29,12 +29,18 @@ export const cartSlice = createSlice({
       if (existingIndex > -1) {
         const currentQty = state.items[existingIndex].quantity;
         const addQty = action.payload.quantity || 1;
-        const maxStock = action.payload.stock || state.items[existingIndex].stock || 999;
+        const maxStock =
+          action.payload.stock !== undefined
+            ? action.payload.stock
+            : state.items[existingIndex].stock !== undefined
+            ? state.items[existingIndex].stock
+            : 999;
         state.items[existingIndex].quantity = Math.min(currentQty + addQty, maxStock);
       } else {
+        const maxStock = action.payload.stock !== undefined ? action.payload.stock : 999;
         state.items.push({
           ...action.payload,
-          quantity: action.payload.quantity || 1,
+          quantity: Math.min(action.payload.quantity || 1, maxStock),
         });
       }
     },
@@ -56,7 +62,7 @@ export const cartSlice = createSlice({
         if (action.payload.quantity <= 0) {
           state.items = state.items.filter((i) => i.productId !== action.payload.productId);
         } else {
-          const maxStock = item.stock || 999;
+          const maxStock = item.stock !== undefined ? item.stock : 999;
           item.quantity = Math.min(action.payload.quantity, maxStock);
         }
       }

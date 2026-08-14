@@ -6,7 +6,6 @@ import { Product } from '@/types/home';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { addToCart, openCartDrawer } from '@/store/slices/cartSlice';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
 
 interface AddToCartSectionProps {
   product: Product;
@@ -18,7 +17,6 @@ interface AddToCartSectionProps {
 
 export function AddToCartSection({ product, quantity, selectedUnit, price, mrp }: AddToCartSectionProps) {
   const dispatch = useAppDispatch();
-  const router = useRouter();
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
 
@@ -57,49 +55,51 @@ export function AddToCartSection({ product, quantity, selectedUnit, price, mrp }
   };
 
   return (
-    <div className="flex flex-col gap-3 w-full my-2">
-      {/* Primary Actions (Add to Cart & Buy Now) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div className="flex flex-col gap-3 w-full mt-1">
+      {/* Action Buttons Aligned with PDP Column Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
         <button
+          type="button"
           onClick={handleAddToCart}
-          className="flex items-center justify-center gap-2 rounded-2xl border-2 border-primary bg-primary/10 py-3 px-5 text-sm font-bold text-primary transition-all hover:bg-primary hover:text-white shadow-xs active:scale-98"
+          className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-primary bg-primary/10 px-5 text-sm font-extrabold text-primary transition-all hover:bg-primary hover:text-white shadow-2xs active:scale-[0.98]"
         >
-          <ShoppingCart className="h-4.5 w-4.5" />
+          <ShoppingCart className="h-4.5 w-4.5 shrink-0" />
           <span>{isBn ? 'কার্টে যোগ করুন' : 'Add to Cart'}</span>
         </button>
 
         <button
+          type="button"
           onClick={handleBuyNow}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-primary py-3 px-5 text-sm font-bold text-white shadow-md transition-all hover:bg-primary-dark active:scale-98"
+          className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-extrabold text-white shadow-md transition-all hover:bg-primary-dark active:scale-[0.98]"
         >
-          <Zap className="h-4.5 w-4.5 text-accent" />
+          <Zap className="h-4.5 w-4.5 text-accent shrink-0" />
           <span>{isBn ? 'এখনই কিনুন' : 'Buy Now'}</span>
         </button>
       </div>
 
       {/* Secondary Actions (Wishlist & Share) */}
-      <div className="flex items-center gap-4 pt-1">
+      <div className="flex items-center gap-5 pt-2">
         <button
           type="button"
-          onClick={() => toast.info(isBn ? 'উইশলিস্ট সেভ হয়েছে' : 'Saved to wishlist')}
-          className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-rose-500 transition-colors"
+          onClick={() => toast.info(isBn ? 'উইশলিস্টে সেভ হয়েছে' : 'Saved to wishlist')}
+          className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-rose-500 transition-colors cursor-pointer"
         >
-          <Heart className="h-4 w-4" />
+          <Heart className="h-4 w-4 text-rose-500/80" />
           <span>{isBn ? 'উইশলিস্টে রাখুন' : 'Add to Wishlist'}</span>
         </button>
 
         <button
           type="button"
           onClick={() => {
-            if (navigator.share) {
+            if (typeof navigator !== 'undefined' && navigator.share) {
               navigator.share({ title: product.nameEn, url: window.location.href });
             } else {
               toast.success(isBn ? 'লিংক কপি হয়েছে!' : 'Link copied to clipboard!');
             }
           }}
-          className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors"
+          className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-primary transition-colors cursor-pointer"
         >
-          <Share2 className="h-4 w-4" />
+          <Share2 className="h-4 w-4 text-primary/80" />
           <span>{isBn ? 'শেয়ার করুন' : 'Share'}</span>
         </button>
       </div>

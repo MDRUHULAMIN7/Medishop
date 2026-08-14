@@ -120,13 +120,6 @@ export function ShopByCategory() {
                     </div>
                   )}
                 </div>
-
-                {/* Card Bottom: URL Slug */}
-                <div>
-                  <p className="line-clamp-1 text-[11px] font-medium text-muted-foreground">
-                    /{cat.slug}
-                  </p>
-                </div>
               </Link>
             );
           })

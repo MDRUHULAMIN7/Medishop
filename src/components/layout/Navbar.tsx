@@ -183,25 +183,32 @@ export function Navbar() {
           {/* Mobile Search Bar with Autocomplete */}
           <div className="pb-3 md:hidden w-full relative">
             <form onSubmit={handleSearchSubmit} className="relative flex items-center">
-              <Search className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
+              <button type="submit" aria-label={isBn ? 'অনুসন্ধান করুন' : 'Submit search'} className="absolute left-3.5 p-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+                <Search className="h-4 w-4" />
+              </button>
               <input
                 type="search"
                 value={searchQuery}
                 onFocus={() => setIsSearchFocused(true)}
                 onChange={(e) => dispatch(setSearchQuery(e.target.value))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearchSubmit(e);
+                  }
+                }}
                 placeholder={
                   isBn
                     ? 'ওষুধ খুঁজুন (যেমন: Napa, Sergel)...'
                     : 'Search medicine (e.g. Napa, Sergel)...'
                 }
-                className="w-full rounded-full border border-border bg-muted/40 py-2 pl-10 pr-9 text-xs font-medium text-foreground placeholder:text-muted-foreground transition-colors focus:border-primary focus:bg-background focus:ring-0 focus:outline-none"
+                className="w-full rounded-full border border-border bg-muted/40 py-2 pl-10 pr-9 text-xs font-medium text-foreground placeholder:text-muted-foreground transition-colors focus:border-primary focus:bg-background focus:ring-0 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => dispatch(setSearchQuery(''))}
                   aria-label={isBn ? 'মুছে ফেলুন' : 'Clear search'}
-                  className="absolute right-3 rounded-full p-1 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3 rounded-full p-1 text-muted-foreground hover:text-foreground cursor-pointer"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -219,25 +226,32 @@ export function Navbar() {
           {/* Desktop Search Bar with Autocomplete (Unified Height h-11) */}
           <div className="hidden flex-1 max-w-2xl mx-6 lg:mx-8 md:flex items-center relative my-auto">
             <form onSubmit={handleSearchSubmit} className="relative flex items-center w-full">
-              <Search className="absolute left-4 h-4.5 w-4.5 text-muted-foreground" />
+              <button type="submit" aria-label={isBn ? 'অনুসন্ধান করুন' : 'Submit search'} className="absolute left-4 p-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+                <Search className="h-4.5 w-4.5" />
+              </button>
               <input
                 type="search"
                 value={searchQuery}
                 onFocus={() => setIsSearchFocused(true)}
                 onChange={(e) => dispatch(setSearchQuery(e.target.value))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearchSubmit(e);
+                  }
+                }}
                 placeholder={
                   isBn
                     ? 'ওষুধ বা স্বাস্থ্য সামগ্রী খুঁজুন (যেমন: Napa, Sergel)...'
                     : 'Search medicines or healthcare items (Ex: Napa, Sergel)...'
                 }
-                className="h-11 w-full rounded-2xl border border-border bg-muted/30 pl-11 pr-10 text-xs sm:text-sm font-medium text-foreground placeholder:text-muted-foreground transition-all focus:border-primary focus:bg-background focus:ring-0 focus:outline-none"
+                className="h-11 w-full rounded-2xl border border-border bg-muted/30 pl-11 pr-10 text-xs sm:text-sm font-medium text-foreground placeholder:text-muted-foreground transition-all focus:border-primary focus:bg-background focus:ring-0 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => dispatch(setSearchQuery(''))}
                   aria-label={isBn ? 'মুছে ফেলুন' : 'Clear search'}
-                  className="absolute right-3.5 rounded-full p-1 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3.5 rounded-full p-1 text-muted-foreground hover:text-foreground cursor-pointer"
                 >
                   <X className="h-4 w-4" />
                 </button>

@@ -22,21 +22,19 @@ export function QuantitySelector({
 
   return (
     <div className="flex items-center gap-3">
-      <span className="text-xs font-bold text-muted-foreground">
-        {isBn ? 'পরিমাণ:' : 'Quantity:'}
-      </span>
-      <div className="flex items-center rounded-2xl border border-border bg-muted/20 p-1 shadow-2xs">
+    
+      <div className="flex items-center rounded-lg border border-border bg-muted/20 p-1 shadow-2xs">
         <button
           type="button"
           onClick={onDecrease}
           disabled={quantity <= 1}
           aria-label={isBn ? 'পরিমাণ কমান' : 'Decrease quantity'}
-          className="flex h-8 w-8 items-center justify-center rounded-xl bg-background text-foreground transition-all hover:bg-muted disabled:opacity-40"
+          className="flex h-9 w-9 items-center justify-center rounded-lg bg-background text-foreground transition-all hover:bg-muted disabled:opacity-40"
         >
-          <Minus className="h-3.5 w-3.5" />
+          <Minus className="h-4 w-4" />
         </button>
 
-        <span className="w-10 text-center font-serif-title text-sm font-bold text-foreground">
+        <span className="w-10 text-center font-serif-title text-lg font-bold text-foreground">
           {quantity}
         </span>
 

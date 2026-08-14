@@ -94,8 +94,14 @@ export class CheckoutService {
     return AVAILABLE_DELIVERY_METHODS;
   }
 
-  public getPaymentMethods(): PaymentMethod[] {
-    return AVAILABLE_PAYMENT_METHODS;
+  public getPaymentMethods(enabledGateways?: string[], codEnabled = true): PaymentMethod[] {
+    if (!enabledGateways || enabledGateways.length === 0) {
+      return AVAILABLE_PAYMENT_METHODS;
+    }
+    return AVAILABLE_PAYMENT_METHODS.filter((m) => {
+      if (m.id === 'cod') return codEnabled && enabledGateways.includes('cod');
+      return enabledGateways.includes(m.id);
+    });
   }
 
   public getDeliveryMethodById(id: DeliveryMethodId): DeliveryMethod {

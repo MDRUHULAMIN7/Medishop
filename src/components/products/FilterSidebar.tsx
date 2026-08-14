@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Filter, RotateCcw } from 'lucide-react';
+import { Filter, RotateCcw, ShieldAlert, BadgePercent, SlidersHorizontal } from 'lucide-react';
 import { ProductFilterState, Brand } from '@/types/product';
+import { CategoryFilter } from './CategoryFilter';
 import { BrandFilter } from './BrandFilter';
 import { PriceRangeSlider } from './PriceRangeSlider';
 import { DiscountFilter } from './DiscountFilter';
@@ -12,6 +13,7 @@ import { useAppSelector } from '@/store';
 interface FilterSidebarProps {
   filters: ProductFilterState;
   availableBrands: Brand[];
+  onSetCategories?: (categories: string[]) => void;
   onSetBrands: (brands: string[]) => void;
   onSetPriceRange: (min: number, max: number) => void;
   onSetDiscounts: (discounts: number[]) => void;
@@ -23,6 +25,7 @@ interface FilterSidebarProps {
 export function FilterSidebar({
   filters,
   availableBrands,
+  onSetCategories,
   onSetBrands,
   onSetPriceRange,
   onSetDiscounts,
@@ -33,61 +36,72 @@ export function FilterSidebar({
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
 
+  // Count active filter conditions
+  const activeCount =
+    (filters.categories?.length || 0) +
+    (filters.brands?.length || 0) +
+    (filters.discounts?.length || 0) +
+    (filters.minPrice > 0 || filters.maxPrice < 3000 ? 1 : 0) +
+    (filters.prescriptionReq !== 'all' ? 1 : 0) +
+    (filters.inStockOnly ? 1 : 0);
+
   return (
     <aside
       aria-label="Product Filters"
-      className="w-[260px] shrink-0 rounded-2xl border border-border bg-background p-4 shadow-xs sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-5"
+      className="w-[280px] shrink-0 rounded-3xl border border-border bg-background p-5 shadow-xs sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-5"
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border pb-3">
+      <div className="flex items-center justify-between border-b border-border pb-3.5">
         <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-bold text-foreground">
-            {isBn ? 'ফিল্টারসমূহ' : 'Filters'}
+          <SlidersHorizontal className="h-4.5 w-4.5 text-primary" />
+          <h3 className="text-sm font-extrabold text-foreground tracking-tight">
+            {isBn ? 'ফিল্টার ফিল্টারিং' : 'Filter Products'}
           </h3>
+          {activeCount > 0 && (
+            <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-extrabold text-white">
+              {activeCount}
+            </span>
+          )}
         </div>
-        <button
-          onClick={onClearAll}
-          className="flex items-center gap-1 text-xs font-bold text-danger hover:underline"
-        >
-          <RotateCcw className="h-3 w-3" />
-          <span>{isBn ? 'রিসেট' : 'Reset'}</span>
-        </button>
+        {activeCount > 0 && (
+          <button
+            type="button"
+            onClick={onClearAll}
+            className="flex items-center gap-1 text-xs font-bold text-rose-600 hover:underline cursor-pointer"
+          >
+            <RotateCcw className="h-3 w-3" />
+            <span>{isBn ? 'রিসেট' : 'Reset'}</span>
+          </button>
+        )}
       </div>
 
-      {/* 1. In Stock Only Toggle */}
-      <div className="flex items-center justify-between py-1">
-        <span className="text-xs font-bold text-foreground">
-          {isBn ? 'শুধু স্টকে থাকা পণ্য' : 'In Stock Only'}
+      {/* 1. Category Filter Section */}
+      {onSetCategories && (
+        <>
+          <CategoryFilter
+            selectedCategories={filters.categories}
+            onChange={onSetCategories}
+          />
+          <hr className="border-border/60" />
+        </>
+      )}
+
+      {/* 2. In Stock Only Toggle */}
+      <div className="flex items-center justify-between py-0.5">
+        <span className="text-xs font-extrabold text-foreground">
+          {isBn ? 'শুধু স্টকে থাকা ওষুধ' : 'In Stock Only'}
         </span>
         <input
           type="checkbox"
           checked={filters.inStockOnly}
           onChange={(e) => onSetInStockOnly(e.target.checked)}
-          className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+          className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
         />
       </div>
 
       <hr className="border-border/60" />
 
-      {/* 2. Prescription Status */}
-      <PrescriptionFilter
-        value={filters.prescriptionReq}
-        onChange={onSetPrescriptionReq}
-      />
-
-      <hr className="border-border/60" />
-
-      {/* 3. Price Range Slider */}
-      <PriceRangeSlider
-        minPrice={filters.minPrice}
-        maxPrice={filters.maxPrice}
-        onApply={onSetPriceRange}
-      />
-
-      <hr className="border-border/60" />
-
-      {/* 4. Brand Checklist */}
+      {/* 3. Brand Checklist Section */}
       <BrandFilter
         brands={availableBrands}
         selectedBrands={filters.brands}
@@ -96,7 +110,24 @@ export function FilterSidebar({
 
       <hr className="border-border/60" />
 
-      {/* 5. Discount Percentage */}
+      {/* 4. Prescription Status */}
+      <PrescriptionFilter
+        value={filters.prescriptionReq}
+        onChange={onSetPrescriptionReq}
+      />
+
+      <hr className="border-border/60" />
+
+      {/* 5. Price Range Slider */}
+      <PriceRangeSlider
+        minPrice={filters.minPrice}
+        maxPrice={filters.maxPrice}
+        onApply={onSetPriceRange}
+      />
+
+      <hr className="border-border/60" />
+
+      {/* 6. Discount Percentage */}
       <DiscountFilter
         selectedDiscounts={filters.discounts}
         onChange={onSetDiscounts}

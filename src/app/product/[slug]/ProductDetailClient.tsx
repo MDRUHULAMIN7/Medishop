@@ -1,8 +1,18 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Star, ShieldCheck, Truck, CheckCircle2, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Star,
+  ShieldCheck,
+  Truck,
+  CheckCircle2,
+  ChevronRight,
+  ChevronDown,
+  Package,
+  Check,
+} from 'lucide-react';
 import { Product } from '@/types/home';
 import { formatBDT, cn } from '@/lib/utils';
 import { useAppSelector } from '@/store';
@@ -17,6 +27,91 @@ import { getProductUnitOptions } from '@/lib/packagingUtils';
 
 interface ProductDetailClientProps {
   product: Product;
+}
+
+/* Custom Packaging Dropdown with Rounded-2xl Popover Menu */
+function PackagingDropdown({
+  options,
+  value,
+  onChange,
+  isBn,
+}: {
+  options: Array<{ value: string; labelBn: string; labelEn: string; price: number }>;
+  value: string;
+  onChange: (val: string) => void;
+  isBn: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const selectedOpt = options.find((o) => o.value === value) || options[0];
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={dropdownRef} className="relative w-full">
+      {/* Trigger Button */}
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="flex h-11 w-full items-center justify-between rounded-xl border border-primary/40 bg-background px-3.5 text-xs sm:text-sm font-bold text-foreground shadow-2xs hover:border-primary focus:outline-none transition-all cursor-pointer"
+      >
+        <span className="truncate">
+          {isBn ? selectedOpt.labelBn : selectedOpt.labelEn} ({formatBDT(selectedOpt.price)})
+        </span>
+        <ChevronDown className={cn("h-4 w-4 text-primary shrink-0 transition-transform duration-200 ml-2", isOpen && "rotate-180")} />
+      </button>
+
+      {/* Floating Popup List (Rounded-2xl with smooth shadow & rounded options) */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.97 }}
+            animate={{ opacity: 1, y: 4, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.97 }}
+            transition={{ duration: 0.15 }}
+            className="absolute left-0 right-0 top-full z-50 overflow-hidden rounded-2xl border border-border bg-background p-1.5 shadow-xl ring-1 ring-black/5 max-h-60 overflow-y-auto"
+          >
+            <div className="flex flex-col gap-1">
+              {options.map((opt) => {
+                const isSelected = opt.value === value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      onChange(opt.value);
+                      setIsOpen(false);
+                    }}
+                    className={cn(
+                      'flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold transition-all cursor-pointer text-left',
+                      isSelected
+                        ? 'bg-primary/10 text-primary font-extrabold'
+                        : 'text-foreground hover:bg-muted'
+                    )}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      {isSelected && <Check className="h-4 w-4 text-primary shrink-0" />}
+                      <span className="truncate">{isBn ? opt.labelBn : opt.labelEn}</span>
+                    </div>
+                    <span className="font-extrabold text-primary shrink-0 ml-2">{formatBDT(opt.price)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }
 
 export function ProductDetailClient({ product }: ProductDetailClientProps) {
@@ -66,7 +161,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       {/* Main PDP 2-Column Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         {/* Left Column: Product Image Gallery */}
-        <ProductGallery images={[product.image]} title={product.nameEn} />
+        <ProductGallery
+          images={product.images && product.images.length > 0 ? product.images : (product.image ? [product.image] : [])}
+          title={product.nameEn}
+        />
 
         {/* Right Column: Product Core Info */}
         <div className="flex flex-col gap-4">
@@ -106,65 +204,50 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             </div>
           </div>
 
-          {/* Price Block */}
-          <div className="flex items-baseline gap-3 rounded-2xl bg-muted/30 p-3.5 border border-border">
-            <span className="font-serif-title text-2xl sm:text-3xl font-extrabold text-primary">
+          {/* Price Block (Fully Responsive Layout) */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 rounded-2xl bg-muted/30 p-3.5 border border-border">
+            <span className="font-serif-title text-xl sm:text-2xl font-extrabold text-primary shrink-0">
               {formatBDT(effectivePrice * quantity)}
             </span>
             {effectiveMrp > effectivePrice && (
-              <>
-                <span className="text-sm text-muted-foreground line-through">
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-xs sm:text-sm text-muted-foreground line-through">
                   {formatBDT(effectiveMrp * quantity)}
                 </span>
-                <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-extrabold text-slate-900">
+                <span className="inline-flex items-center whitespace-nowrap rounded-lg bg-accent px-2 py-0.5 text-[10px] sm:text-xs font-extrabold text-slate-900">
                   {discountPercent}% OFF
                 </span>
-              </>
+              </div>
             )}
-            <span className="text-xs font-semibold text-muted-foreground ml-auto">
+            <span className="text-xs sm:text-sm font-semibold text-muted-foreground ml-auto whitespace-nowrap">
               /{isBn ? activeOption.labelBn : activeOption.labelEn}
             </span>
           </div>
 
-          {/* Packaging Unit Switcher (Industry Standard Selector) */}
-          <div className="flex flex-col gap-2 rounded-2xl border border-primary/20 bg-primary/5 p-3.5">
-            <label className="text-xs font-extrabold text-foreground tracking-tight">
-              {isBn ? 'প্যাকেজিং একক নির্বাচন করুন:' : 'Select Packaging Unit:'}
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {unitOptions.map((opt) => {
-                const isSelected = selectedUnit === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setSelectedUnit(opt.value)}
-                    className={cn(
-                      'flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all cursor-pointer text-center',
-                      isSelected
-                        ? 'border-primary bg-primary text-white shadow-sm font-extrabold'
-                        : 'border-border bg-background text-foreground hover:border-primary/50'
-                    )}
-                  >
-                    <span className="text-xs font-bold">{isBn ? opt.labelBn : opt.labelEn}</span>
-                    <span className={cn('text-[11px] font-semibold mt-0.5', isSelected ? 'text-white/90' : 'text-primary')}>
-                      {formatBDT(opt.price)}
-                    </span>
-                  </button>
-                );
-              })}
+          {/* Packaging Unit Dropdown & Quantity Control Row */}
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+            {/* Left: Custom Packaging Unit Selector Dropdown */}
+            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+              <PackagingDropdown
+                options={unitOptions}
+                value={selectedUnit}
+                onChange={setSelectedUnit}
+                isBn={isBn}
+              />
+            </div>
+
+            {/* Right: Quantity Selector */}
+            <div className="flex flex-col gap-1.5 shrink-0">
+              <QuantitySelector
+                quantity={quantity}
+                onIncrease={() => setQuantity((q) => q + 1)}
+                onDecrease={() => setQuantity((q) => Math.max(1, q - 1))}
+              />
             </div>
           </div>
 
           {/* Prescription Required Notice */}
           {product.requiresRx && <PrescriptionNotice />}
-
-          {/* Quantity Selector */}
-          <QuantitySelector
-            quantity={quantity}
-            onIncrease={() => setQuantity((q) => q + 1)}
-            onDecrease={() => setQuantity((q) => Math.max(1, q - 1))}
-          />
 
           {/* Add to Cart / Buy Now */}
           <AddToCartSection
@@ -175,8 +258,8 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             mrp={effectiveMrp}
           />
 
-          {/* Trust Guarantees Bar */}
-          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border">
+          {/* Trust Guarantees Bar (Clean Border & Spacing) */}
+          <div className="grid grid-cols-2 gap-3 pt-3 mt-1 border-t border-border/70">
             <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
               <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
               <span>{isBn ? '১০০% অরিজিনাল ওষুধ' : '100% Authentic Medicine'}</span>

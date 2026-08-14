@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -40,6 +40,11 @@ export function RbacHeader({
   const activeRoleConfig = RBAC_ROLES_CONFIG[currentRole] || RBAC_ROLES_CONFIG.customer;
 
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const toggleLanguage = () => {
     dispatch(setLanguage(isBn ? 'en' : 'bn'));
@@ -49,6 +54,8 @@ export function RbacHeader({
     setIsProfileDropdownOpen(false);
     await executeLogout();
   };
+
+  const avatarChar = mounted && user?.name ? user.name.charAt(0).toUpperCase() : 'U';
 
   return (
     <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-border bg-background/95 px-4 sm:px-6 backdrop-blur-md shrink-0">
@@ -91,10 +98,10 @@ export function RbacHeader({
             className="flex items-center gap-2 rounded-full border border-border p-1 hover:bg-muted/40 transition-all cursor-pointer"
           >
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-black text-white overflow-hidden">
-              {user?.avatar ? (
+              {mounted && user?.avatar ? (
                 <Image src={user.avatar} alt="Avatar" width={32} height={32} className="h-full w-full object-cover" />
               ) : (
-                <span>{user?.name ? user.name.charAt(0).toUpperCase() : 'U'}</span>
+                <span suppressHydrationWarning>{avatarChar}</span>
               )}
             </div>
             <ChevronDown className="h-3.5 w-3.5 text-muted-foreground mr-1 hidden sm:inline" />
@@ -103,8 +110,12 @@ export function RbacHeader({
           {isProfileDropdownOpen && (
             <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-border bg-background p-2 shadow-2xl ring-1 ring-black/5 z-50">
               <div className="px-3 py-2 border-b border-border">
-                <p className="text-xs font-extrabold text-foreground truncate">{user?.name || 'User Profile'}</p>
-                <p className="text-[11px] text-muted-foreground truncate">{user?.email || user?.phone}</p>
+                <p className="text-xs font-extrabold text-foreground truncate" suppressHydrationWarning>
+                  {mounted && user?.name ? user.name : 'User Profile'}
+                </p>
+                <p className="text-[11px] text-muted-foreground truncate" suppressHydrationWarning>
+                  {mounted ? user?.email || user?.phone || '' : ''}
+                </p>
               </div>
 
               <div className="py-1 space-y-1">

@@ -31,50 +31,7 @@ export function BannerManager() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const [banners, setBanners] = useState<BannerSlide[]>([
-    {
-      id: 'hs-1',
-      titleBn: '২৪/৭ ভিডিও কলে অভিজ্ঞ ডাক্তারের পরামর্শ',
-      titleEn: '24/7 Expert Doctor Video Consultation',
-      subtitleBn: 'যেকোনো স্বাস্থ্য সমস্যায় তাৎক্ষণিক বিশেষজ্ঞ ডাক্তারের সেবা নিন।',
-      subtitleEn: 'Get instant healthcare advice from verified specialists anytime.',
-      badgeBn: 'তাৎক্ষণিক ভিডিও কনসাল্টেশন',
-      badgeEn: 'Instant Video Call',
-      ctaTextBn: 'ডাক্তার দেখান',
-      ctaTextEn: 'Consult Now',
-      ctaLink: '/consultation',
-      isActive: true,
-      priority: 1,
-    },
-    {
-      id: 'hs-2',
-      titleBn: 'জরুরি প্রয়োজনে দ্রুততম হোম ডেলিভারি',
-      titleEn: 'Express Same-Day Dhaka Delivery',
-      subtitleBn: 'ঢাকায় ৪-৬ ঘণ্টার মধ্যে এবং সারাদেশে ১-৩ দিনে ১০০% আসল ওষুধ পৌঁছে যাবে।',
-      subtitleEn: 'Express 4-6 hours delivery in Dhaka and 1-3 days nationwide.',
-      badgeBn: 'সেম-ডে ডেলিভারি গ্যারান্টি',
-      badgeEn: 'Express Delivery Guaranteed',
-      ctaTextBn: 'ওষুধ অর্ডার করুন',
-      ctaTextEn: 'Order Medicine',
-      ctaLink: '/products',
-      isActive: true,
-      priority: 2,
-    },
-    {
-      id: 'hs-3',
-      titleBn: 'বাংলাদেশে সর্ববৃহৎ মেডিসিন সম্ভার',
-      titleEn: 'Largest Authentic Medicine Inventory',
-      subtitleBn: 'ডিজিডিএ অনুমোদিত ১০০% আসল ওষুধ এবং আধুনিক ডায়াবেটিস কেয়ার ডিভাইস।',
-      subtitleEn: 'DGDA licensed 100% authentic medicine and diabetic monitoring kits.',
-      badgeBn: 'ডিজিডিএ অনুমোদিত অনলাইন ফার্মেসি',
-      badgeEn: 'DGDA Approved Pharmacy',
-      ctaTextBn: 'প্রেসক্রিপশন আপলোড',
-      ctaTextEn: 'Upload Prescription',
-      ctaLink: '/upload-prescription',
-      isActive: true,
-      priority: 3,
-    },
-  ]);
+  const [banners, setBanners] = useState<BannerSlide[]>([]);
 
   const [formData, setFormData] = useState({
     titleEn: '',
@@ -86,7 +43,7 @@ export function BannerManager() {
     ctaTextEn: 'Order Now',
     ctaTextBn: 'অর্ডার করুন',
     ctaLink: '/products',
-    priority: '4',
+    priority: '1',
     image: '',
   });
 
@@ -94,8 +51,10 @@ export function BannerManager() {
     setLoading(true);
     try {
       const fullSettings = await settingsService.getFullSettings();
-      if (fullSettings?.seo && (fullSettings as any).banners) {
+      if (fullSettings && (fullSettings as any).banners && Array.isArray((fullSettings as any).banners)) {
         setBanners((fullSettings as any).banners);
+      } else {
+        setBanners([]);
       }
     } catch (err: any) {
       console.error('Failed to load site banners:', err);
@@ -152,7 +111,7 @@ export function BannerManager() {
       ctaTextBn: formData.ctaTextBn,
       ctaLink: formData.ctaLink || '/products',
       isActive: true,
-      priority: Number(formData.priority) || 4,
+      priority: Number(formData.priority) || 1,
       image: formData.image,
     };
 
@@ -168,7 +127,7 @@ export function BannerManager() {
       ctaTextEn: 'Order Now',
       ctaTextBn: 'অর্ডার করুন',
       ctaLink: '/products',
-      priority: '4',
+      priority: '1',
       image: '',
     });
     toast.success(isBn ? 'নতুন হিরো ব্যানার স্লাইড যোগ হয়েছে!' : 'New Banner Slide added!');
@@ -216,64 +175,81 @@ export function BannerManager() {
       </div>
 
       {/* Banner Cards List */}
-      <div className="flex flex-col gap-4">
-        {banners.map((slide) => (
-          <div
-            key={slide.id}
-            className="flex flex-col md:flex-row md:items-center justify-between rounded-2xl border border-border bg-background p-5 shadow-2xs gap-4"
-          >
-            {/* Banner Meta Info */}
-            <div className="flex flex-col gap-1.5 max-w-2xl">
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary">
-                  Priority #{slide.priority}
-                </span>
-                {slide.badgeEn && (
-                  <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200">
-                    {isBn ? slide.badgeBn : slide.badgeEn}
+      {loading ? (
+        <div className="flex justify-center items-center py-16 text-xs text-muted-foreground gap-2">
+          <RefreshCw className="h-4 w-4 animate-spin text-primary" />
+          <span>{isBn ? 'ডাটাবেজ থেকে ব্যানার লোড হচ্ছে...' : 'Loading live banners from database...'}</span>
+        </div>
+      ) : banners.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 border border-dashed border-border rounded-3xl bg-background text-muted-foreground">
+          <ImageIcon className="h-12 w-12 text-muted-foreground/30 mb-2" />
+          <p className="text-sm font-bold text-foreground">
+            {isBn ? 'কোনো ব্যানার স্লাইড যোগ করা হয়নি' : 'No hero banner slides found'}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {isBn ? 'উপরে "নতুন ব্যানার স্লাইড" বাটনে ক্লিক করে হোমপেজের প্রথম ব্যানারটি তৈরি করুন।' : 'Click "Add New Banner" above to create your first homepage slide.'}
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {banners.map((slide) => (
+            <div
+              key={slide.id}
+              className="flex flex-col md:flex-row md:items-center justify-between rounded-2xl border border-border bg-background p-5 shadow-2xs gap-4"
+            >
+              {/* Banner Meta Info */}
+              <div className="flex flex-col gap-1.5 max-w-2xl">
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary">
+                    Priority #{slide.priority}
                   </span>
-                )}
+                  {slide.badgeEn && (
+                    <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200">
+                      {isBn ? slide.badgeBn : slide.badgeEn}
+                    </span>
+                  )}
+                </div>
+
+                <h3 className="text-base font-bold text-foreground">
+                  {isBn ? slide.titleBn : slide.titleEn}
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  {isBn ? slide.subtitleBn : slide.subtitleEn}
+                </p>
+
+                <div className="flex items-center gap-4 text-xs text-primary font-bold mt-1">
+                  <span>CTA: {isBn ? slide.ctaTextBn : slide.ctaTextEn}</span>
+                  <span>Link: {slide.ctaLink}</span>
+                </div>
               </div>
 
-              <h3 className="text-base font-bold text-foreground">
-                {isBn ? slide.titleBn : slide.titleEn}
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                {isBn ? slide.subtitleBn : slide.subtitleEn}
-              </p>
+              {/* Actions */}
+              <div className="flex items-center gap-3 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleToggleActive(slide.id)}
+                  className={`rounded-full px-3.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
+                    slide.isActive
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-slate-100 text-slate-800'
+                  }`}
+                >
+                  {slide.isActive ? (isBn ? 'হোমপেজে সচল' : 'Active on Home') : (isBn ? 'বন্ধ আছে' : 'Disabled')}
+                </button>
 
-              <div className="flex items-center gap-4 text-xs text-primary font-bold mt-1">
-                <span>CTA: {isBn ? slide.ctaTextBn : slide.ctaTextEn}</span>
-                <span>Link: {slide.ctaLink}</span>
+                <button
+                  type="button"
+                  onClick={() => toast.info(isBn ? 'স্লাইড লাইভ প্রিভিউ' : 'Live Preview')}
+                  className="rounded-xl border border-border p-2 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+                  title="Preview Slide"
+                >
+                  <Eye className="h-4 w-4" />
+                </button>
               </div>
             </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-3 shrink-0">
-              <button
-                type="button"
-                onClick={() => handleToggleActive(slide.id)}
-                className={`rounded-full px-3.5 py-1 text-xs font-bold transition-colors cursor-pointer ${
-                  slide.isActive
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : 'bg-slate-100 text-slate-800'
-                }`}
-              >
-                {slide.isActive ? (isBn ? 'হোমপেজে সচল' : 'Active on Home') : (isBn ? 'বন্ধ আছে' : 'Disabled')}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => toast.info(isBn ? 'স্লাইড লাইভ প্রিভিউ' : 'Live Preview')}
-                className="rounded-xl border border-border p-2 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
-                title="Preview Slide"
-              >
-                <Eye className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Add New Banner Modal */}
       <AnimatePresence>
@@ -394,14 +370,14 @@ export function BannerManager() {
                   <button
                     type="button"
                     onClick={() => setIsAddModalOpen(false)}
-                    className="rounded-xl border border-border px-4 py-2 text-xs font-bold text-foreground hover:bg-muted"
+                    className="rounded-xl border border-border px-4 py-2 text-xs font-bold text-foreground hover:bg-muted cursor-pointer"
                   >
                     Cancel
                   </button>
 
                   <button
                     type="submit"
-                    className="rounded-xl bg-primary px-5 py-2 text-xs font-bold text-white hover:bg-primary-dark shadow-md"
+                    className="rounded-xl bg-primary px-5 py-2 text-xs font-bold text-white hover:bg-primary-dark shadow-md cursor-pointer"
                   >
                     Add Banner Slide
                   </button>

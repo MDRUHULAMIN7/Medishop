@@ -26,6 +26,7 @@ export interface Product {
   mrp: number;
   discountPercent: number;
   image: string;
+  images?: string[];
   requiresRx: boolean;
   inStock: boolean;
   stockCount: number;

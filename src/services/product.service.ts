@@ -227,10 +227,16 @@ export const ProductService = {
     if (sortArg) sort = sortArg;
     if (sort) query.append('sort', sort);
 
-    const categoryVal = params.category || params.categorySlug || (Array.isArray(params.categories) && params.categories.length > 0 ? params.categories[0] : undefined);
+    const categoryVal =
+      Array.isArray(params.categories) && params.categories.length > 0
+        ? params.categories.join(',')
+        : params.category || params.categorySlug;
     if (categoryVal) query.append('category', categoryVal);
 
-    const brandVal = params.brand || (Array.isArray(params.brands) && params.brands.length > 0 ? params.brands.join(',') : undefined);
+    const brandVal =
+      Array.isArray(params.brands) && params.brands.length > 0
+        ? params.brands.join(',')
+        : params.brand;
     if (brandVal) query.append('brand', brandVal);
 
     if (params.dosageForm) query.append('dosageForm', params.dosageForm);
@@ -251,31 +257,28 @@ export const ProductService = {
     let rawProducts: any[] = [];
     let total = 0;
     let page = params.page || 1;
-    let limit = params.limit || 10;
+    let limit = params.limit || 12;
     let totalPages = 1;
 
-    if (Array.isArray(response)) {
-      rawProducts = response;
-      total = response.length;
-    } else if (response && typeof response === 'object') {
-      if (Array.isArray(response.products)) {
+    if (response && typeof response === 'object') {
+      const meta = response.meta || response.pagination;
+
+      if (Array.isArray(response)) {
+        rawProducts = response;
+      } else if (Array.isArray(response.products)) {
         rawProducts = response.products;
       } else if (Array.isArray(response.data)) {
         rawProducts = response.data;
       }
 
-      if (response.meta) {
-        total = response.meta.total || rawProducts.length;
-        page = response.meta.page || page;
-        limit = response.meta.limit || limit;
-        totalPages = response.meta.totalPage || response.meta.totalPages || Math.ceil(total / limit) || 1;
-      } else if (response.pagination) {
-        total = response.pagination.total || rawProducts.length;
-        page = response.pagination.page || page;
-        limit = response.pagination.limit || limit;
-        totalPages = response.pagination.totalPages || Math.ceil(total / limit) || 1;
+      if (meta) {
+        total = meta.total || meta.totalCount || rawProducts.length;
+        page = meta.page || page;
+        limit = meta.limit || limit;
+        totalPages = meta.pages || meta.totalPage || meta.totalPages || Math.ceil(total / limit) || 1;
       } else {
         total = rawProducts.length;
+        totalPages = Math.ceil(total / limit) || 1;
       }
     }
 

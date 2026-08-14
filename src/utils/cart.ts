@@ -13,7 +13,8 @@ export interface StoredCartState {
  * Format price in Bangladeshi Taka (৳) with proper locale formatting.
  */
 export function formatPrice(amount: number, locale: 'bn' | 'en' = 'bn'): string {
-  const rounded = Math.round(amount);
+  const validAmount = Number(amount);
+  const rounded = isNaN(validAmount) ? 0 : Math.round(validAmount);
   if (locale === 'bn') {
     const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
     const formattedNum = rounded
@@ -28,11 +29,13 @@ export function formatPrice(amount: number, locale: 'bn' | 'en' = 'bn'): string 
  * Format any number into English or Bangla digits.
  */
 export function formatNumber(num: number, locale: 'bn' | 'en' = 'bn'): string {
+  const validNum = Number(num);
+  const safeNum = isNaN(validNum) ? 0 : validNum;
   if (locale === 'bn') {
     const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-    return num.toString().replace(/\d/g, (digit) => bnDigits[parseInt(digit, 10)]);
+    return safeNum.toString().replace(/\d/g, (digit) => bnDigits[parseInt(digit, 10)]);
   }
-  return num.toString();
+  return safeNum.toString();
 }
 
 /**

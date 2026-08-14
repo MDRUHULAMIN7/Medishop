@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, Loader2 } from 'lucide-react';
+import { CheckCircle2, Loader2, X } from 'lucide-react';
 import { useCoupon } from '@/hooks/useCoupon';
 
 interface CouponBoxProps {
@@ -26,63 +26,68 @@ export function CouponBox({ isBn = true }: CouponBoxProps) {
   };
 
   return (
-    <div className="space-y-2">
-      <label className="block text-xs font-semibold text-gray-700">
-        {isBn ? 'কুপন প্রয়োগ করুন' : 'Apply Coupon'}
-      </label>
+    <div className="space-y-3">
+      <h3 className="text-sm font-bold text-gray-900">
+        {isBn ? 'কুপন কোড ব্যবহার করুন' : 'Apply Coupon Code'}
+      </h3>
 
-      <AnimatePresence mode="wait">
-        {appliedCoupon ? (
-          /* Applied Coupon Status Box */
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <input
+          type="text"
+          value={couponCodeInput}
+          onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
+          placeholder={isBn ? 'কুপন কোড লিখুন' : 'Enter coupon code'}
+          className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-3.5 py-2 text-xs font-medium text-gray-900 placeholder:text-gray-400 focus:border-blue-600 focus:bg-white focus:outline-hidden"
+          maxLength={20}
+        />
+
+        <button
+          type="submit"
+          disabled={isLoading || !couponCodeInput.trim()}
+          className="inline-flex items-center justify-center rounded-xl bg-blue-50 px-4 py-2 text-xs font-bold text-blue-600 hover:bg-blue-600 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer shrink-0"
+        >
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <span>{isBn ? 'প্রয়োগ করুন' : 'Apply'}</span>
+          )}
+        </button>
+      </form>
+
+      {/* Applied Active Coupon Pill Banner matching Screenshot */}
+      <AnimatePresence>
+        {appliedCoupon && (
           <motion.div
-            key="applied"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="flex items-center justify-between gap-2 rounded-xl bg-emerald-50 px-3 py-2.5 border border-emerald-200"
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 space-y-1.5"
           >
-            <div className="flex items-center gap-2 min-w-0">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-              <span className="text-xs font-semibold text-emerald-800 truncate">
-                {isBn
-                  ? `কুপন "${appliedCoupon.code}" প্রয়োগ করা হয়েছে`
-                  : `Coupon "${appliedCoupon.code}" applied`}
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={removeCoupon}
-              className="text-xs font-semibold text-red-600 hover:text-red-700 hover:underline shrink-0 cursor-pointer"
-            >
-              {isBn ? 'সরান' : 'Remove'}
-            </button>
-          </motion.div>
-        ) : (
-          /* Input Field + Apply Button (Toast response only, no text below input) */
-          <motion.div key="input" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <form onSubmit={handleSubmit} className="flex gap-2">
-              <input
-                type="text"
-                value={couponCodeInput}
-                onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
-                placeholder={isBn ? 'কুপন কোড দিন' : 'Enter coupon code'}
-                className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-3.5 py-2.5 text-xs font-medium text-gray-900 placeholder:text-gray-400 focus:border-blue-600 focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-blue-600"
-                maxLength={20}
-              />
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5">
+                <span className="font-extrabold text-emerald-900 text-xs tracking-wider">
+                  {appliedCoupon.code}
+                </span>
+                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-300">
+                  {isBn ? 'প্রযোজ্য হয়েছে' : 'Applied'}
+                </span>
+              </div>
 
               <button
-                type="submit"
-                disabled={isLoading || !couponCodeInput.trim()}
-                className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer shrink-0"
+                type="button"
+                onClick={removeCoupon}
+                className="flex items-center gap-1 text-[11px] font-bold text-gray-500 hover:text-red-600 cursor-pointer"
               >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <span>{isBn ? 'প্রয়োগ' : 'Apply'}</span>
-                )}
+                <span>{isBn ? 'মুছুন' : 'Remove'}</span>
+                <X className="h-3.5 w-3.5" />
               </button>
-            </form>
+            </div>
+
+            <p className="text-[11px] text-emerald-700 font-medium">
+              {isBn
+                ? '১০% ছাড় (সর্বোচ্চ ৳১০০ ছাড়)'
+                : '10% OFF (Max ৳100 discount)'}
+            </p>
           </motion.div>
         )}
       </AnimatePresence>

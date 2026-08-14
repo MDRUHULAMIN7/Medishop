@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/store';
@@ -14,12 +14,12 @@ import {
   selectIsCheckoutSubmitting,
 } from '@/store/slices/checkoutSlice';
 import { clearCart, selectCartItems } from '@/store/slices/cartSlice';
-import { addOrder } from '@/store/slices/orderSlice';
 import { useAddress } from './useAddress';
 import { checkoutService } from '@/services/checkout.service';
 import { orderService } from '@/services/order.service';
+import { settingsService } from '@/services/settings.service';
 import { PricingEngine } from '@/utils/pricing';
-import { DeliveryMethodId, PaymentMethodId } from '@/types/checkout';
+import { DeliveryMethod, PaymentMethod } from '@/types/checkout';
 
 export function useCheckout() {
   const dispatch = useAppDispatch();
@@ -37,8 +37,96 @@ export function useCheckout() {
 
   const { selectedAddress, selectedAddressId } = useAddress();
 
-  const deliveryMethod = checkoutService.getDeliveryMethodById(deliveryMethodId);
-  const paymentMethod = checkoutService.getPaymentMethodById(paymentMethodId);
+  const [availableDeliveryMethods, setAvailableDeliveryMethods] = useState<DeliveryMethod[]>(
+    checkoutService.getDeliveryMethods()
+  );
+  const [availablePaymentMethods, setAvailablePaymentMethods] = useState<PaymentMethod[]>(
+    checkoutService.getPaymentMethods()
+  );
+
+  // Fetch Public Site Settings & filter ONLY active methods configured by admin
+  useEffect(() => {
+    let isMounted = true;
+    async function loadSettingsMethods() {
+      try {
+        const publicSettings = await settingsService.getPublicSettings();
+        if (!isMounted) return;
+
+        // Dynamic Payment Methods filter (ONLY Active)
+        if (publicSettings?.payment?.methods && publicSettings.payment.methods.length > 0) {
+          const activeMethods = publicSettings.payment.methods.filter((m) => m.isActive);
+          if (activeMethods.length > 0) {
+            const mappedPaymentMethods: PaymentMethod[] = activeMethods.map((m) => ({
+              id: (m.code || m.id) as any,
+              nameEn: m.nameEn || m.nameBn,
+              nameBn: m.nameBn || m.nameEn,
+              descriptionEn: m.descriptionEn || m.accountNumber || 'Pay securely',
+              descriptionBn: m.descriptionBn || m.instructionsBn || 'পণ্য পেয়ে পরিশোধ করুন',
+              iconName: m.code === 'card' ? 'CreditCard' : m.code === 'cod' ? 'Banknote' : 'Smartphone',
+              isAvailable: true,
+            }));
+            setAvailablePaymentMethods(mappedPaymentMethods);
+
+            // Auto select first active payment method if current is inactive
+            if (!mappedPaymentMethods.some((pm) => pm.id === paymentMethodId)) {
+              dispatch(setPaymentMethodId(mappedPaymentMethods[0].id as any));
+            }
+          }
+        }
+
+        // Dynamic Delivery Options filter (ONLY Active)
+        if (publicSettings?.shipping?.options && publicSettings.shipping.options.length > 0) {
+          const activeOptions = publicSettings.shipping.options.filter((o) => o.isActive);
+          if (activeOptions.length > 0) {
+            const mappedDeliveryMethods: DeliveryMethod[] = activeOptions.map((o) => ({
+              id: (o.code || o.id) as any,
+              nameEn: o.nameEn || o.nameBn,
+              nameBn: o.nameBn || o.nameEn,
+              descriptionEn: o.estimatedDaysEn || '2 - 3 working days',
+              descriptionBn: o.estimatedDaysBn || '২ - ৩ কার্যদিবস',
+              charge: Number(o.charge ?? 60),
+              estimatedDeliveryEn: o.estimatedDaysEn || '2 - 3 working days',
+              estimatedDeliveryBn: o.estimatedDaysBn || '২ - ৩ কার্যদিবস',
+              isPopular: o.code === 'inside_dhaka',
+            }));
+            setAvailableDeliveryMethods(mappedDeliveryMethods);
+
+            // Auto select first active delivery option if current is inactive
+            if (!mappedDeliveryMethods.some((dm) => dm.id === deliveryMethodId)) {
+              dispatch(setDeliveryMethodId(mappedDeliveryMethods[0].id as any));
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load dynamic checkout settings:', err);
+      }
+    }
+    loadSettingsMethods();
+    return () => {
+      isMounted = false;
+    };
+  }, [dispatch, deliveryMethodId, paymentMethodId]);
+
+  // Selected delivery method fallback
+  const deliveryMethod =
+    availableDeliveryMethods.find((m) => m.id === deliveryMethodId) ||
+    availableDeliveryMethods[0] || {
+      id: 'standard',
+      nameEn: 'Standard Delivery',
+      nameBn: 'স্ট্যান্ডার্ড ডেলিভারি',
+      charge: 60,
+      estimatedDeliveryEn: '2 - 4 working days',
+      estimatedDeliveryBn: '২ - ৪ কর্মদিবস',
+    };
+
+  // Selected payment method fallback
+  const paymentMethod =
+    availablePaymentMethods.find((m) => m.id === paymentMethodId) ||
+    availablePaymentMethods[0] || {
+      id: 'cod',
+      nameEn: 'Cash on Delivery',
+      nameBn: 'ক্যাশ অন ডেলিভারি',
+    };
 
   // Compute total financial summary incorporating selected delivery method
   const shippingOption = {
@@ -58,23 +146,23 @@ export function useCheckout() {
   );
 
   const handleSetDeliveryMethod = useCallback(
-    (id: DeliveryMethodId) => {
+    (id: any) => {
       dispatch(setDeliveryMethodId(id));
       checkoutService.saveSelectionsToStorage({
         selectedAddressId,
         selectedDeliveryMethodId: id,
-        selectedPaymentMethodId: paymentMethodId,
+        selectedPaymentMethodId: paymentMethodId as any,
       });
     },
     [dispatch, selectedAddressId, paymentMethodId]
   );
 
   const handleSetPaymentMethod = useCallback(
-    (id: PaymentMethodId) => {
+    (id: any) => {
       dispatch(setPaymentMethodId(id));
       checkoutService.saveSelectionsToStorage({
         selectedAddressId,
-        selectedDeliveryMethodId: deliveryMethodId,
+        selectedDeliveryMethodId: deliveryMethodId as any,
         selectedPaymentMethodId: id,
       });
     },
@@ -110,7 +198,15 @@ export function useCheckout() {
       const rawAddrId = (selectedAddress as any)._id || selectedAddress.id || '';
       const isProfileAddr = rawAddrId && !rawAddrId.startsWith('custom_');
 
+      const checkoutItems = items
+        .map((i) => ({
+          productId: i.productId || (i as any).product?.id || (i as any).product?._id || '',
+          quantity: i.quantity,
+        }))
+        .filter((i) => i.productId && i.quantity > 0);
+
       const response = await orderService.checkout({
+        items: checkoutItems,
         ...(isProfileAddr ? { shippingAddressId: rawAddrId } : {}),
         shippingAddress: {
           recipientName: selectedAddress.recipientName || selectedAddress.fullName || 'Customer',
@@ -160,6 +256,7 @@ export function useCheckout() {
     notes,
     isBn,
     router,
+    appliedCoupon,
   ]);
 
   return {
@@ -167,8 +264,8 @@ export function useCheckout() {
     selectedAddress,
     deliveryMethod,
     paymentMethod,
-    availableDeliveryMethods: checkoutService.getDeliveryMethods(),
-    availablePaymentMethods: checkoutService.getPaymentMethods(),
+    availableDeliveryMethods,
+    availablePaymentMethods,
     summary,
     notes,
     isSubmitting,

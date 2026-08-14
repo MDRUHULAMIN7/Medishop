@@ -10,17 +10,7 @@ export const SearchService = {
     const trimmed = query.trim();
 
     try {
-      // 1. Try fast backend search suggestions API
-      const suggestions = await ProductService.getSuggestions(trimmed, 8);
-      if (suggestions && suggestions.length > 0) {
-        return {
-          query: trimmed,
-          suggestions: suggestions as any[],
-          totalMatches: suggestions.length,
-        };
-      }
-
-      // 2. Fallback to full products text search query
+      // Fetch full matching products with image, price, and details
       const searchRes = await ProductService.getProducts({ search: trimmed, limit: 8 });
       return {
         query: trimmed,

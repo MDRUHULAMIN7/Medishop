@@ -52,11 +52,11 @@ export default function CartPage() {
   return (
     <div className="min-h-screen bg-gray-50/50 pb-16">
       {/* Container */}
-      <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 py-6">
+      <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Breadcrumb Navigation */}
         <nav
           aria-label="Breadcrumb"
-          className="mb-5 flex items-center gap-2 text-xs font-medium text-gray-500"
+          className="flex items-center gap-2 text-xs font-medium text-gray-500"
         >
           <Link href="/" className="hover:text-blue-600 transition-colors">
             {isBn ? 'হোম' : 'Home'}
@@ -67,8 +67,8 @@ export default function CartPage() {
           </span>
         </nav>
 
-        {/* Page Header matching Screenshot */}
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">
+        {/* Page Header Card matching Screenshot */}
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">
           <div className="flex items-center gap-3.5">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
               <ShoppingBag className="h-5 w-5" />
@@ -97,7 +97,7 @@ export default function CartPage() {
               <button
                 type="button"
                 onClick={handleWishlistClick}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer shadow-2xs"
               >
                 <Heart className="h-4 w-4 text-rose-500" />
                 <span>{isBn ? 'উইশলিস্ট' : 'Wishlist'}</span>
@@ -106,7 +106,7 @@ export default function CartPage() {
               <button
                 type="button"
                 onClick={clearCart}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-700 hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-700 hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer shadow-2xs"
               >
                 <Trash2 className="h-4 w-4" />
                 <span>{isBn ? 'কার্ট খালি করুন' : 'Clear Cart'}</span>
@@ -138,55 +138,12 @@ export default function CartPage() {
                 <RecommendedProducts isBn={isBn} />
               </div>
 
-              {/* Right Column (4 cols): Order Summary & Coupon Box Sticky */}
+              {/* Right Column (4 cols): Coupon Box ABOVE Order Summary */}
               <div className="lg:col-span-4 space-y-5">
-                <OrderSummary isBn={isBn} />
-                <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">
+                <div className="rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 shadow-xs">
                   <CouponBox isBn={isBn} />
                 </div>
-              </div>
-            </div>
-
-            {/* Bottom Trust Features Row matching Screenshot */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
-              <div className="flex items-center gap-3.5 rounded-2xl border border-gray-200 bg-white p-4 shadow-xs">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                  <ShieldCheck className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-gray-900">{isBn ? 'অরিজিনাল মেডিসিন' : '100% Authentic'}</h4>
-                  <p className="text-[11px] text-gray-400">{isBn ? '১০০% অথেন্টিক প্রোডাক্ট' : 'Genuine medicines'}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3.5 rounded-2xl border border-gray-200 bg-white p-4 shadow-xs">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-                  <Truck className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-gray-900">{isBn ? 'দ্রুত ডেলিভারি' : 'Fast Delivery'}</h4>
-                  <p className="text-[11px] text-gray-400">{isBn ? '২-৩ কার্যদিবসে ডেলিভারি' : '2-3 Days Doorstep'}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3.5 rounded-2xl border border-gray-200 bg-white p-4 shadow-xs">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                  <Lock className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-gray-900">{isBn ? 'নিরাপদ পেমেন্ট' : 'Secure Payment'}</h4>
-                  <p className="text-[11px] text-gray-400">{isBn ? 'সব ধরনের পেমেন্ট সুরক্ষিত' : 'Protected Checkout'}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3.5 rounded-2xl border border-gray-200 bg-white p-4 shadow-xs">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
-                  <Headset className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-gray-900">{isBn ? '২৪/৭ সাপোর্ট' : '24/7 Support'}</h4>
-                  <p className="text-[11px] text-gray-400">{isBn ? 'আমরা আছি আপনার পাশে' : 'Always here to help'}</p>
-                </div>
+                <OrderSummary isBn={isBn} />
               </div>
             </div>
           </div>

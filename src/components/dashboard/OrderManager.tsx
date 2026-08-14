@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingBag,
   Search,
@@ -19,12 +20,14 @@ import {
   User,
   Phone,
   Calendar,
-  Check,
+  Mail,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAppSelector } from '@/store';
 import { formatBDT } from '@/lib/utils';
 import { toast } from 'sonner';
 import { orderService } from '@/services/order.service';
+import { CustomStatusSelect, StatusOption } from './CustomStatusSelect';
 
 interface OrderItem {
   productId: string;
@@ -43,6 +46,14 @@ interface OrderRecord {
   id: string;
   orderNumber: string;
   userId: string;
+  user?: {
+    id?: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    role?: string;
+    createdAt?: string;
+  };
   items: OrderItem[];
   shippingAddress: {
     recipientName: string;
@@ -67,6 +78,21 @@ interface OrderRecord {
   createdAt?: string;
   updatedAt?: string;
 }
+
+const PAYMENT_STATUS_OPTIONS: StatusOption[] = [
+  { value: 'pending', label: 'PENDING', badgeClass: 'bg-amber-100 text-amber-800 border-amber-300' },
+  { value: 'paid', label: 'PAID', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
+  { value: 'failed', label: 'FAILED', badgeClass: 'bg-rose-100 text-rose-800 border-rose-300' },
+  { value: 'refunded', label: 'REFUNDED', badgeClass: 'bg-purple-100 text-purple-800 border-purple-300' },
+];
+
+const ORDER_STATUS_OPTIONS: StatusOption[] = [
+  { value: 'pending', label: 'PENDING', badgeClass: 'bg-amber-50 text-amber-800 border-amber-300' },
+  { value: 'processing', label: 'PROCESSING', badgeClass: 'bg-blue-50 text-blue-800 border-blue-300' },
+  { value: 'shipped', label: 'SHIPPED', badgeClass: 'bg-sky-50 text-sky-800 border-sky-300' },
+  { value: 'delivered', label: 'DELIVERED', badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-300' },
+  { value: 'cancelled', label: 'CANCELLED', badgeClass: 'bg-rose-50 text-rose-800 border-rose-300' },
+];
 
 export function OrderManager() {
   const language = useAppSelector((state) => state.ui.language);
@@ -127,8 +153,8 @@ export function OrderManager() {
 
       toast.success(
         isBn
-          ? `অর্ডার #${updated.orderNumber || id} এর স্ট্যাটাস '${newOrderStatus}' করা হয়েছে`
-          : `Order #${updated.orderNumber || id} status updated to '${newOrderStatus}'`
+          ? `অর্ডার #${updated?.orderNumber || id} এর স্ট্যাটাস '${newOrderStatus}' করা হয়েছে`
+          : `Order #${updated?.orderNumber || id} status updated to '${newOrderStatus}'`
       );
     } catch (err: any) {
       toast.error(err?.message || 'Failed to update order status');
@@ -171,9 +197,10 @@ export function OrderManager() {
     const matchOrderNum = o.orderNumber?.toLowerCase().includes(q);
     const matchName = o.shippingAddress?.recipientName?.toLowerCase().includes(q);
     const matchPhone = o.shippingAddress?.phone?.includes(q);
+    const matchEmail = o.user?.email?.toLowerCase().includes(q);
     const matchDistrict = o.shippingAddress?.district?.toLowerCase().includes(q);
 
-    return matchOrderNum || matchName || matchPhone || matchDistrict;
+    return matchOrderNum || matchName || matchPhone || matchEmail || matchDistrict;
   });
 
   return (
@@ -205,7 +232,7 @@ export function OrderManager() {
       {/* Filter & Search Bar */}
       <div className="flex flex-col sm:flex-row items-center gap-3">
         <div className="relative flex-1 w-full">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <input
             type="search"
             value={search}
@@ -222,7 +249,7 @@ export function OrderManager() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-10 rounded-xl border border-border bg-background px-3 text-xs font-bold text-foreground focus:border-primary focus:outline-none cursor-pointer"
+          className="h-10 rounded-xl border border-border bg-background px-3 text-xs font-extrabold text-foreground focus:border-primary focus:outline-none cursor-pointer"
         >
           <option value="ALL">{isBn ? 'সকল অর্ডার স্ট্যাটাস' : 'All Order Statuses'}</option>
           <option value="pending">PENDING</option>
@@ -235,7 +262,7 @@ export function OrderManager() {
         <select
           value={paymentFilter}
           onChange={(e) => setPaymentFilter(e.target.value)}
-          className="h-10 rounded-xl border border-border bg-background px-3 text-xs font-bold text-foreground focus:border-primary focus:outline-none cursor-pointer"
+          className="h-10 rounded-xl border border-border bg-background px-3 text-xs font-extrabold text-foreground focus:border-primary focus:outline-none cursor-pointer"
         >
           <option value="ALL">{isBn ? 'সকল পেমেন্ট স্ট্যাটাস' : 'All Payment Statuses'}</option>
           <option value="pending">PENDING</option>
@@ -250,9 +277,9 @@ export function OrderManager() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-border bg-muted/40 font-bold uppercase tracking-wider text-muted-foreground">
+              <tr className="border-b border-border bg-muted/40 font-extrabold uppercase tracking-wider text-muted-foreground">
                 <th className="py-3.5 px-4">Order Number & Date</th>
-                <th className="py-3.5 px-4">Customer & Address</th>
+                <th className="py-3.5 px-4">Customer</th>
                 <th className="py-3.5 px-4">Amount & Payment</th>
                 <th className="py-3.5 px-4">Order Lifecycle</th>
                 <th className="py-3.5 px-4 text-right">Actions</th>
@@ -282,7 +309,7 @@ export function OrderManager() {
                         <span className="font-extrabold text-primary sm:text-sm">
                           #{order.orderNumber}
                         </span>
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1">
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1 font-medium">
                           <Calendar className="h-3 w-3" />
                           <span>
                             {order.createdAt
@@ -304,89 +331,55 @@ export function OrderManager() {
                       </div>
                     </td>
 
+                    {/* Customer Info */}
                     <td className="py-3.5 px-4">
                       <div className="flex flex-col">
-                        <span className="font-bold text-foreground sm:text-sm">
-                          {order.shippingAddress?.recipientName || 'N/A'}
+                        <span className="font-extrabold text-foreground sm:text-sm">
+                          {order.shippingAddress?.recipientName || order.user?.name || 'Customer'}
                         </span>
-                        <span className="text-[11px] font-semibold text-primary">
-                          {order.shippingAddress?.phone || 'N/A'}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground truncate max-w-[220px] flex items-center gap-1 mt-0.5">
-                          <MapPin className="h-3 w-3 shrink-0" />
-                          <span>
-                            {order.shippingAddress?.addressLine}, {order.shippingAddress?.thana},{' '}
-                            {order.shippingAddress?.district}
-                          </span>
+                        <span className="text-[11px] font-bold text-sky-600">
+                          {order.shippingAddress?.phone || order.user?.phone || 'N/A'}
                         </span>
                       </div>
                     </td>
 
+                    {/* Amount & Payment (Harmonized h-8 height, rounded-xl, Custom Popover Dropdown) */}
                     <td className="py-3.5 px-4">
-                      <div className="flex flex-col">
-                        <span className="font-black text-foreground text-sm">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-black text-foreground text-sm flex h-8 items-center">
                           {formatBDT(order.grandTotal)}
                         </span>
-                        <span className="text-[11px] font-medium text-muted-foreground uppercase">
+                        <span className="flex h-8 items-center rounded-xl bg-muted border border-border/80 px-3 text-xs font-black uppercase text-muted-foreground shadow-2xs">
                           {order.paymentMethod}
                         </span>
-                        <div className="mt-1 flex items-center gap-1">
-                          <select
-                            value={order.paymentStatus}
-                            onChange={(e) => handleUpdatePaymentStatus(order.id, e.target.value)}
-                            disabled={updatingId === order.id}
-                            className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase cursor-pointer border-none outline-none ${
-                              order.paymentStatus === 'paid'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : order.paymentStatus === 'pending'
-                                ? 'bg-amber-100 text-amber-800'
-                                : order.paymentStatus === 'refunded'
-                                ? 'bg-purple-100 text-purple-800'
-                                : 'bg-rose-100 text-rose-800'
-                            }`}
-                          >
-                            <option value="pending">PENDING</option>
-                            <option value="paid">PAID</option>
-                            <option value="failed">FAILED</option>
-                            <option value="refunded">REFUNDED</option>
-                          </select>
-                        </div>
+                        <CustomStatusSelect
+                          value={order.paymentStatus}
+                          options={PAYMENT_STATUS_OPTIONS}
+                          onChange={(val) => handleUpdatePaymentStatus(order.id, val)}
+                          disabled={updatingId === order.id}
+                        />
                       </div>
                     </td>
 
+                    {/* Order Lifecycle (Harmonized h-8 height, rounded-xl, Custom Popover Dropdown) */}
                     <td className="py-3.5 px-4">
-                      <select
+                      <CustomStatusSelect
                         value={order.orderStatus}
-                        onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                        options={ORDER_STATUS_OPTIONS}
+                        onChange={(val) => handleUpdateOrderStatus(order.id, val)}
                         disabled={updatingId === order.id}
-                        className={`rounded-xl border border-border px-3 py-1 text-xs font-black uppercase cursor-pointer transition-colors ${
-                          order.orderStatus === 'pending'
-                            ? 'bg-amber-50 text-amber-800 border-amber-300'
-                            : order.orderStatus === 'processing'
-                            ? 'bg-blue-50 text-blue-800 border-blue-300'
-                            : order.orderStatus === 'shipped'
-                            ? 'bg-sky-50 text-sky-800 border-sky-300'
-                            : order.orderStatus === 'delivered'
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                            : 'bg-rose-50 text-rose-800 border-rose-300'
-                        }`}
-                      >
-                        <option value="pending">PENDING</option>
-                        <option value="processing">PROCESSING</option>
-                        <option value="shipped">SHIPPED</option>
-                        <option value="delivered">DELIVERED</option>
-                        <option value="cancelled">CANCELLED</option>
-                      </select>
+                      />
                     </td>
 
+                    {/* Actions button (Harmonized h-8 height, rounded-xl) */}
                     <td className="py-3.5 px-4 text-right">
                       <button
                         type="button"
                         onClick={() => setSelectedOrder(order)}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-bold text-foreground hover:bg-muted transition-colors cursor-pointer"
+                        className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-border bg-background px-3 text-xs font-bold text-foreground hover:bg-muted transition-colors shadow-2xs cursor-pointer"
                       >
                         <Eye className="h-3.5 w-3.5 text-primary" />
-                        <span>{isBn ? 'ডিটেইলস' : 'View'}</span>
+                        <span>{isBn ? 'ডিটেইলস' : 'View Details'}</span>
                       </button>
                     </td>
                   </tr>
@@ -398,119 +391,154 @@ export function OrderManager() {
       </div>
 
       {/* Detailed Order Modal */}
-      {selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border border-border bg-background p-6 shadow-2xl space-y-6">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-border pb-4">
-              <div>
-                <span className="text-xs font-bold text-primary uppercase tracking-wider">
-                  Order Details
-                </span>
-                <h3 className="text-lg sm:text-xl font-extrabold text-foreground">
-                  #{selectedOrder.orderNumber}
-                </h3>
-              </div>
+      <AnimatePresence>
+        {selectedOrder && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedOrder(null)}
+              className="fixed inset-0 bg-black backdrop-blur-xs cursor-pointer"
+            />
 
-              <button
-                type="button"
-                onClick={() => setSelectedOrder(null)}
-                className="rounded-xl border border-border p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Recipient & Address Info */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-2xl border border-border bg-muted/20 p-4 text-xs">
-              <div className="space-y-1">
-                <span className="font-extrabold text-foreground flex items-center gap-1.5">
-                  <User className="h-4 w-4 text-primary" />
-                  {selectedOrder.shippingAddress?.recipientName}
-                </span>
-                <p className="text-muted-foreground flex items-center gap-1.5">
-                  <Phone className="h-3.5 w-3.5 text-sky-600" />
-                  {selectedOrder.shippingAddress?.phone}
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <span className="font-extrabold text-foreground flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4 text-rose-600" />
-                  Shipping Location
-                </span>
-                <p className="text-muted-foreground leading-relaxed">
-                  {selectedOrder.shippingAddress?.addressLine}, {selectedOrder.shippingAddress?.thana},{' '}
-                  {selectedOrder.shippingAddress?.district},{' '}
-                  {selectedOrder.shippingAddress?.division}
-                </p>
-              </div>
-            </div>
-
-            {/* Items List */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-extrabold text-foreground uppercase tracking-wider">
-                Order Items ({selectedOrder.items?.length || 0})
-              </h4>
-              <div className="divide-y divide-border border border-border rounded-2xl overflow-hidden bg-background">
-                {selectedOrder.items?.map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 text-xs">
-                    <div className="flex items-center gap-3">
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="h-10 w-10 object-cover rounded-lg border border-border"
-                        />
-                      ) : (
-                        <div className="h-10 w-10 rounded-lg border border-border bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground">
-                          MED
-                        </div>
-                      )}
-                      <div>
-                        <p className="font-bold text-foreground">{item.name}</p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {item.dosageForm} • Qty: {item.quantity} × {formatBDT(item.effectiveUnitPrice)}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="font-black text-foreground">
-                      {formatBDT(item.totalPrice)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Summary Breakdown */}
-            <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2 text-xs">
-              <div className="flex justify-between text-muted-foreground">
-                <span>Subtotal</span>
-                <span className="font-bold text-foreground">{formatBDT(selectedOrder.subtotal)}</span>
-              </div>
-
-              {selectedOrder.couponDiscount > 0 && (
-                <div className="flex justify-between text-emerald-600 font-bold">
-                  <span>Coupon Discount ({selectedOrder.couponCode})</span>
-                  <span>-{formatBDT(selectedOrder.couponDiscount)}</span>
+            {/* Modal Dialog Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 15 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border border-border bg-background p-6 shadow-2xl space-y-6"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between border-b border-border pb-4">
+                <div>
+                  <span className="text-xs font-bold text-primary uppercase tracking-wider">
+                    Order Details
+                  </span>
+                  <h3 className="text-lg sm:text-xl font-extrabold text-foreground">
+                    #{selectedOrder.orderNumber}
+                  </h3>
                 </div>
-              )}
 
-              <div className="flex justify-between text-muted-foreground">
-                <span>Delivery Fee</span>
-                <span className="font-bold text-foreground">{formatBDT(selectedOrder.deliveryCharge)}</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedOrder(null)}
+                  className="rounded-xl border border-border p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
               </div>
 
-              <div className="pt-2 border-t border-border flex justify-between items-baseline text-sm">
-                <span className="font-extrabold text-foreground">Grand Total</span>
-                <span className="font-black text-primary text-base">
-                  {formatBDT(selectedOrder.grandTotal)}
-                </span>
+              {/* Customer Registration & Shipping Address Info */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-2xl border border-border bg-muted/20 p-4 text-xs">
+                {/* Customer Account Info */}
+                <div className="space-y-1.5">
+                  <span className="font-extrabold text-foreground flex items-center gap-1.5 text-xs">
+                    <User className="h-4 w-4 text-primary" />
+                    Customer Registration Info
+                  </span>
+                  <p className="font-bold text-foreground">
+                    {selectedOrder.shippingAddress?.recipientName || selectedOrder.user?.name || 'Customer'}
+                  </p>
+                  <p className="text-muted-foreground flex items-center gap-1.5">
+                    <Phone className="h-3.5 w-3.5 text-sky-600 shrink-0" />
+                    <span>{selectedOrder.shippingAddress?.phone || selectedOrder.user?.phone || 'N/A'}</span>
+                  </p>
+                  {selectedOrder.user?.email && (
+                    <p className="text-muted-foreground flex items-center gap-1.5 truncate">
+                      <Mail className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                      <span className="truncate">{selectedOrder.user.email}</span>
+                    </p>
+                  )}
+                  {selectedOrder.user?.id && (
+                    <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <ShieldCheck className="h-3 w-3 text-emerald-600 shrink-0" />
+                      <span>Reg ID: {selectedOrder.user.id}</span>
+                    </p>
+                  )}
+                </div>
+
+                {/* Shipping Address Info */}
+                <div className="space-y-1.5">
+                  <span className="font-extrabold text-foreground flex items-center gap-1.5 text-xs">
+                    <MapPin className="h-4 w-4 text-rose-600" />
+                    Shipping Address
+                  </span>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {selectedOrder.shippingAddress?.addressLine}, {selectedOrder.shippingAddress?.thana},{' '}
+                    {selectedOrder.shippingAddress?.district},{' '}
+                    {selectedOrder.shippingAddress?.division}
+                  </p>
+                </div>
               </div>
-            </div>
+
+              {/* Items List */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-extrabold text-foreground uppercase tracking-wider">
+                  Order Items ({selectedOrder.items?.length || 0})
+                </h4>
+                <div className="divide-y divide-border border border-border rounded-2xl overflow-hidden bg-background">
+                  {selectedOrder.items?.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 text-xs">
+                      <div className="flex items-center gap-3">
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="h-10 w-10 object-cover rounded-lg border border-border"
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-lg border border-border bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground">
+                            MED
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-bold text-foreground">{item.name}</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {item.dosageForm} • Qty: {item.quantity} × {formatBDT(item.effectiveUnitPrice)}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="font-black text-foreground">
+                        {formatBDT(item.totalPrice)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Summary Breakdown */}
+              <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2 text-xs">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Subtotal</span>
+                  <span className="font-bold text-foreground">{formatBDT(selectedOrder.subtotal)}</span>
+                </div>
+
+                {selectedOrder.couponDiscount > 0 && (
+                  <div className="flex justify-between text-emerald-600 font-bold">
+                    <span>Coupon Discount ({selectedOrder.couponCode})</span>
+                    <span>-{formatBDT(selectedOrder.couponDiscount)}</span>
+                  </div>
+                )}
+
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Delivery Fee</span>
+                  <span className="font-bold text-foreground">{formatBDT(selectedOrder.deliveryCharge)}</span>
+                </div>
+
+                <div className="pt-2 border-t border-border flex justify-between items-baseline text-sm">
+                  <span className="font-extrabold text-foreground">Grand Total</span>
+                  <span className="font-black text-primary text-base">
+                    {formatBDT(selectedOrder.grandTotal)}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }

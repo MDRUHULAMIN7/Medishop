@@ -23,6 +23,7 @@ import {
   Layers,
   History,
   Boxes,
+  Eye,
 } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
@@ -101,6 +102,7 @@ export function ProductManager() {
   // Local State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [localSearch, setLocalSearch] = useState(searchQuery);
@@ -504,7 +506,7 @@ export function ProductManager() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-3xl border border-border bg-background p-4 sm:p-6 shadow-2xs">
         <div>
           <h2 className="text-lg sm:text-xl font-extrabold text-foreground tracking-tight">
-            {isBn ? 'ওষুধ ও পণ্য ক্যাটালগ ম্যানেজার' : 'Medicine Catalog Manager'}
+            {isBn ? 'প্রোডাক্ট ম্যানেজমেন্ট' : 'Product Management'}
           </h2>
           <p className="text-xs text-muted-foreground font-medium mt-0.5">
             {isBn
@@ -721,6 +723,13 @@ export function ProductManager() {
                         {/* Actions */}
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => setViewingProduct(p)}
+                              className="rounded-xl border border-border p-1.5 text-muted-foreground hover:border-primary hover:text-primary transition-all cursor-pointer"
+                              title={isBn ? 'প্রোডাক্ট ডিটেইলস প্রিভিউ' : 'View Product Details'}
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </button>
                             <button
                               onClick={() => openAuditModal(p)}
                               className="rounded-xl border border-border p-1.5 text-muted-foreground hover:border-primary hover:text-primary transition-all cursor-pointer"
@@ -1401,6 +1410,145 @@ export function ProductManager() {
                   ) : (
                     <span>{isBn ? 'হ্যাঁ, ডিলিট করুন' : 'Yes, Delete'}</span>
                   )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Product Details View Modal */}
+      <AnimatePresence>
+        {viewingProduct && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setViewingProduct(null)}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: 15 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-3xl border border-border bg-background p-6 shadow-2xl space-y-5"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between border-b border-border pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-primary/10 p-2 text-primary">
+                    <Pill className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <h3 className="text-base font-extrabold text-foreground">
+                      {viewingProduct.name}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      {viewingProduct.genericName || 'Generic N/A'} • {viewingProduct.dosageForm} ({viewingProduct.strength || 'N/A'})
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setViewingProduct(null)}
+                  className="rounded-xl p-1.5 text-muted-foreground hover:bg-muted"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Grid Content */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Product Image */}
+                <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-muted border border-border">
+                  <Image
+                    src={viewingProduct.image && viewingProduct.image.trim() !== '' ? viewingProduct.image : 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=400&auto=format&fit=crop'}
+                    alt={viewingProduct.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+
+                {/* Specs Info */}
+                <div className="sm:col-span-2 space-y-3 text-xs">
+                  <div className="grid grid-cols-2 gap-2 rounded-2xl bg-muted/30 p-3 border border-border">
+                    <div>
+                      <span className="text-muted-foreground font-semibold block">Brand:</span>
+                      <span className="font-extrabold text-foreground">{typeof viewingProduct.brand === 'object' ? viewingProduct.brand?.name : viewingProduct.brand || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground font-semibold block">Category:</span>
+                      <span className="font-extrabold text-foreground">{typeof viewingProduct.category === 'object' ? viewingProduct.category?.name : viewingProduct.category || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground font-semibold block">Requires Rx:</span>
+                      <span className={`font-bold ${viewingProduct.requiresRx ? 'text-rose-600' : 'text-emerald-600'}`}>
+                        {viewingProduct.requiresRx ? 'Yes (Prescription Required)' : 'No (OTC)'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground font-semibold block">Total Stock:</span>
+                      <span className="font-extrabold text-primary">{viewingProduct.stockCount || viewingProduct.stock} Base Units</span>
+                    </div>
+                  </div>
+
+                  {/* Unit Prices Breakdown */}
+                  <div className="space-y-1.5">
+                    <span className="font-extrabold text-foreground block">Packaging & Unit Prices:</span>
+                    <div className="rounded-2xl border border-border overflow-hidden">
+                      <table className="w-full text-left text-[11px]">
+                        <thead className="bg-muted/50 font-bold uppercase text-muted-foreground">
+                          <tr>
+                            <th className="py-2 px-3">Unit</th>
+                            <th className="py-2 px-3">Selling Price</th>
+                            <th className="py-2 px-3">MRP</th>
+                            <th className="py-2 px-3">Unit Stock</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {viewingProduct.unitPrices && viewingProduct.unitPrices.length > 0 ? (
+                            viewingProduct.unitPrices.map((u, i) => (
+                              <tr key={i} className="hover:bg-muted/20">
+                                <td className="py-2 px-3 font-bold text-foreground">{u.unitLabelBn || u.unit}</td>
+                                <td className="py-2 px-3 font-bold text-primary">{formatBDT(u.price)}</td>
+                                <td className="py-2 px-3 text-muted-foreground">{formatBDT(u.mrp || u.price)}</td>
+                                <td className="py-2 px-3 font-semibold">{u.stock} {u.unit}</td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td className="py-2 px-3 font-bold text-foreground">{viewingProduct.unitType || 'pcs'}</td>
+                              <td className="py-2 px-3 font-bold text-primary">{formatBDT(viewingProduct.price)}</td>
+                              <td className="py-2 px-3 text-muted-foreground">{formatBDT(viewingProduct.mrp || viewingProduct.price)}</td>
+                              <td className="py-2 px-3 font-semibold">{viewingProduct.stockCount || viewingProduct.stock}</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  {viewingProduct.description && (
+                    <div className="space-y-1">
+                      <span className="font-extrabold text-foreground block">Product Description:</span>
+                      <p className="text-muted-foreground text-xs leading-relaxed bg-muted/20 p-2.5 rounded-xl border border-border">
+                        {viewingProduct.description}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex justify-end pt-2 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => setViewingProduct(null)}
+                  className="rounded-xl border border-border px-5 py-2 text-xs font-bold text-foreground hover:bg-muted"
+                >
+                  Close Preview
                 </button>
               </div>
             </motion.div>

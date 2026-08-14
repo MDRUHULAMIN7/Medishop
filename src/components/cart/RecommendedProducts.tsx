@@ -1,65 +1,120 @@
 'use client';
 
-import React, { useRef } from 'react';
-import { ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
-import { useCart } from '@/hooks/useCart';
-import { formatPrice } from '@/utils/cart';
-import { toast } from 'sonner';
+import React, { useEffect, useState, useRef } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ProductService, Product } from '@/services/product.service';
+import { ProductCard } from '@/components/home/ProductCard';
 
 interface RecommendedProductsProps {
   isBn?: boolean;
 }
 
-const RECOMMENDED_ITEMS = [
+const FALLBACK_PRODUCTS: Product[] = [
   {
-    id: 'rec_1',
-    nameEn: 'Napa Extra',
-    nameBn: 'নাপা এক্সট্রা',
+    id: 'prod_1',
+    name: 'Napa Extra 500mg',
+    nameEn: 'Napa Extra 500mg',
+    nameBn: 'নাপা এক্সট্রা ৫০০ মি.গ্রা.',
+    slug: 'napa-extra',
     dosageForm: 'Tablet',
-    price: 240,
-    mrp: 260,
-    image: '/images/products/napa-extra.png',
-    brand: 'BEXIMCO',
-    unit: 'Tablet',
-  },
+    unitType: 'Tablet',
+    unit: '10 Tablets Strip',
+    unitPrices: [{ unit: 'Tablet', price: 25, mrp: 30, stock: 100, isDefault: true }],
+    price: 25,
+    mrpPrice: 30,
+    stockCount: 100,
+    inStock: true,
+    requiresRx: false,
+    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&auto=format&fit=crop&q=80',
+    rating: 4.8,
+    reviewCount: 24,
+    brandName: 'Beximco Pharmaceuticals',
+  } as any,
   {
-    id: 'rec_2',
-    nameEn: 'Sergel',
-    nameBn: 'সারজেল',
-    dosageForm: 'Tablet',
-    price: 130,
-    mrp: 140,
-    image: '/images/products/sergel.png',
-    brand: 'HEALTHCARE',
-    unit: 'Tablet',
-  },
-  {
-    id: 'rec_3',
-    nameEn: 'Vitamin D3 1000 IU',
-    nameBn: 'ভিটামিন ডি৩ ১০০০ আইইউ',
+    id: 'prod_2',
+    name: 'Sergel 20mg',
+    nameEn: 'Sergel 20mg',
+    nameBn: 'সারজেল ২০ মি.গ্রা.',
+    slug: 'sergel-20mg',
     dosageForm: 'Capsule',
-    price: 210,
-    mrp: 230,
-    image: '/images/products/vitamin-d3.png',
-    brand: 'SQUARE',
-    unit: 'Capsule',
-  },
+    unitType: 'Capsule',
+    unit: '10 Capsules Strip',
+    unitPrices: [{ unit: 'Capsule', price: 70, mrp: 80, stock: 100, isDefault: true }],
+    price: 70,
+    mrpPrice: 80,
+    stockCount: 100,
+    inStock: true,
+    requiresRx: false,
+    image: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=300&auto=format&fit=crop&q=80',
+    rating: 4.9,
+    reviewCount: 38,
+    brandName: 'Healthcare Pharmaceuticals',
+  } as any,
   {
-    id: 'rec_4',
-    nameEn: 'Panadol Extra',
-    nameBn: 'প্যানাডল এক্সট্রা',
+    id: 'prod_3',
+    name: 'Monas 10mg',
+    nameEn: 'Monas 10mg',
+    nameBn: 'মোনাস ১০ মি.গ্রা.',
+    slug: 'monas-10mg',
     dosageForm: 'Tablet',
-    price: 180,
-    mrp: 200,
-    image: '/images/products/panadol-extra.png',
-    brand: 'GSK',
-    unit: 'Tablet',
-  },
+    unitType: 'Tablet',
+    unit: '15 Tablets Box',
+    unitPrices: [{ unit: 'Tablet', price: 260, mrp: 280, stock: 100, isDefault: true }],
+    price: 260,
+    mrpPrice: 280,
+    stockCount: 100,
+    inStock: true,
+    requiresRx: false,
+    image: 'https://images.unsplash.com/photo-1550572017-edf9955a5510?w=300&auto=format&fit=crop&q=80',
+    rating: 4.7,
+    reviewCount: 19,
+    brandName: 'Acme Laboratories',
+  } as any,
+  {
+    id: 'prod_4',
+    name: 'Ceevit 250mg',
+    nameEn: 'Ceevit 250mg',
+    nameBn: 'সিভিট ২৫০ মি.গ্রা.',
+    slug: 'ceevit-250mg',
+    dosageForm: 'Chewable Tablet',
+    unitType: 'Tablet',
+    unit: '10 Tablets Strip',
+    unitPrices: [{ unit: 'Tablet', price: 18, mrp: 20, stock: 100, isDefault: true }],
+    price: 18,
+    mrpPrice: 20,
+    stockCount: 100,
+    inStock: true,
+    requiresRx: false,
+    image: 'https://images.unsplash.com/photo-1576602976047-174e57a47881?w=300&auto=format&fit=crop&q=80',
+    rating: 4.9,
+    reviewCount: 42,
+    brandName: 'Square Pharmaceuticals',
+  } as any,
 ];
 
 export function RecommendedProducts({ isBn = true }: RecommendedProductsProps) {
-  const { addToCart } = useCart();
+  const [products, setProducts] = useState<Product[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadProducts() {
+      try {
+        const res = await ProductService.getProducts({ limit: 8 });
+        if (isMounted && res.products && res.products.length > 0) {
+          setProducts(res.products);
+        } else if (isMounted) {
+          setProducts(FALLBACK_PRODUCTS);
+        }
+      } catch (err) {
+        if (isMounted) setProducts(FALLBACK_PRODUCTS);
+      }
+    }
+    loadProducts();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleScroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -68,40 +123,19 @@ export function RecommendedProducts({ isBn = true }: RecommendedProductsProps) {
     }
   };
 
-  const handleAddToCart = (item: typeof RECOMMENDED_ITEMS[0]) => {
-    addToCart({
-      id: item.id,
-      productId: item.id,
-      nameEn: item.nameEn,
-      nameBn: item.nameBn,
-      slug: item.nameEn.toLowerCase().replace(/\s+/g, '-'),
-      brand: item.brand,
-      sellingPrice: item.price,
-      mrp: item.mrp,
-      price: item.price,
-      image: item.image,
-      images: [item.image],
-      unit: item.unit,
-      dosageForm: item.dosageForm,
-      prescriptionRequired: false,
-      stock: 100,
-      quantity: 1,
-    } as any);
-
-    toast.success(
-      isBn
-        ? `"${item.nameBn}" কার্টে যুক্ত করা হয়েছে!`
-        : `"${item.nameEn}" added to cart!`
-    );
-  };
+  const displayList = products.length > 0 ? products : FALLBACK_PRODUCTS;
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-xs space-y-4">
+    <div className="space-y-4 pt-2">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-bold text-gray-900">
-          {isBn ? 'আপনার জন্য প্রস্তাবিত' : 'Recommended For You'}
+        <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+          <span>{isBn ? 'আপনার জন্য প্রস্তাবিত' : 'Recommended For You'}</span>
+          <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-0.5">
+            {isBn ? '১০০% অরিজিনাল' : '100% Genuine'}
+          </span>
         </h3>
+
         <button
           type="button"
           className="text-xs font-bold text-blue-600 hover:underline cursor-pointer"
@@ -129,44 +163,14 @@ export function RecommendedProducts({ isBn = true }: RecommendedProductsProps) {
           <ChevronRight className="h-4 w-4" />
         </button>
 
-        {/* Scrollable Container */}
+        {/* Scrollable Container with NO Scrollbar visible */}
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto custom-scrollbar scroll-smooth py-1 px-1"
+          className="flex gap-4 overflow-x-auto scroll-smooth py-1 px-1 [::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
         >
-          {RECOMMENDED_ITEMS.map((item) => (
-            <div
-              key={item.id}
-              className="w-52 shrink-0 rounded-2xl border border-gray-200 bg-white p-4 flex flex-col justify-between hover:border-blue-600 hover:shadow-md transition-all"
-            >
-              <div className="space-y-2">
-                <div className="h-28 w-full rounded-xl bg-gray-50 p-2 flex items-center justify-center border border-gray-100 overflow-hidden">
-                  <img
-                    src={item.image}
-                    alt={item.nameEn}
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </div>
-
-                <div className="text-center space-y-0.5">
-                  <h4 className="text-sm font-bold text-gray-900 truncate">
-                    {isBn ? item.nameBn : item.nameEn}
-                  </h4>
-                  <p className="text-xs text-gray-400">{item.dosageForm}</p>
-                  <p className="text-sm font-bold text-blue-600">
-                    {formatPrice(item.price, isBn ? 'bn' : 'en')}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => handleAddToCart(item)}
-                className="mt-3 w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-50 py-2 text-xs font-bold text-blue-600 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer"
-              >
-                <ShoppingCart className="h-3.5 w-3.5" />
-                <span>{isBn ? 'কার্টে যোগ করুন' : 'Add to Cart'}</span>
-              </button>
+          {displayList.map((product) => (
+            <div key={product.id || product.slug} className="w-56 shrink-0">
+              <ProductCard product={product} />
             </div>
           ))}
         </div>

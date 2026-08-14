@@ -121,29 +121,29 @@ export function ProductTabs({ product }: ProductTabsProps) {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-xl font-extrabold text-foreground">
-                    {((product as any).ratingAverage || product.rating || 5.0).toFixed(1)}
+                    {reviewsTotal > 0
+                      ? (((product as any).ratingAverage || product.rating || (reviews.length > 0 ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length : 0))).toFixed(1)
+                      : '0.0'}
                   </span>
                   <div className="flex items-center text-amber-400">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`h-4 w-4 ${
-                          star <= Math.round((product as any).ratingAverage || product.rating || 5)
-                            ? 'fill-amber-400 text-amber-400'
-                            : 'text-gray-300'
-                        }`}
-                      />
-                    ))}
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const ratingVal = reviewsTotal > 0 ? ((product as any).ratingAverage || product.rating || 5) : 0;
+                      return (
+                        <Star
+                          key={star}
+                          className={`h-4 w-4 ${
+                            star <= Math.round(ratingVal)
+                              ? 'fill-amber-400 text-amber-400'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      );
+                    })}
                   </div>
                   <span className="text-xs font-semibold text-muted-foreground">
                     ({reviewsTotal} {isBn ? 'টি রিভিউ' : 'reviews'})
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {isBn
-                    ? 'শুধুমাত্র ভেরিফাইড ক্রয়কারী কাস্টমারদের রিভিউ ডিরেক্ট ডাটাবেজ থেকে দেখানো হচ্ছে'
-                    : 'Showing customer reviews submitted by verified buyers.'}
-                </p>
               </div>
 
               <button

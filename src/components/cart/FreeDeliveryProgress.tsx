@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Truck, Sparkles, CheckCircle2 } from 'lucide-react';
+import { User, CheckCircle2 } from 'lucide-react';
 import { formatPrice } from '@/utils/cart';
 import { FREE_DELIVERY_THRESHOLD } from '@/utils/pricing';
 
@@ -26,49 +26,40 @@ export function FreeDeliveryProgress({
 
   return (
     <div
-      className={`rounded-2xl border p-4 shadow-xs transition-all ${
+      className={`rounded-2xl border p-4.5 shadow-2xs space-y-3 ${
         isUnlocked
           ? 'border-emerald-200 bg-emerald-50/70'
-          : 'border-primary/20 bg-primary/5'
+          : 'border-blue-100 bg-blue-50/60'
       } ${className}`}
     >
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <div className="flex items-center gap-2">
-          {isUnlocked ? (
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-white shadow-xs">
-              <CheckCircle2 className="h-4 w-4" />
-            </div>
-          ) : (
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-white shadow-xs">
-              <Truck className="h-4 w-4" />
-            </div>
-          )}
+      <div className="flex items-center justify-between gap-3 text-xs sm:text-sm">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-2xs">
+            {isUnlocked ? <CheckCircle2 className="h-4 w-4" /> : <User className="h-4 w-4" />}
+          </div>
 
-          <p className="text-xs sm:text-sm font-bold text-foreground">
+          <p className="font-bold text-gray-900">
             {isUnlocked ? (
-              <span className="flex items-center gap-1.5 text-emerald-800">
-                <Sparkles className="h-4 w-4 text-emerald-600 animate-bounce" />
-                {isBn
-                  ? 'অভিনন্দন! আপনি ফ্রি ডেলিভারি আনলক করেছেন!'
-                  : 'Congratulations! You unlocked FREE Delivery!'}
+              <span className="text-emerald-800">
+                {isBn ? 'অভিনন্দন! আপনি ফ্রি ডেলিভারি পাচ্ছেন!' : 'Congratulations! Free Delivery Unlocked!'}
               </span>
             ) : (
               <span>
                 {isBn ? (
                   <>
-                    বিনামূল্যে ডেলিভারির জন্য আরও{' '}
-                    <span className="font-extrabold text-primary">
+                    আপনি আরও{' '}
+                    <span className="font-extrabold text-blue-600">
                       {formatPrice(remaining, 'bn')}
                     </span>{' '}
-                    টাকার ওষুধ যোগ করুন
+                    যোগ করলে ফ্রি ডেলিভারি পাবেন!
                   </>
                 ) : (
                   <>
                     Add{' '}
-                    <span className="font-extrabold text-primary">
+                    <span className="font-extrabold text-blue-600">
                       {formatPrice(remaining, 'en')}
                     </span>{' '}
-                    more for FREE Delivery
+                    more for FREE Delivery!
                   </>
                 )}
               </span>
@@ -76,18 +67,16 @@ export function FreeDeliveryProgress({
           </p>
         </div>
 
-        <span className="text-xs font-bold tracking-tight text-muted-foreground">
-          {percentage}%
+        <span className="text-xs font-extrabold text-gray-600 shrink-0">
+          {formatPrice(subtotal, isBn ? 'bn' : 'en')} / {formatPrice(FREE_DELIVERY_THRESHOLD, isBn ? 'bn' : 'en')}
         </span>
       </div>
 
       {/* Progress Bar Container */}
-      <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-muted">
+      <div className="relative h-2 w-full overflow-hidden rounded-full bg-blue-100/80">
         <motion.div
           className={`h-full rounded-full ${
-            isUnlocked
-              ? 'bg-gradient-to-r from-emerald-500 to-teal-500'
-              : 'bg-gradient-to-r from-primary to-accent'
+            isUnlocked ? 'bg-emerald-600' : 'bg-blue-600'
           }`}
           initial={{ width: 0 }}
           animate={{ width: `${percentage}%` }}

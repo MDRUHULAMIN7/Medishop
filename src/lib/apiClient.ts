@@ -210,6 +210,9 @@ export async function apiClient<T = any>(
 
   // Handle standard ApiResponse wrapper
   if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+    if ((data.meta || data.pagination) && Array.isArray(data.data)) {
+      (data.data as any).meta = data.meta || data.pagination;
+    }
     return data.data as T;
   }
 

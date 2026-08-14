@@ -4,6 +4,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Filter } from 'lucide-react';
 import { ProductFilterState, Brand } from '@/types/product';
+import { CategoryFilter } from './CategoryFilter';
 import { BrandFilter } from './BrandFilter';
 import { PriceRangeSlider } from './PriceRangeSlider';
 import { DiscountFilter } from './DiscountFilter';
@@ -15,6 +16,7 @@ interface FilterDrawerProps {
   onClose: () => void;
   filters: ProductFilterState;
   availableBrands: Brand[];
+  onSetCategories?: (categories: string[]) => void;
   onSetBrands: (brands: string[]) => void;
   onSetPriceRange: (min: number, max: number) => void;
   onSetDiscounts: (discounts: number[]) => void;
@@ -28,6 +30,7 @@ export function FilterDrawer({
   onClose,
   filters,
   availableBrands,
+  onSetCategories,
   onSetBrands,
   onSetPriceRange,
   onSetDiscounts,
@@ -83,6 +86,17 @@ export function FilterDrawer({
 
           {/* Scrollable Filters Content */}
           <div className="flex-1 overflow-y-auto py-4 space-y-5">
+            {/* Category Filter */}
+            {onSetCategories && (
+              <>
+                <CategoryFilter
+                  selectedCategories={filters.categories}
+                  onChange={onSetCategories}
+                />
+                <hr className="border-border/60" />
+              </>
+            )}
+
             {/* In Stock */}
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-foreground">

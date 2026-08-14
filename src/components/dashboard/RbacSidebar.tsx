@@ -55,9 +55,9 @@ export function RbacSidebar({
     catalog: true,
     clinical: true,
     sales: true,
-    marketing: false,
-    analytics: false,
-    system: false,
+    marketing: true,
+    analytics: true,
+    system: true,
   });
 
   const toggleCategory = (key: string) => {
@@ -67,78 +67,74 @@ export function RbacSidebar({
     }));
   };
 
-  const handleSubItemClick = (tab: string, targetPath?: string) => {
+  const handleSubItemClick = (tab: string) => {
     setActiveTab(tab as RbacTabId);
     onCloseMobile();
-    if (targetPath) {
-      router.push(targetPath);
-    } else {
-      router.push(`/dashboard/admin?tab=${tab}`);
-    }
+    router.push(`/dashboard/admin?tab=${tab}`);
   };
 
   const CATEGORIES = [
     {
       key: 'catalog',
-      titleBn: 'ফার্মা ক্যাটালগ ও স্টক',
+      titleBn: 'ওষুধ ক্যাটালগ ও ইনভেন্টরি',
       titleEn: 'Pharma Catalog & Stock',
       icon: Package,
       items: [
-        { id: 'products', labelBn: 'ওষুধ ও পণ্য ক্যাটালগ', labelEn: 'Medicine Catalog', icon: Pill },
-        { id: 'categories', labelBn: 'ফার্মেসি ক্যাটাগরি', labelEn: 'Pharmacy Categories', icon: FolderTree },
-        { id: 'brands', labelBn: 'ফার্মাসিউটিক্যালস ব্র্যান্ডস', labelEn: 'Pharma Brands (DGDA)', icon: Building2 },
-        { id: 'inventory', labelBn: 'শেয়ার্ড ইনভেন্টরি ও ব্যাচ', labelEn: 'Inventory & Batches', icon: Boxes, targetPath: '/dashboard/inventory' },
-        { id: 'ledger', labelBn: 'অডিট লেজার ট্রেইল', labelEn: 'Stock Audit Ledger', icon: History },
+        { id: 'products', labelBn: 'সকল ওষুধ ও প্রোডাক্টস', labelEn: 'Medicine & Product Catalog', icon: Pill },
+        { id: 'categories', labelBn: 'চিকিৎসা ও ওষুধ ক্যাটাগরি', labelEn: 'Pharmacy Categories', icon: FolderTree },
+        { id: 'brands', labelBn: 'ডিজিডিএ নিবন্ধিত ব্রান্ডস', labelEn: 'DGDA Pharma Brands', icon: Building2 },
+        { id: 'inventory', labelBn: 'ইনভেন্টরি ও ব্যাচ ট্র্যাকিং', labelEn: 'Inventory & Batches', icon: Boxes },
+        { id: 'ledger', labelBn: 'স্টক মুভমেন্ট অডিট লেজার', labelEn: 'Stock Audit Ledger', icon: History },
       ],
     },
     {
       key: 'clinical',
-      titleBn: 'ক্লিনিক্যাল ও পিওএস সেলস',
-      titleEn: 'Clinical & POS Operations',
+      titleBn: 'ক্লিনিক্যাল সার্ভিসেস ও পিওএস',
+      titleEn: 'Clinical Services & POS',
       icon: Stethoscope,
       items: [
-        { id: 'pos_sales', labelBn: 'কাউন্টার পজ বিক্রয় (POS)', labelEn: 'In-Store POS Terminal', icon: Store, targetPath: '/dashboard/sales', color: 'bg-emerald-600' },
-        { id: 'prescriptions', labelBn: 'প্রেসক্রিপশন অডিট কিউ', labelEn: 'Prescription Queue', icon: FileCheck2, color: 'bg-amber-600' },
+        { id: 'pos_sales', labelBn: 'ইন-স্টোর পিওএস কাউন্টার', labelEn: 'In-Store POS Terminal', icon: Store, color: 'bg-emerald-600' },
+        { id: 'prescriptions', labelBn: 'প্রেসক্রিপশন ভেরিফিকেশন কিউ', labelEn: 'Pharmacist Rx Verification', icon: FileCheck2, color: 'bg-amber-600' },
       ],
     },
     {
       key: 'sales',
-      titleBn: 'সেলস ও কাস্টমার ডিরেক্টরি',
-      titleEn: 'Orders & Customers',
+      titleBn: 'কাস্টমার অর্ডার ও একাউন্টস',
+      titleEn: 'Orders & Customer Directory',
       icon: ShoppingBag,
       items: [
-        { id: 'orders', labelBn: 'সকল কাস্টমার অর্ডার', labelEn: 'Customer Orders', icon: ShoppingBag },
-        { id: 'users', labelBn: 'লাইভ কাস্টমার ডিরেক্টরি', labelEn: 'User Directory (Live DB)', icon: Users },
+        { id: 'orders', labelBn: 'অনলাইন কাস্টমার অর্ডারসমূহ', labelEn: 'Customer Orders', icon: ShoppingBag },
+        { id: 'users', labelBn: 'নিবন্ধিত কাস্টমার ডিরেক্টরি', labelEn: 'Customer Accounts Directory', icon: Users },
       ],
     },
     {
       key: 'marketing',
-      titleBn: 'মার্কেটিং ও অফার প্রমোশন',
-      titleEn: 'Marketing & Offers',
+      titleBn: 'মার্কেটিং, কুপন ও স্লাইডার',
+      titleEn: 'Marketing & Hero Sliders',
       icon: Megaphone,
       items: [
-        { id: 'coupons', labelBn: 'ডিসকাউন্ট কুপন ও কোড', labelEn: 'Coupons & Promo Codes', icon: Ticket },
-        { id: 'banners', labelBn: 'হিরো ব্যানার ও স্লাইডার', labelEn: 'Hero Banner Slider', icon: ImageIcon },
-        { id: 'reviews', labelBn: 'রিভিউ ও রেটিং মোডারেশন', labelEn: 'Reviews & Rating', icon: Star },
+        { id: 'coupons', labelBn: 'প্রমোশনাল কুপন ও ডিসকাউন্ট', labelEn: 'Coupons & Promo Codes', icon: Ticket },
+        { id: 'banners', labelBn: 'হোমপেজ লাইভ ব্যানার স্লাইডার', labelEn: 'Homepage Hero Slider', icon: ImageIcon },
+        { id: 'reviews', labelBn: 'কাস্টমার রিভিউ মোডারেশন', labelEn: 'Product Reviews & Ratings', icon: Star },
       ],
     },
     {
       key: 'analytics',
-      titleBn: 'রিপোর্টস ও বিজনেস ফাইন্যান্স',
-      titleEn: 'Reports & Analytics',
+      titleBn: 'ব্যবসা এ্যানালিটিক্স ও রিপোর্ট',
+      titleEn: 'Business Reports & Finance',
       icon: BarChart3,
       items: [
-        { id: 'reports', labelBn: 'সেলস ও সম্পদ ভ্যালুয়েশন', labelEn: 'Reports & Valuation', icon: BarChart3 },
+        { id: 'reports', labelBn: 'সেলস রিপোর্ট ও সম্পদ ভ্যালু', labelEn: 'Sales & Asset Valuation', icon: BarChart3 },
       ],
     },
     {
       key: 'system',
-      titleBn: 'সিস্টেম ও স্টাফ পারমিশন',
-      titleEn: 'System Control & RBAC',
+      titleBn: 'সাইট ব্র্যান্ডিং ও এক্সেস কন্ট্রোল',
+      titleEn: 'Branding & Access Control',
       icon: ShieldCheck,
       items: [
-        { id: 'staff', labelBn: 'স্টাফ অ্যাকাউন্ট ও রোলস (RBAC)', labelEn: 'Staff & Roles (RBAC)', icon: ShieldCheck },
-        { id: 'settings', labelBn: 'সাইট সেটিংস ও ব্র্যান্ডিং', labelEn: 'Site Settings & Dynamic Branding', icon: Settings },
+        { id: 'staff', labelBn: 'ফার্মেসি স্টাফ ও পারমিশন ম্যাট্রিক্স', labelEn: 'Staff & Access Roles', icon: ShieldCheck },
+        { id: 'settings', labelBn: 'সাইট ব্র্যান্ডিং ও গ্লোবাল সেটিংস', labelEn: 'Site Branding & Dynamic Settings', icon: Settings },
       ],
     },
   ];
@@ -185,7 +181,7 @@ export function RbacSidebar({
         >
           <div className="flex items-center gap-3">
             <LayoutDashboard className="h-4.5 w-4.5 shrink-0" />
-            <span>{isBn ? 'ওভারভিউ ও অ্যানালিটিক্স' : 'Overview & Analytics'}</span>
+            <span>{isBn ? 'ওভারভিউ ও ড্যাশবোর্ড' : 'Overview & Dashboard'}</span>
           </div>
           <span className="rounded-full bg-emerald-500/20 text-emerald-600 px-2 py-0.5 text-[10px] font-bold">
             Live
@@ -241,7 +237,7 @@ export function RbacSidebar({
                         <button
                           key={subItem.id}
                           type="button"
-                          onClick={() => handleSubItemClick(subItem.id, subItem.targetPath)}
+                          onClick={() => handleSubItemClick(subItem.id)}
                           className={`w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
                             isActive
                               ? `${(subItem as any).color || 'bg-primary'} text-white font-black shadow-md`

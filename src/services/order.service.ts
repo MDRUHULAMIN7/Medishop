@@ -1,6 +1,7 @@
-import { apiClient } from '@/lib/apiClient';
+import { apiClient, getAccessToken } from '@/lib/apiClient';
 
 export interface CheckoutPayload {
+  items?: Array<{ productId: string; quantity: number }>;
   shippingAddressId?: string;
   shippingAddress?: {
     recipientName: string;
@@ -87,6 +88,40 @@ export class OrderService {
       method: 'PATCH',
       body: JSON.stringify({ orderStatus: 'cancelled', note }),
     });
+  }
+
+  /**
+   * Download PDF Invoice directly as PDF File
+   */
+  public async downloadInvoicePdf(id: string, orderNumber?: string): Promise<void> {
+    if (typeof window === 'undefined') return;
+    try {
+      const token = getAccessToken();
+
+      const authHeader = token ? (token.startsWith('Bearer ') ? token : `Bearer ${token}`) : '';
+
+      const response = await fetch(`http://localhost:5000/api/v1/orders/${id}/invoice/download`, {
+        headers: {
+          ...(authHeader ? { Authorization: authHeader } : {}),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to download PDF: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `invoice-${orderNumber || id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('PDF download error:', err);
+    }
   }
 }
 

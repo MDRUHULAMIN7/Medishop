@@ -265,11 +265,11 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
                   /* Expanded Unit & Quantity Selection Flow */
                   <motion.div
                     key="expanded-flow"
-                    initial={{ opacity: 0, y: 4, scale: 0.98 }}
+                    initial={{ opacity: 0, y: 6, scale: 0.94 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 4, scale: 0.98 }}
-                    transition={{ duration: 0.15 }}
-                    className="flex flex-col gap-2 rounded-xl border border-primary/30 bg-background p-2 shadow-sm"
+                    exit={{ opacity: 0, y: 6, scale: 0.94 }}
+                    transition={{ type: 'spring', stiffness: 420, damping: 26 }}
+                    className="flex flex-col gap-2 rounded-xl border border-primary/30 bg-background/95 backdrop-blur-md p-2.5 shadow-xl"
                   >
                     {/* Header bar with close button */}
                     <div className="flex items-center justify-between border-b border-border/60 pb-1.5">

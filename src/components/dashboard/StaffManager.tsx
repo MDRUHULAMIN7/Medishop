@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Users,
   ShieldCheck,
@@ -10,77 +10,59 @@ import {
   Check,
   X,
   KeyRound,
+  RefreshCw,
 } from 'lucide-react';
 import { useAppSelector } from '@/store';
+import { adminService, AdminUserListItem } from '@/services/admin.service';
 import { toast } from 'sonner';
-
-interface StaffUser {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  role: string;
-  status: 'active' | 'blocked';
-  lastLogin: string;
-}
 
 export function StaffManager() {
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
 
-  const [staffList, setStaffList] = useState<StaffUser[]>([
-    {
-      id: 'st-1',
-      name: 'Dr. Rafiqul Islam',
-      email: 'pharmacist@medishop.com.bd',
-      phone: '+880 1711-223344',
-      role: 'pharmacist_verifier',
-      status: 'active',
-      lastLogin: 'Today, 10:15 AM',
-    },
-    {
-      id: 'st-2',
-      name: 'Kamrul Hasan',
-      email: 'inventory@medishop.com.bd',
-      phone: '+880 1819-556677',
-      role: 'inventory_manager',
-      status: 'active',
-      lastLogin: 'Yesterday, 04:30 PM',
-    },
-    {
-      id: 'st-3',
-      name: 'Nusrat Jahan',
-      email: 'orders@medishop.com.bd',
-      phone: '+880 1912-889900',
-      role: 'order_manager',
-      status: 'active',
-      lastLogin: 'Today, 11:00 AM',
-    },
-  ]);
-
+  const [staffList, setStaffList] = useState<AdminUserListItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteName, setInviteName] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('pharmacist_verifier');
 
-  const handleInviteStaff = (e: React.FormEvent) => {
+  const fetchStaff = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await adminService.listUsers();
+      // Filter out pure customer users to show staff members
+      const staffOnly = res.users.filter((u) => u.role !== 'customer');
+      setStaffList(staffOnly);
+    } catch (err: any) {
+      console.error('Failed to load staff list:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStaff();
+  }, [fetchStaff]);
+
+  const handleInviteStaff = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inviteName.trim() || !inviteEmail.trim()) {
       toast.error(isBn ? 'নাম ও ইমেইল পূরণ করুন' : 'Please provide staff name and email');
       return;
     }
 
-    const newStaff: StaffUser = {
+    const newStaffItem: AdminUserListItem = {
       id: `st-${Date.now()}`,
       name: inviteName.trim(),
       email: inviteEmail.trim(),
       phone: '+880 1700-000000',
       role: inviteRole,
       status: 'active',
-      lastLogin: 'Never',
+      createdAt: new Date().toISOString(),
     };
 
-    setStaffList((prev) => [...prev, newStaff]);
+    setStaffList((prev) => [...prev, newStaffItem]);
     toast.success(
       isBn
         ? `"${inviteName}" কে সফলভাবে ইনভাইট করা হয়েছে!`
@@ -91,13 +73,15 @@ export function StaffManager() {
     setInviteEmail('');
   };
 
-  const handleToggleStatus = (id: string) => {
-    setStaffList((prev) =>
-      prev.map((st) =>
-        st.id === id ? { ...st, status: st.status === 'active' ? 'blocked' : 'active' } : st
-      )
-    );
-    toast.info(isBn ? 'স্টাফ একাউন্ট স্ট্যাটাস পরিবর্তন করা হয়েছে' : 'Staff status toggled');
+  const handleToggleStatus = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'active' ? 'blocked' : 'active';
+    try {
+      await adminService.updateUserStatus(id, newStatus);
+      toast.success(isBn ? 'স্টাফ একাউন্ট স্ট্যাটাস পরিবর্তন করা হয়েছে' : 'Staff status updated');
+      fetchStaff();
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update status');
+    }
   };
 
   return (
@@ -119,14 +103,26 @@ export function StaffManager() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowInviteModal(true)}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-primary-dark transition-all cursor-pointer w-fit"
-        >
-          <Plus className="h-4 w-4" />
-          <span>{isBn ? 'নতুন স্টাফ ইনভাইট' : 'Invite Staff Member'}</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowInviteModal(true)}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-primary-dark transition-all cursor-pointer w-fit"
+          >
+            <Plus className="h-4 w-4" />
+            <span>{isBn ? 'নতুন স্টাফ ইনভাইট' : 'Invite Staff Member'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={fetchStaff}
+            disabled={loading}
+            className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-3.5 py-2 text-xs font-bold text-foreground shadow-2xs hover:bg-muted transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <span>{isBn ? 'রিফ্রেশ' : 'Refresh'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Staff List Table */}
@@ -138,57 +134,71 @@ export function StaffManager() {
                 <th className="py-3.5 px-4">Staff Name & Email</th>
                 <th className="py-3.5 px-4">Assigned Role</th>
                 <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4">Last Active</th>
+                <th className="py-3.5 px-4">Joined Date</th>
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">
-              {staffList.map((st) => (
-                <tr key={st.id} className="hover:bg-muted/30 transition-colors">
-                  <td className="py-3.5 px-4">
-                    <div className="flex flex-col">
-                      <span className="font-bold text-foreground sm:text-sm">{st.name}</span>
-                      <span className="text-[11px] text-muted-foreground">{st.email}</span>
-                    </div>
-                  </td>
-
-                  <td className="py-3.5 px-4">
-                    <span className="inline-block rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-black text-primary uppercase">
-                      {st.role.replace('_', ' ')}
-                    </span>
-                  </td>
-
-                  <td className="py-3.5 px-4">
-                    <span
-                      className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase ${
-                        st.status === 'active'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-rose-100 text-rose-800'
-                      }`}
-                    >
-                      {st.status}
-                    </span>
-                  </td>
-
-                  <td className="py-3.5 px-4 text-muted-foreground font-medium">
-                    {st.lastLogin}
-                  </td>
-
-                  <td className="py-3.5 px-4 text-right">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleStatus(st.id)}
-                      className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
-                        st.status === 'active'
-                          ? 'border border-rose-200 text-rose-600 hover:bg-rose-50'
-                          : 'border border-emerald-200 text-emerald-600 hover:bg-emerald-50'
-                      }`}
-                    >
-                      {st.status === 'active' ? (isBn ? 'ব্লক করুন' : 'Disable') : (isBn ? 'সচল করুন' : 'Enable')}
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="py-12 text-center text-xs text-muted-foreground font-medium">
+                    {isBn ? 'স্টাফ ডাটা লোড হচ্ছে...' : 'Loading staff directory...'}
                   </td>
                 </tr>
-              ))}
+              ) : staffList.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-12 text-center text-xs text-muted-foreground font-medium">
+                    {isBn ? 'কোনো স্টাফ অ্যাকাউন্ট পাওয়া যায়নি। উপরে ইনভাইট বাটনে ক্লিক করে নতুন স্টাফ যোগ করুন।' : 'No staff accounts registered yet. Click Invite Staff Member above to add one.'}
+                  </td>
+                </tr>
+              ) : (
+                staffList.map((st) => (
+                  <tr key={st.id} className="hover:bg-muted/30 transition-colors">
+                    <td className="py-3.5 px-4">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-foreground sm:text-sm">{st.name}</span>
+                        <span className="text-[11px] text-muted-foreground">{st.email}</span>
+                      </div>
+                    </td>
+
+                    <td className="py-3.5 px-4">
+                      <span className="inline-block rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-black text-primary uppercase">
+                        {st.role.replace('_', ' ')}
+                      </span>
+                    </td>
+
+                    <td className="py-3.5 px-4">
+                      <span
+                        className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase ${
+                          st.status === 'active'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-rose-100 text-rose-800'
+                        }`}
+                      >
+                        {st.status}
+                      </span>
+                    </td>
+
+                    <td className="py-3.5 px-4 text-muted-foreground font-medium">
+                      {st.createdAt ? new Date(st.createdAt).toLocaleDateString() : 'N/A'}
+                    </td>
+
+                    <td className="py-3.5 px-4 text-right">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStatus(st.id, st.status)}
+                        className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
+                          st.status === 'active'
+                            ? 'border border-rose-200 text-rose-600 hover:bg-rose-50'
+                            : 'border border-emerald-200 text-emerald-600 hover:bg-emerald-50'
+                        }`}
+                      >
+                        {st.status === 'active' ? (isBn ? 'ব্লক করুন' : 'Disable') : (isBn ? 'সচল করুন' : 'Enable')}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -254,7 +264,7 @@ export function StaffManager() {
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-primary px-5 py-2 font-bold text-white shadow-xs hover:bg-primary-dark"
+                  className="rounded-xl bg-primary px-5 py-2 font-bold text-white shadow-xs hover:bg-primary-dark cursor-pointer"
                 >
                   Send Invite
                 </button>
