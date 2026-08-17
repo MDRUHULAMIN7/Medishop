@@ -82,7 +82,10 @@ export function LiveChatWidget({ isOpen, onClose }: LiveChatWidgetProps) {
 
   useEffect(() => {
     if (isOpen && isAuthenticated && token) {
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:5000';
+      const backendUrl =
+        process.env.NEXT_PUBLIC_SOCKET_URL ||
+        process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, '') ||
+        'http://localhost:5000';
       const socket = io(backendUrl, {
         auth: { token },
       });
