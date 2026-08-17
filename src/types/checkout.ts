@@ -32,6 +32,7 @@ export interface PaymentMethod {
   descriptionEn: string;
   descriptionBn: string;
   iconName: string;
+  logo?: string;
   isAvailable: boolean;
   instructionsEn?: string;
   instructionsBn?: string;

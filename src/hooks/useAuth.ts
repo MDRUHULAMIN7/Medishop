@@ -349,7 +349,11 @@ export function useAuth() {
       clearAccessToken();
       dispatch(logoutAction());
       toast.info(isBn ? 'সফলভাবে লগআউট করা হয়েছে।' : 'Logged out successfully.');
-      router.push('/');
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      } else {
+        router.replace('/');
+      }
     }
   };
 

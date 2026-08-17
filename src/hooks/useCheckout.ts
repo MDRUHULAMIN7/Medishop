@@ -63,6 +63,7 @@ export function useCheckout() {
               descriptionEn: m.descriptionEn || m.accountNumber || 'Pay securely',
               descriptionBn: m.descriptionBn || m.instructionsBn || 'পণ্য পেয়ে পরিশোধ করুন',
               iconName: m.code === 'card' ? 'CreditCard' : m.code === 'cod' ? 'Banknote' : 'Smartphone',
+              logo: m.logo,
               isAvailable: true,
             }));
             setAvailablePaymentMethods(mappedPaymentMethods);

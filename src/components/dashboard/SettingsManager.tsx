@@ -19,6 +19,8 @@ import {
   Upload,
   RefreshCw,
   Sparkles,
+  Edit3,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { useAppSelector } from '@/store';
 import {
@@ -61,9 +63,11 @@ export function SettingsManager() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingPayLogo, setUploadingPayLogo] = useState(false);
 
-  // New Payment Method Modal State
+  // Payment Method Modal States
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
+  const [editingPayMethod, setEditingPayMethod] = useState<DynamicPaymentMethod | null>(null);
   const [newPayMethod, setNewPayMethod] = useState<Partial<DynamicPaymentMethod>>({
     code: '',
     nameBn: '',
@@ -71,6 +75,7 @@ export function SettingsManager() {
     accountNumber: '',
     instructionsBn: '',
     instructionsEn: '',
+    logo: '',
     isActive: true,
   });
 
@@ -294,6 +299,29 @@ export function SettingsManager() {
     });
   };
 
+  // Upload Payment Logo
+  const handlePaymentLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingPayLogo(true);
+      const res = await uploadService.uploadImage(file, 'general');
+      if (res?.url) {
+        if (isEdit && editingPayMethod) {
+          setEditingPayMethod({ ...editingPayMethod, logo: res.url });
+        } else {
+          setNewPayMethod((prev) => ({ ...prev, logo: res.url }));
+        }
+        toast.success(isBn ? 'পেমেন্ট লোগো সফলভাবে আপলোড হয়েছে!' : 'Payment logo uploaded successfully!');
+      }
+    } catch {
+      toast.error(isBn ? 'লোগো আপলোড ব্যর্থ হয়েছে' : 'Failed to upload logo');
+    } finally {
+      setUploadingPayLogo(false);
+    }
+  };
+
   // Add Payment Method
   const handleAddPaymentMethod = () => {
     if (!newPayMethod.nameBn || !newPayMethod.code) {
@@ -309,6 +337,7 @@ export function SettingsManager() {
       accountNumber: newPayMethod.accountNumber || '',
       instructionsBn: newPayMethod.instructionsBn || '',
       instructionsEn: newPayMethod.instructionsEn || '',
+      logo: newPayMethod.logo || '',
       isActive: Boolean(newPayMethod.isActive),
     };
 
@@ -320,9 +349,30 @@ export function SettingsManager() {
       },
     }));
 
-    setNewPayMethod({ code: '', nameBn: '', nameEn: '', accountNumber: '', isActive: true });
+    setNewPayMethod({ code: '', nameBn: '', nameEn: '', accountNumber: '', logo: '', isActive: true });
     setShowAddPaymentModal(false);
     toast.success(isBn ? 'নতুন পেমেন্ট পদ্ধতি যুক্ত হয়েছে!' : 'New payment method added!');
+  };
+
+  // Update Existing Payment Method
+  const handleUpdatePaymentMethod = () => {
+    if (!editingPayMethod || !editingPayMethod.nameBn || !editingPayMethod.code) {
+      toast.error(isBn ? 'পেমেন্ট পদ্ধতির নাম ও কোড দিন' : 'Please provide name and code');
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      payment: {
+        ...prev.payment,
+        methods: (prev.payment.methods || []).map((m) =>
+          m.id === editingPayMethod.id ? editingPayMethod : m
+        ),
+      },
+    }));
+
+    setEditingPayMethod(null);
+    toast.success(isBn ? 'পেমেন্ট মেথড আপডেট হয়েছে!' : 'Payment method updated!');
   };
 
   // Delete Payment Method
@@ -804,39 +854,70 @@ export function SettingsManager() {
                         : 'border-border bg-muted/20 opacity-70'
                     }`}
                   >
-                    <div className="space-y-1 min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-foreground text-sm">
-                          {isBn ? method.nameBn : method.nameEn}
-                        </span>
-                        <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-[10px] font-bold text-muted-foreground uppercase">
-                          Code: {method.code}
-                        </span>
-                        {method.isActive ? (
-                          <span className="rounded-full bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[10px] font-black text-emerald-800 dark:text-emerald-300 border border-emerald-300">
-                            Active
-                          </span>
+                    <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                      {/* Logo Thumbnail / Icon */}
+                      <div className="flex h-12 w-16 shrink-0 items-center justify-center rounded-xl border border-border/80 bg-background p-1 shadow-2xs overflow-hidden">
+                        {method.logo && method.logo.trim() !== '' ? (
+                          <div className="relative h-full w-full">
+                            <Image
+                              src={method.logo}
+                              alt={method.nameEn || method.code}
+                              fill
+                              sizes="64px"
+                              className="object-contain"
+                            />
+                          </div>
                         ) : (
-                          <span className="rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-[10px] font-black text-gray-600 dark:text-gray-400 border border-gray-300">
-                            Inactive
+                          <span className="text-[10px] font-black uppercase text-primary">
+                            {method.code}
                           </span>
                         )}
                       </div>
 
-                      {method.accountNumber && (
-                        <p className="text-primary font-bold text-[11px]">
-                          Account/Number: {method.accountNumber}
-                        </p>
-                      )}
-                      {method.instructionsBn && (
-                        <p className="text-muted-foreground text-[11px]">
-                          Instructions: {method.instructionsBn}
-                        </p>
-                      )}
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-extrabold text-foreground text-sm">
+                            {isBn ? method.nameBn : method.nameEn}
+                          </span>
+                          <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-[10px] font-bold text-muted-foreground uppercase">
+                            Code: {method.code}
+                          </span>
+                          {method.isActive ? (
+                            <span className="rounded-full bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[10px] font-black text-emerald-800 dark:text-emerald-300 border border-emerald-300">
+                              Active
+                            </span>
+                          ) : (
+                            <span className="rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-[10px] font-black text-gray-600 dark:text-gray-400 border border-gray-300">
+                              Inactive
+                            </span>
+                          )}
+                        </div>
+
+                        {method.accountNumber && (
+                          <p className="text-primary font-bold text-[11px]">
+                            Account/Number: {method.accountNumber}
+                          </p>
+                        )}
+                        {method.instructionsBn && (
+                          <p className="text-muted-foreground text-[11px]">
+                            Instructions: {method.instructionsBn}
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     {/* Action Controls */}
                     <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setEditingPayMethod({ ...method })}
+                        className="inline-flex items-center gap-1 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-bold text-foreground hover:bg-muted transition-all cursor-pointer"
+                        title={isBn ? 'এডিট করুন' : 'Edit Method'}
+                      >
+                        <Edit3 className="h-3.5 w-3.5 text-primary" />
+                        <span>{isBn ? 'এডিট' : 'Edit'}</span>
+                      </button>
+
                       <button
                         type="button"
                         onClick={() => togglePaymentMethodActive(method.id)}
@@ -866,12 +947,56 @@ export function SettingsManager() {
               {/* Add Payment Method Modal */}
               {showAddPaymentModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                  <div className="w-full max-w-md rounded-3xl bg-background p-6 space-y-4 shadow-xl border border-border">
+                  <div className="w-full max-w-md rounded-3xl bg-background p-6 space-y-4 shadow-xl border border-border max-h-[90vh] overflow-y-auto custom-scrollbar">
                     <h4 className="text-base font-extrabold text-foreground border-b border-border pb-2">
                       {isBn ? 'নতুন পেমেন্ট মেথড যুক্ত করুন' : 'Add New Payment Method'}
                     </h4>
 
                     <div className="space-y-3 text-xs">
+                      {/* Logo Upload Section */}
+                      <div>
+                        <label className="block font-bold text-foreground mb-1">Payment Method Logo (Optional):</label>
+                        <div className="flex items-center gap-3">
+                          {newPayMethod.logo ? (
+                            <div className="relative h-12 w-20 shrink-0 overflow-hidden rounded-xl border border-border bg-white p-1">
+                              <Image
+                                src={newPayMethod.logo}
+                                alt="Logo"
+                                fill
+                                sizes="80px"
+                                className="object-contain"
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex h-12 w-20 shrink-0 items-center justify-center rounded-xl border border-dashed border-border bg-muted/30 text-muted-foreground">
+                              <ImageIcon className="h-5 w-5" />
+                            </div>
+                          )}
+
+                          <div className="flex-1 space-y-1">
+                            <label className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary hover:text-white cursor-pointer transition-all">
+                              {uploadingPayLogo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                              <span>{uploadingPayLogo ? (isBn ? 'আপলোড হচ্ছে...' : 'Uploading...') : (isBn ? 'লোগো আপলোড করুন' : 'Upload Logo')}</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handlePaymentLogoUpload(e, false)}
+                                className="hidden"
+                              />
+                            </label>
+                            {newPayMethod.logo && (
+                              <button
+                                type="button"
+                                onClick={() => setNewPayMethod({ ...newPayMethod, logo: '' })}
+                                className="block text-[11px] font-bold text-rose-500 hover:underline cursor-pointer"
+                              >
+                                {isBn ? 'লোগো রিমুভ' : 'Remove logo'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
                       <div>
                         <label className="block font-bold text-foreground mb-1">Method Code (Unique identifier):</label>
                         <input
@@ -932,16 +1057,140 @@ export function SettingsManager() {
                       <button
                         type="button"
                         onClick={() => setShowAddPaymentModal(false)}
-                        className="rounded-xl border border-border px-4 py-2 text-xs font-bold text-muted-foreground hover:bg-muted"
+                        className="rounded-xl border border-border px-4 py-2 text-xs font-bold text-muted-foreground hover:bg-muted cursor-pointer"
                       >
                         Cancel
                       </button>
                       <button
                         type="button"
                         onClick={handleAddPaymentMethod}
-                        className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white hover:bg-primary-dark"
+                        className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white hover:bg-primary-dark cursor-pointer"
                       >
                         Save Method
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Edit Payment Method Modal */}
+              {editingPayMethod && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                  <div className="w-full max-w-md rounded-3xl bg-background p-6 space-y-4 shadow-xl border border-border max-h-[90vh] overflow-y-auto custom-scrollbar">
+                    <h4 className="text-base font-extrabold text-foreground border-b border-border pb-2">
+                      {isBn ? 'পেমেন্ট মেথড এডিট করুন' : 'Edit Payment Method'}
+                    </h4>
+
+                    <div className="space-y-3 text-xs">
+                      {/* Logo Upload Section */}
+                      <div>
+                        <label className="block font-bold text-foreground mb-1">Payment Method Logo:</label>
+                        <div className="flex items-center gap-3">
+                          {editingPayMethod.logo ? (
+                            <div className="relative h-12 w-20 shrink-0 overflow-hidden rounded-xl border border-border bg-white p-1">
+                              <Image
+                                src={editingPayMethod.logo}
+                                alt="Logo"
+                                fill
+                                sizes="80px"
+                                className="object-contain"
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex h-12 w-20 shrink-0 items-center justify-center rounded-xl border border-dashed border-border bg-muted/30 text-muted-foreground">
+                              <ImageIcon className="h-5 w-5" />
+                            </div>
+                          )}
+
+                          <div className="flex-1 space-y-1">
+                            <label className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary hover:text-white cursor-pointer transition-all">
+                              {uploadingPayLogo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                              <span>{uploadingPayLogo ? (isBn ? 'আপলোড হচ্ছে...' : 'Uploading...') : (isBn ? 'লোগো পরিবর্তন করুন' : 'Upload / Change Logo')}</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handlePaymentLogoUpload(e, true)}
+                                className="hidden"
+                              />
+                            </label>
+                            {editingPayMethod.logo && (
+                              <button
+                                type="button"
+                                onClick={() => setEditingPayMethod({ ...editingPayMethod, logo: '' })}
+                                className="block text-[11px] font-bold text-rose-500 hover:underline cursor-pointer"
+                              >
+                                {isBn ? 'লোগো রিমুভ' : 'Remove logo'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-foreground mb-1">Method Code:</label>
+                        <input
+                          type="text"
+                          value={editingPayMethod.code || ''}
+                          onChange={(e) => setEditingPayMethod({ ...editingPayMethod, code: e.target.value })}
+                          className="w-full rounded-xl border border-border bg-background p-2.5 text-xs"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-foreground mb-1">Name (Bangla):</label>
+                        <input
+                          type="text"
+                          value={editingPayMethod.nameBn || ''}
+                          onChange={(e) => setEditingPayMethod({ ...editingPayMethod, nameBn: e.target.value })}
+                          className="w-full rounded-xl border border-border bg-background p-2.5 text-xs"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-foreground mb-1">Name (English):</label>
+                        <input
+                          type="text"
+                          value={editingPayMethod.nameEn || ''}
+                          onChange={(e) => setEditingPayMethod({ ...editingPayMethod, nameEn: e.target.value })}
+                          className="w-full rounded-xl border border-border bg-background p-2.5 text-xs"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-foreground mb-1">Account / Merchant Number (Optional):</label>
+                        <input
+                          type="text"
+                          value={editingPayMethod.accountNumber || ''}
+                          onChange={(e) => setEditingPayMethod({ ...editingPayMethod, accountNumber: e.target.value })}
+                          className="w-full rounded-xl border border-border bg-background p-2.5 text-xs"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-foreground mb-1">Instructions (Bangla):</label>
+                        <input
+                          type="text"
+                          value={editingPayMethod.instructionsBn || ''}
+                          onChange={(e) => setEditingPayMethod({ ...editingPayMethod, instructionsBn: e.target.value })}
+                          className="w-full rounded-xl border border-border bg-background p-2.5 text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-2 border-t border-border">
+                      <button
+                        type="button"
+                        onClick={() => setEditingPayMethod(null)}
+                        className="rounded-xl border border-border px-4 py-2 text-xs font-bold text-muted-foreground hover:bg-muted cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleUpdatePaymentMethod}
+                        className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white hover:bg-primary-dark cursor-pointer"
+                      >
+                        {isBn ? 'আপডেট সম্পন্ন করুন' : 'Update Method'}
                       </button>
                     </div>
                   </div>

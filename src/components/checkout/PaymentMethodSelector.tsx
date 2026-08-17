@@ -67,7 +67,7 @@ export function PaymentMethodSelector({
 
               {/* Centered Brand Icon */}
               <div className="flex h-full w-full items-center justify-center pt-1">
-                <PaymentBrandIcon code={method.id} isBn={isBn} />
+                <PaymentBrandIcon code={method.id} logo={method.logo} isBn={isBn} />
               </div>
             </button>
           );

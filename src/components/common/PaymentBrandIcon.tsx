@@ -1,17 +1,39 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { Building2, CreditCard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PaymentBrandIconProps {
   code: string;
+  logo?: string;
   className?: string;
   isBn?: boolean;
 }
 
-export function PaymentBrandIcon({ code, className, isBn = false }: PaymentBrandIconProps) {
+export function PaymentBrandIcon({ code, logo, className, isBn = false }: PaymentBrandIconProps) {
   const normalized = (code || '').toLowerCase().trim();
+
+  // If a custom uploaded logo exists, display the image
+  if (logo && logo.trim() !== '') {
+    return (
+      <div className={cn('flex flex-col items-center justify-center gap-1 text-center', className)}>
+        <div className="relative h-9 w-16 sm:h-10 sm:w-20 shrink-0 overflow-hidden rounded-lg p-0.5">
+          <Image
+            src={logo}
+            alt={code}
+            fill
+            sizes="80px"
+            className="object-contain"
+          />
+        </div>
+        <span className="text-[10px] font-bold text-foreground capitalize truncate max-w-[90px]">
+          {code}
+        </span>
+      </div>
+    );
+  }
 
   // 1. Cash on Delivery (COD)
   if (normalized === 'cod' || normalized.includes('cash')) {

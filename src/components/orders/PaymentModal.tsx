@@ -269,7 +269,7 @@ export function PaymentModal({
                             {isSelected && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
                           </span>
                           <div className="flex h-full w-full items-center justify-center pt-1">
-                            <PaymentBrandIcon code={code} isBn={isBn} />
+                            <PaymentBrandIcon code={code} logo={method.logo} isBn={isBn} />
                           </div>
                         </button>
                       );
