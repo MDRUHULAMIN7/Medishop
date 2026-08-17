@@ -4,6 +4,7 @@ import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAppSelector } from '@/store';
 import { cn } from '@/lib/utils';
+import { formatNumber } from '@/utils/cart';
 
 interface ProductPaginationProps {
   currentPage: number;
@@ -27,6 +28,7 @@ export function ProductPagination({
 
   const startItem = Math.max(1, (currentPage - 1) * limit + 1);
   const endItem = Math.min(currentPage * limit, totalCount);
+  const langKey = isBn ? 'bn' : 'en';
 
   // Generate page numbers range
   const getPageNumbers = () => {
@@ -56,8 +58,8 @@ export function ProductPagination({
       {/* Range Info */}
       <div className="text-xs text-muted-foreground font-semibold text-center sm:text-left">
         {isBn
-          ? `মোট ${totalCount} টি পণ্যের মধ্যে ${startItem} - ${endItem} টি দেখানো হচ্ছে`
-          : `Showing ${startItem}–${endItem} of ${totalCount} medicines`}
+          ? `মোট ${formatNumber(totalCount, 'bn')} টি পণ্যের মধ্যে ${formatNumber(startItem, 'bn')} - ${formatNumber(endItem, 'bn')} টি দেখানো হচ্ছে`
+          : `Showing ${formatNumber(startItem, 'en')}–${formatNumber(endItem, 'en')} of ${formatNumber(totalCount, 'en')} medicines`}
       </div>
 
       {/* Pagination Controls */}
@@ -106,7 +108,7 @@ export function ProductPagination({
                     : 'border border-border bg-background text-foreground hover:bg-muted hover:border-primary/50'
                 )}
               >
-                {num}
+                {formatNumber(num, langKey)}
               </button>
             );
           })}

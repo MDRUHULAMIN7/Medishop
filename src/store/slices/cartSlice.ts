@@ -2,11 +2,19 @@ import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { AppliedCoupon, CartItem, CartSummary } from '@/types/cart';
 import { PricingEngine } from '@/utils/pricing';
 
+export interface PreOrderModalState {
+  isOpen: boolean;
+  item: CartItem | null;
+  requestedQuantity: number;
+  availableStock: number;
+}
+
 export interface CartState {
   items: CartItem[];
   appliedCoupon: AppliedCoupon | null;
   isDrawerOpen: boolean;
   isHydrated: boolean;
+  preOrderModal: PreOrderModalState;
 }
 
 const initialState: CartState = {
@@ -14,34 +22,75 @@ const initialState: CartState = {
   appliedCoupon: null,
   isDrawerOpen: false,
   isHydrated: false,
+  preOrderModal: {
+    isOpen: false,
+    item: null,
+    requestedQuantity: 0,
+    availableStock: 0,
+  },
 };
 
 export const cartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
-    addToCart: (state, action: PayloadAction<CartItem>) => {
+    addToCart: (state, action: PayloadAction<CartItem & { allowPreOrder?: boolean }>) => {
       state.isHydrated = true;
       const existingIndex = state.items.findIndex(
-        (item) => item.productId === action.payload.productId
+        (item) =>
+          item.productId === action.payload.productId &&
+          (!action.payload.unit || item.unit === action.payload.unit)
       );
+
+      const maxStock =
+        action.payload.stock !== undefined
+          ? action.payload.stock
+          : existingIndex > -1 && state.items[existingIndex].stock !== undefined
+          ? state.items[existingIndex].stock
+          : 0;
+
+      // Reject adding regular cart items if there is no stock and pre-order is not specified
+      if (maxStock <= 0 && !action.payload.allowPreOrder) {
+        return;
+      }
 
       if (existingIndex > -1) {
         const currentQty = state.items[existingIndex].quantity;
         const addQty = action.payload.quantity || 1;
-        const maxStock =
-          action.payload.stock !== undefined
-            ? action.payload.stock
-            : state.items[existingIndex].stock !== undefined
-            ? state.items[existingIndex].stock
-            : 999;
-        state.items[existingIndex].quantity = Math.min(currentQty + addQty, maxStock);
+        if (action.payload.stock !== undefined) {
+          state.items[existingIndex].stock = action.payload.stock;
+        }
+
+        if (action.payload.allowPreOrder) {
+          const newQty = currentQty + addQty;
+          state.items[existingIndex].quantity = newQty;
+          state.items[existingIndex].preOrderQuantity = Math.max(0, newQty - maxStock);
+        } else {
+          const newQty = Math.min(currentQty + addQty, maxStock);
+          if (newQty > 0) {
+            state.items[existingIndex].quantity = newQty;
+          }
+        }
       } else {
-        const maxStock = action.payload.stock !== undefined ? action.payload.stock : 999;
-        state.items.push({
-          ...action.payload,
-          quantity: Math.min(action.payload.quantity || 1, maxStock),
-        });
+        const requested = action.payload.quantity || 1;
+        if (action.payload.allowPreOrder) {
+          state.items.push({
+            ...action.payload,
+            stock: maxStock,
+            quantity: requested,
+            preOrderQuantity: Math.max(0, requested - maxStock),
+          });
+        } else {
+          const finalQty = Math.min(requested, maxStock);
+          if (finalQty > 0) {
+            state.items.push({
+              ...action.payload,
+              stock: maxStock,
+              quantity: finalQty,
+              preOrderQuantity: 0,
+            });
+          }
+        }
       }
     },
 
@@ -55,20 +104,54 @@ export const cartSlice = createSlice({
 
     updateQuantity: (
       state,
-      action: PayloadAction<{ productId: string; quantity: number }>
+      action: PayloadAction<{ productId: string; quantity: number; allowPreOrder?: boolean }>
     ) => {
       const item = state.items.find((i) => i.productId === action.payload.productId);
       if (item) {
         if (action.payload.quantity <= 0) {
           state.items = state.items.filter((i) => i.productId !== action.payload.productId);
         } else {
-          const maxStock = item.stock !== undefined ? item.stock : 999;
-          item.quantity = Math.min(action.payload.quantity, maxStock);
+          const maxStock = item.stock !== undefined ? item.stock : 0;
+          if (action.payload.allowPreOrder) {
+            item.quantity = action.payload.quantity;
+            item.preOrderQuantity = Math.max(0, action.payload.quantity - maxStock);
+          } else {
+            if (maxStock <= 0) {
+              state.items = state.items.filter((i) => i.productId !== action.payload.productId);
+            } else {
+              item.quantity = Math.min(action.payload.quantity, maxStock);
+            }
+          }
         }
       }
       if (state.items.length === 0) {
         state.appliedCoupon = null;
       }
+    },
+
+    openPreOrderModal: (
+      state,
+      action: PayloadAction<{
+        item: CartItem;
+        requestedQuantity: number;
+        availableStock: number;
+      }>
+    ) => {
+      state.preOrderModal = {
+        isOpen: true,
+        item: action.payload.item,
+        requestedQuantity: action.payload.requestedQuantity,
+        availableStock: action.payload.availableStock,
+      };
+    },
+
+    closePreOrderModal: (state) => {
+      state.preOrderModal = {
+        isOpen: false,
+        item: null,
+        requestedQuantity: 0,
+        availableStock: 0,
+      };
     },
 
     applyCoupon: (state, action: PayloadAction<AppliedCoupon>) => {
@@ -111,6 +194,8 @@ export const {
   addToCart,
   removeFromCart,
   updateQuantity,
+  openPreOrderModal,
+  closePreOrderModal,
   applyCoupon,
   removeCoupon,
   clearCart,
@@ -126,6 +211,7 @@ export const selectCartItems = (state: { cart: CartState }) => state.cart.items;
 export const selectAppliedCoupon = (state: { cart: CartState }) => state.cart.appliedCoupon;
 export const selectIsCartDrawerOpen = (state: { cart: CartState }) => state.cart.isDrawerOpen;
 export const selectIsCartHydrated = (state: { cart: CartState }) => state.cart.isHydrated;
+export const selectPreOrderModal = (state: { cart: CartState }) => state.cart.preOrderModal;
 
 /**
  * Centralized memoized selector for full financial breakdown via PricingEngine.

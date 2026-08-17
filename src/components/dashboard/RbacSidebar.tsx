@@ -2,7 +2,9 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useBranding } from '@/context/BrandingContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -27,9 +29,10 @@ import {
   History,
   Stethoscope,
   Megaphone,
+  MessageSquare,
 } from 'lucide-react';
 import { UserRole } from '@/types';
-import { RbacTabId } from '@/config/rbac.config';
+import { RbacTabId, RBAC_ROLES_CONFIG } from '@/config/rbac.config';
 
 interface RbacSidebarProps {
   currentRole: UserRole;
@@ -40,6 +43,39 @@ interface RbacSidebarProps {
   isBn?: boolean;
 }
 
+const ROLE_ALLOWED_TABS: Record<UserRole, RbacTabId[]> = {
+  admin: [
+    'overview', 'products', 'categories', 'brands', 'inventory', 'ledger',
+    'pos_sales', 'prescriptions', 'orders', 'chat', 'users',
+    'coupons', 'banners', 'reviews', 'reports', 'staff', 'settings'
+  ],
+  super_admin: [
+    'overview', 'products', 'categories', 'brands', 'inventory', 'ledger',
+    'pos_sales', 'prescriptions', 'orders', 'chat', 'users',
+    'coupons', 'banners', 'reviews', 'reports', 'staff', 'settings'
+  ],
+  pharmacist: [
+    'overview', 'prescriptions', 'pos_sales', 'products', 'categories',
+    'brands', 'inventory', 'orders', 'chat'
+  ],
+  pharmacist_verifier: [
+    'overview', 'prescriptions', 'orders', 'chat'
+  ],
+  sales_staff: [
+    'overview', 'pos_sales', 'orders', 'chat', 'products'
+  ],
+  order_manager: [
+    'overview', 'orders', 'chat', 'users', 'prescriptions', 'pos_sales'
+  ],
+  inventory_manager: [
+    'overview', 'products', 'categories', 'brands', 'inventory', 'ledger', 'reports'
+  ],
+  marketing_editor: [
+    'overview', 'coupons', 'banners', 'reviews'
+  ],
+  customer: [],
+};
+
 export function RbacSidebar({
   currentRole,
   activeTab,
@@ -49,6 +85,9 @@ export function RbacSidebar({
   isBn = true,
 }: RbacSidebarProps) {
   const router = useRouter();
+  const { settings } = useBranding();
+  const siteName = settings.general?.siteName || 'mediShop';
+  const roleConfig = RBAC_ROLES_CONFIG[currentRole] || RBAC_ROLES_CONFIG.admin;
 
   // Category Accordion Expanded States
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
@@ -104,6 +143,7 @@ export function RbacSidebar({
       icon: ShoppingBag,
       items: [
         { id: 'orders', labelBn: 'অনলাইন কাস্টমার অর্ডারসমূহ', labelEn: 'Customer Orders', icon: ShoppingBag },
+        { id: 'chat', labelBn: 'লাইভ ফার্মাসিস্ট চ্যাট', labelEn: 'Live Chat Support Center', icon: MessageSquare },
         { id: 'users', labelBn: 'নিবন্ধিত কাস্টমার ডিরেক্টরি', labelEn: 'Customer Accounts Directory', icon: Users },
       ],
     },
@@ -139,83 +179,78 @@ export function RbacSidebar({
     },
   ];
 
+  const allowedTabs = ROLE_ALLOWED_TABS[currentRole] || ROLE_ALLOWED_TABS.admin;
+
+  const filteredCategories = CATEGORIES.map((cat) => ({
+    ...cat,
+    items: cat.items.filter((item) => allowedTabs.includes(item.id as RbacTabId)),
+  })).filter((cat) => cat.items.length > 0);
+
   const sidebarContent = (
     <div className="flex flex-col h-full bg-background border-r border-border w-80 shrink-0 select-none shadow-xs">
       {/* Brand Header */}
       <div className="h-16 px-6 border-b border-border flex items-center justify-between shrink-0">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white font-bold shadow-md transition-transform group-hover:scale-105 shrink-0">
-            <Pill className="h-5 w-5" />
-          </div>
+          {settings.general?.logoLight &&
+          settings.general.logoLight !== '/images/logo.png' &&
+          settings.general.logoLight.trim() !== '' ? (
+            <div className="relative h-9 w-9 rounded-xl overflow-hidden shadow-md transition-transform group-hover:scale-105 shrink-0 border border-primary/20 bg-white">
+              <Image
+                src={settings.general.logoLight}
+                alt={siteName}
+                fill
+                sizes="36px"
+                className="object-contain p-0.5"
+              />
+            </div>
+          ) : (
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white font-bold shadow-md transition-transform group-hover:scale-105 shrink-0">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+          )}
           <div className="flex flex-col justify-center">
-            <span className="font-serif-title text-2xl font-extrabold tracking-tight text-primary leading-none">
-              mediShop
+            <span className="font-serif-title text-xl font-extrabold tracking-tight text-primary leading-none">
+              {siteName}
             </span>
             <span className="text-[10px] font-bold tracking-wider uppercase text-muted-foreground mt-0.5">
-              {isBn ? 'ফার্মেসি এডমিন প্যানেল v2.0' : 'Pharmacy Admin Panel'}
+              {isBn ? roleConfig.titleBn : roleConfig.titleEn}
             </span>
           </div>
         </Link>
-
-        {/* Mobile Close Button */}
         <button
           type="button"
           onClick={onCloseMobile}
-          className="lg:hidden p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted"
+          className="lg:hidden p-1.5 rounded-lg text-muted-foreground hover:bg-muted cursor-pointer"
         >
           <X className="h-5 w-5" />
         </button>
       </div>
 
-      {/* Navigation Scrollable Body */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-        {/* Top Overview Button */}
-        <button
-          type="button"
-          onClick={() => handleSubItemClick('overview')}
-          className={`w-full flex items-center justify-between rounded-2xl px-4 py-3 text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'overview'
-              ? 'bg-primary text-white font-black shadow-md'
-              : 'bg-muted/40 text-foreground hover:bg-muted/80'
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            <LayoutDashboard className="h-4.5 w-4.5 shrink-0" />
-            <span>{isBn ? 'ওভারভিউ ও ড্যাশবোর্ড' : 'Overview & Dashboard'}</span>
-          </div>
-          <span className="rounded-full bg-emerald-500/20 text-emerald-600 px-2 py-0.5 text-[10px] font-bold">
-            Live
-          </span>
-        </button>
-
-        {/* Accordion Categories */}
-        {CATEGORIES.map((cat) => {
+      {/* Accordion Categories Container */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 custom-scrollbar">
+        {filteredCategories.map((cat) => {
           const CatIcon = cat.icon;
-          const isExpanded = !!expandedCategories[cat.key];
-          const hasActiveItem = cat.items.some((it) => it.id === activeTab);
+          const isExpanded = expandedCategories[cat.key] ?? true;
 
           return (
             <div key={cat.key} className="space-y-1">
+              {/* Category Accordion Header */}
               <button
                 type="button"
                 onClick={() => toggleCategory(cat.key)}
-                className={`group w-full flex items-center justify-between rounded-2xl px-3.5 py-2.5 text-xs font-bold transition-all cursor-pointer shadow-2xs ${
-                  hasActiveItem
-                    ? 'bg-primary/10 text-primary border border-primary/20'
-                    : 'bg-muted/20 text-foreground hover:bg-muted/60'
-                }`}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all cursor-pointer group"
               >
-                <div className="flex items-center gap-2.5">
-                  <CatIcon className="h-4 w-4 text-primary shrink-0 transition-transform group-hover:scale-110" />
-                  <span className="font-black">
+                <div className="flex items-center gap-2">
+                  <CatIcon className="h-4 w-4 text-primary shrink-0" />
+                  <span className="uppercase tracking-wider text-[11px] font-black text-foreground">
                     {isBn ? cat.titleBn : cat.titleEn}
                   </span>
                 </div>
                 <motion.div
-                  animate={{ rotate: isExpanded ? 180 : 0 }}
-                  transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  animate={{ rotate: isExpanded ? 0 : -90 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-primary shrink-0" />
+                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground" />
                 </motion.div>
               </button>
 
@@ -226,7 +261,7 @@ export function RbacSidebar({
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.22, ease: [0.04, 0.62, 0.23, 0.98] }}
+                    transition={{ duration: 0.2, ease: [0.04, 0.62, 0.23, 0.98] }}
                     className="overflow-hidden pl-3 pr-1 pt-1 space-y-1"
                   >
                     {cat.items.map((subItem) => {
@@ -259,7 +294,7 @@ export function RbacSidebar({
 
       {/* Sidebar Footer */}
       <div className="p-4 border-t border-border bg-muted/20 text-center shrink-0">
-        <p className="text-xs font-bold text-foreground">mediShop Healthcare BD</p>
+        <p className="text-xs font-bold text-foreground">{siteName} BD</p>
         <p className="text-[11px] text-muted-foreground">DGDA License #10294 • Version 2.0</p>
       </div>
     </div>
@@ -272,18 +307,34 @@ export function RbacSidebar({
         {sidebarContent}
       </aside>
 
-      {/* Mobile Drawer Sidebar */}
-      {isOpenMobile && (
-        <div className="fixed inset-0 z-50 lg:hidden flex">
-          <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
-            onClick={onCloseMobile}
-          />
-          <div className="relative z-10 flex h-full w-80 max-w-[85vw]">
-            {sidebarContent}
+      {/* Mobile Drawer Sidebar with Smooth Slide-in Spring Animation */}
+      <AnimatePresence>
+        {isOpenMobile && (
+          <div className="fixed inset-0 z-50 lg:hidden flex">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+              onClick={onCloseMobile}
+              aria-hidden="true"
+            />
+
+            {/* Sliding Drawer Container */}
+            <motion.aside
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 250 }}
+              className="relative z-10 flex h-full w-80 max-w-[85vw]"
+            >
+              {sidebarContent}
+            </motion.aside>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </>
   );
 }

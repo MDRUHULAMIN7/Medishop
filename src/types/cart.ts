@@ -13,11 +13,20 @@ export interface CartItem {
   brand: string;
   image: string;
   unit: string;
+  unitType?: string;
   sellingPrice: number;
   mrp: number;
   prescriptionRequired: boolean;
   stock: number;
   quantity: number;
+  availableQuantity?: number;
+  preOrderQuantity?: number;
+  allowPreOrder?: boolean;
+  fulfillmentType?: 'immediate' | 'preorder' | 'mixed';
+  unitMultiplier?: number;
+  unitPrice?: number;
+  effectiveUnitPrice?: number;
+  totalPrice?: number;
   availabilityStatus?: ProductAvailabilityStatus;
 }
 

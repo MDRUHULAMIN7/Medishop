@@ -29,6 +29,22 @@ export interface DynamicDeliveryOption {
   isDefault?: boolean;
 }
 
+export interface BannerSlide {
+  id: string;
+  titleBn: string;
+  titleEn: string;
+  subtitleBn: string;
+  subtitleEn: string;
+  badgeBn?: string;
+  badgeEn?: string;
+  ctaTextBn: string;
+  ctaTextEn: string;
+  ctaLink: string;
+  isActive: boolean;
+  priority: number;
+  image?: string;
+}
+
 export interface GeneralSettings {
   siteName: string;
   tagline?: string;
@@ -81,6 +97,7 @@ export interface LegalSettings {
 export interface PublicSiteSettings {
   general: GeneralSettings;
   branding: BrandingSettings;
+  banners?: BannerSlide[];
   payment?: PaymentSettings;
   shipping: ShippingSettings;
   seo: SEOSettings;
@@ -92,6 +109,7 @@ export interface PublicSiteSettings {
 export interface FullSiteSettings extends PublicSiteSettings {
   payment: PaymentSettings;
   legal: LegalSettings;
+  banners?: BannerSlide[];
 }
 
 export const settingsService = {
@@ -109,7 +127,7 @@ export const settingsService = {
           favicon: '/favicon.ico',
           contactEmail: 'support@medishop.com.bd',
           contactPhone: '+880 1742-643763',
-          address: 'Dhaka, Bangladesh',
+          address: 'House 42, Road 11, Banani, Dhaka-1213, Bangladesh',
         },
         branding: {
           primaryColor: '#1D4ED8',
@@ -142,7 +160,7 @@ export const settingsService = {
           favicon: '/favicon.ico',
           contactEmail: 'support@medishop.com.bd',
           contactPhone: '+880 1742-643763',
-          address: 'Dhaka, Bangladesh',
+          address: 'House 42, Road 11, Banani, Dhaka-1213, Bangladesh',
         },
         branding: {
           primaryColor: '#1D4ED8',

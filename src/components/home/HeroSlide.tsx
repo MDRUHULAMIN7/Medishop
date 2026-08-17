@@ -42,9 +42,8 @@ export function HeroSlideItem({ slide, isActive }: HeroSlideProps) {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="inline-flex items-center gap-1.5 w-fit rounded-full bg-accent/90 px-2.5 py-0.5 text-[10px] sm:text-xs font-bold text-slate-900 shadow-2xs"
+              className="inline-flex items-center w-fit rounded-full bg-accent px-3 py-0.5 text-[10px] sm:text-xs font-black text-slate-900 shadow-2xs"
             >
-              <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               <span>{isBn ? slide.badgeBn : slide.badgeEn}</span>
             </motion.div>
           )}

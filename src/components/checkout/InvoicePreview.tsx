@@ -1,11 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Download, ShieldCheck, PhoneCall, CheckCircle2, Sparkles, FileText } from 'lucide-react';
+import Image from 'next/image';
+import { Download, ShieldCheck, PhoneCall, CheckCircle2, Sparkles, FileText, Printer, Mail, MapPin } from 'lucide-react';
 import { Order } from '@/types/order';
 import { orderService } from '@/services/order.service';
 import { invoiceService } from '@/services/invoice.service';
 import { formatPrice } from '@/utils/cart';
+import { useBranding } from '@/context/BrandingContext';
 
 interface InvoicePreviewProps {
   order: Order;
@@ -13,13 +15,30 @@ interface InvoicePreviewProps {
 }
 
 export function InvoicePreview({ order, isBn = true }: InvoicePreviewProps) {
+  const { settings } = useBranding();
   const invoiceData = invoiceService.generateInvoiceData(order);
+
+  // Dynamic Site Settings
+  const siteName = settings?.general?.siteName || 'mediShop';
+  const tagline = settings?.general?.tagline || 'Digital Pharmacy (Verified DGDA #DAR-2026-BD)';
+  const contactPhone = settings?.general?.contactPhone || '+880 1742-643763';
+  const contactEmail = settings?.general?.contactEmail || 'support@medishop.com.bd';
+  const address = settings?.general?.address || 'House 42, Road 11, Banani, Dhaka-1213, Bangladesh';
+  const logoLight = settings?.general?.logoLight;
+
+  // Dynamic Theme Colors
+  const primaryColor = settings?.branding?.primaryColor || '#1D4ED8';
+  const accentColor = settings?.branding?.accentColor || '#F59E0B';
+
+  // Dynamic Legal & Terms
+  const invoiceTerms = settings?.legal?.invoiceTerms || 'Goods once sold are non-refundable unless damaged or incorrect. DGDA verified items.';
+  const refundPolicyContent = settings?.legal?.refundPolicyContent || 'Returns accepted within 7 days with original seal & invoice receipt.';
+  const warrantyPolicyContent = settings?.legal?.warrantyPolicyContent || 'Manufacturer warranty applies where applicable with official invoice.';
 
   const getStatusBadgeStyle = (status: string) => {
     const s = (status || 'pending').toLowerCase();
     switch (s) {
       case 'paid':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-300';
       case 'delivered':
         return 'bg-emerald-100 text-emerald-800 border-emerald-300';
       case 'cancelled':
@@ -34,22 +53,34 @@ export function InvoicePreview({ order, isBn = true }: InvoicePreviewProps) {
   return (
     <div className="space-y-4">
       {/* Action Header */}
-      <div className="flex items-center justify-between no-print">
+      <div className="flex flex-wrap items-center justify-between gap-3 no-print">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" />
+          <Sparkles className="h-4 w-4 text-primary" style={{ color: primaryColor }} />
           <h3 className="text-base font-extrabold text-foreground font-serif-title">
             {isBn ? 'ইনভয়েস প্রাকদর্শন' : 'Invoice Preview'}
           </h3>
         </div>
 
-        <button
-          type="button"
-          onClick={() => orderService.downloadInvoicePdf(order.id, invoiceData.invoiceNumber)}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-extrabold text-white shadow-md hover:bg-primary-dark transition-all cursor-pointer"
-        >
-          <Download className="h-4 w-4" />
-          <span>{isBn ? 'ইনভয়েস PDF ডাউনলোড' : 'Download Invoice (PDF)'}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => invoiceService.downloadInvoice('printable-invoice', invoiceData.invoiceNumber)}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3.5 py-2 text-xs font-bold text-foreground shadow-xs hover:bg-muted transition-all cursor-pointer"
+          >
+            <Printer className="h-4 w-4 text-muted-foreground" />
+            <span>{isBn ? 'প্রিন্ট' : 'Print'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => orderService.downloadInvoicePdf(order.id, invoiceData.invoiceNumber)}
+            style={{ backgroundColor: primaryColor }}
+            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-extrabold text-white shadow-md hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
+          >
+            <Download className="h-4 w-4" />
+            <span>{isBn ? 'ইনভয়েস PDF ডাউনলোড' : 'Download Invoice (PDF)'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Printable Invoice Container */}
@@ -58,27 +89,69 @@ export function InvoicePreview({ order, isBn = true }: InvoicePreviewProps) {
         className="rounded-3xl border border-border bg-background p-6 sm:p-10 shadow-xs space-y-8 print:shadow-none print:border-none print:p-0"
       >
         {/* 1. Header with Brand & DGDA Verified Badge */}
-        <div className="flex flex-wrap items-start justify-between gap-4 pb-5 border-b-2 border-primary">
-          <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="font-serif-title text-2xl font-black text-primary tracking-tight">
-                mediShop
+        <div
+          className="flex flex-wrap items-start justify-between gap-4 pb-5 border-b-2"
+          style={{ borderColor: primaryColor }}
+        >
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2.5">
+              {logoLight &&
+              !logoLight.includes('undefined') &&
+              logoLight !== '/images/logo.png' &&
+              logoLight.trim() !== '' && (
+                <div className="relative h-9 w-9 rounded-xl overflow-hidden shadow-xs border border-primary/20 bg-white shrink-0">
+                  <Image
+                    src={logoLight}
+                    alt={siteName}
+                    fill
+                    className="object-cover"
+                    sizes="36px"
+                  />
+                </div>
+              )}
+              <span
+                className="font-serif-title text-2xl font-black tracking-tight"
+                style={{ color: primaryColor }}
+              >
+                {siteName}
               </span>
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 text-[10px] font-black text-emerald-800 uppercase">
                 <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                <span>Digital Pharmacy</span>
+                <span>Verified Pharmacy</span>
               </span>
             </div>
+
             <p className="text-xs font-bold text-muted-foreground">
-              DGDA Licensed Pharmacy <span className="text-foreground">(#DAR-2026-BD)</span>
+              {tagline}
             </p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              Hotline: <strong className="text-foreground">16780</strong> | Email: <strong className="text-foreground">support@medishop.com.bd</strong>
-            </p>
+
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <PhoneCall className="h-3 w-3" style={{ color: primaryColor }} />
+                <span>Hotline: <strong className="text-foreground">{contactPhone}</strong></span>
+              </span>
+              <span className="flex items-center gap-1">
+                <Mail className="h-3 w-3" style={{ color: primaryColor }} />
+                <span>Email: <strong className="text-foreground">{contactEmail}</strong></span>
+              </span>
+            </div>
+
+            {address && (
+              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <MapPin className="h-3 w-3 shrink-0" style={{ color: primaryColor }} />
+                <span>{address}</span>
+              </p>
+            )}
           </div>
 
-          <div className="sm:text-right">
-            <span className="inline-block rounded-xl bg-primary/10 px-3.5 py-1 text-xs font-black text-primary uppercase tracking-wider mb-1.5">
+          <div className="sm:text-right space-y-1">
+            <span
+              className="inline-block rounded-xl px-3.5 py-1 text-xs font-black uppercase tracking-wider"
+              style={{
+                backgroundColor: `${primaryColor}15`,
+                color: primaryColor,
+              }}
+            >
               INVOICE
             </span>
             <p className="text-sm font-black text-foreground">Invoice No: {invoiceData.invoiceNumber}</p>
@@ -91,7 +164,10 @@ export function InvoicePreview({ order, isBn = true }: InvoicePreviewProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
           {/* Bill To Info */}
           <div className="space-y-1.5">
-            <p className="text-[11px] font-black text-primary uppercase tracking-wider">
+            <p
+              className="text-[11px] font-black uppercase tracking-wider"
+              style={{ color: primaryColor }}
+            >
               {isBn ? 'গ্রাহকের বিবরণ (BILL TO / SHIP TO):' : 'BILL TO / SHIP TO:'}
             </p>
             <p className="text-sm font-extrabold text-foreground">{invoiceData.customerName}</p>
@@ -105,7 +181,10 @@ export function InvoicePreview({ order, isBn = true }: InvoicePreviewProps) {
 
           {/* Order & Payment Info */}
           <div className="space-y-1.5">
-            <p className="text-[11px] font-black text-primary uppercase tracking-wider">
+            <p
+              className="text-[11px] font-black uppercase tracking-wider"
+              style={{ color: primaryColor }}
+            >
               {isBn ? 'অর্ডার ও পেমেন্ট বিবরণ:' : 'ORDER & PAYMENT:'}
             </p>
             <p className="text-muted-foreground">
@@ -162,7 +241,7 @@ export function InvoicePreview({ order, isBn = true }: InvoicePreviewProps) {
                         <div>
                           <p className="font-extrabold text-foreground">{isBn ? item.nameBn || item.name : item.nameEn || item.name}</p>
                           <p className="text-[10px] text-muted-foreground font-medium">
-                            {item.brand || 'MediShop'}{unitLabel ? ` (${unitLabel})` : ''}
+                            {item.brand || siteName}{unitLabel ? ` (${unitLabel})` : ''}
                           </p>
                         </div>
                       </div>
@@ -188,7 +267,7 @@ export function InvoicePreview({ order, isBn = true }: InvoicePreviewProps) {
               {isBn ? 'লাইসেন্স & গ্যারান্টি:' : 'Authenticity Guarantee:'}
             </p>
             <p className="leading-relaxed text-[11px]">
-              All items sold are 100% authentic DGDA certified medicines and healthcare products.
+              All items sold are 100% authentic DGDA certified medicines and healthcare products from {siteName}.
             </p>
           </div>
 
@@ -223,9 +302,12 @@ export function InvoicePreview({ order, isBn = true }: InvoicePreviewProps) {
               </span>
             </div>
 
-            <div className="pt-2.5 border-t border-border flex justify-between items-baseline">
-              <span className="font-black text-foreground text-sm">TOTAL:</span>
-              <span className="font-black text-primary text-xl">
+            <div
+              className="p-3 rounded-xl flex justify-between items-center text-white"
+              style={{ backgroundColor: primaryColor }}
+            >
+              <span className="font-black text-xs uppercase tracking-wider">TOTAL:</span>
+              <span className="font-black text-lg">
                 {formatPrice(invoiceData.summary.grandTotal, isBn ? 'bn' : 'en')}
               </span>
             </div>
@@ -234,8 +316,11 @@ export function InvoicePreview({ order, isBn = true }: InvoicePreviewProps) {
 
         {/* 5. Invoice Terms & Policy Box (Pushed to bottom near footer) */}
         <div className="border-t border-border pt-6 space-y-2.5 text-xs">
-          <p className="text-[11px] font-black text-primary uppercase tracking-wider flex items-center gap-1.5">
-            <FileText className="h-4 w-4 text-primary" />
+          <p
+            className="text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5"
+            style={{ color: primaryColor }}
+          >
+            <FileText className="h-4 w-4" style={{ color: primaryColor }} />
             <span>{isBn ? 'ইনভয়েস শর্তাবলী ও পলিসি' : 'INVOICE TERMS & POLICIES:'}</span>
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-[11px] text-muted-foreground">
@@ -243,19 +328,19 @@ export function InvoicePreview({ order, isBn = true }: InvoicePreviewProps) {
               <strong className="text-foreground block text-[11px]">
                 {isBn ? '• বিক্রয় শর্তাবলী:' : '• Invoice Terms:'}
               </strong>
-              <p>Goods once sold are non-refundable unless damaged or incorrect. DGDA verified items.</p>
+              <p>{invoiceTerms}</p>
             </div>
             <div className="space-y-1">
               <strong className="text-foreground block text-[11px]">
                 {isBn ? '• রিফান্ড পলিসি:' : '• Return & Refund:'}
               </strong>
-              <p>Returns accepted within 7 days with original seal & invoice receipt.</p>
+              <p>{refundPolicyContent}</p>
             </div>
             <div className="space-y-1">
               <strong className="text-foreground block text-[11px]">
                 {isBn ? '• ওয়ারেন্টি পলিসি:' : '• Warranty Policy:'}
               </strong>
-              <p>Manufacturer warranty applies where applicable with official invoice.</p>
+              <p>{warrantyPolicyContent}</p>
             </div>
           </div>
         </div>
@@ -263,7 +348,7 @@ export function InvoicePreview({ order, isBn = true }: InvoicePreviewProps) {
         {/* 6. Professional 3-Column Footer */}
         <div className="pt-6 border-t border-border grid grid-cols-1 sm:grid-cols-3 gap-5 text-center sm:text-left text-[11px]">
           <div>
-            <p className="font-extrabold text-primary flex items-center gap-1">
+            <p className="font-extrabold flex items-center gap-1" style={{ color: primaryColor }}>
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
               <span>Authenticity</span>
             </p>
@@ -273,17 +358,17 @@ export function InvoicePreview({ order, isBn = true }: InvoicePreviewProps) {
           </div>
 
           <div>
-            <p className="font-extrabold text-primary flex items-center gap-1">
+            <p className="font-extrabold flex items-center gap-1" style={{ color: primaryColor }}>
               <PhoneCall className="h-3.5 w-3.5 text-sky-600 shrink-0" />
               <span>Customer Support</span>
             </p>
             <p className="text-muted-foreground text-[10px] mt-0.5">
-              Hotline: 16780 | support@medishop.com.bd
+              Hotline: {contactPhone} | {contactEmail}
             </p>
           </div>
 
           <div>
-            <p className="font-extrabold text-primary flex items-center gap-1">
+            <p className="font-extrabold flex items-center gap-1" style={{ color: primaryColor }}>
               <CheckCircle2 className="h-3.5 w-3.5 text-amber-600 shrink-0" />
               <span>Important Notice</span>
             </p>
@@ -294,10 +379,11 @@ export function InvoicePreview({ order, isBn = true }: InvoicePreviewProps) {
         </div>
 
         {/* Bottom Tagline */}
-        <div className="pt-3 text-center text-[10px] font-bold text-primary">
-          Thank you for choosing mediShop — Your Trusted Digital Pharmacy.
+        <div className="pt-3 text-center text-[10px] font-bold" style={{ color: primaryColor }}>
+          Thank you for choosing {siteName} — {tagline}
         </div>
       </div>
     </div>
   );
 }
+

@@ -3,16 +3,20 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingBag, ArrowRight, Pill, Plus } from 'lucide-react';
+import { ShoppingBag, ArrowRight, Pill, Plus, Clock } from 'lucide-react';
 import { MOCK_PRODUCTS } from '@/mocks/products';
 import { useCart } from '@/hooks/useCart';
 import { formatPrice } from '@/utils/cart';
+import { cn } from '@/lib/utils';
+import { useAppDispatch } from '@/store';
+import { openPreOrderModal } from '@/store/slices/cartSlice';
 
 interface EmptyCartProps {
   isBn?: boolean;
 }
 
 export function EmptyCart({ isBn = true }: EmptyCartProps) {
+  const dispatch = useAppDispatch();
   const { addToCart } = useCart();
   const recommendedProducts = MOCK_PRODUCTS.slice(0, 4);
 
@@ -68,64 +72,94 @@ export function EmptyCart({ isBn = true }: EmptyCartProps) {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {recommendedProducts.map((prod) => (
-            <div
-              key={prod.id}
-              className="flex flex-col justify-between rounded-2xl border border-border bg-background p-4 shadow-xs hover:border-primary/40 hover:shadow-md transition-all"
-            >
-              <div>
-                <div className="relative h-32 w-full mb-3 rounded-xl overflow-hidden bg-muted/20 border border-border p-2">
-                  <Image
-                    src={prod.image}
-                    alt={isBn ? prod.nameBn : prod.nameEn}
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-                <p className="text-[11px] font-medium text-muted-foreground">{prod.brand}</p>
-                <h4 className="text-xs font-bold text-foreground line-clamp-1">
-                  {isBn ? prod.nameBn : prod.nameEn}
-                </h4>
-              </div>
-
-              <div className="mt-4 flex items-center justify-between pt-3 border-t border-border">
+          {recommendedProducts.map((prod) => {
+            const isOut = prod.stockCount <= 0;
+            return (
+              <div
+                key={prod.id}
+                className="flex flex-col justify-between rounded-2xl border border-border bg-background p-4 shadow-xs hover:border-primary/40 hover:shadow-md transition-all"
+              >
                 <div>
-                  <span className="text-xs font-extrabold text-primary">
-                    {formatPrice(prod.price, isBn ? 'bn' : 'en')}
-                  </span>
-                  {prod.mrp > prod.price && (
-                    <span className="ml-1.5 text-[10px] text-muted-foreground line-through">
-                      {formatPrice(prod.mrp, isBn ? 'bn' : 'en')}
-                    </span>
-                  )}
+                  <div className="relative h-32 w-full mb-3 rounded-xl overflow-hidden bg-muted/20 border border-border p-2">
+                    <Image
+                      src={prod.image}
+                      alt={isBn ? prod.nameBn : prod.nameEn}
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                  <p className="text-[11px] font-medium text-muted-foreground">{prod.brand}</p>
+                  <h4 className="text-xs font-bold text-foreground line-clamp-1">
+                    {isBn ? prod.nameBn : prod.nameEn}
+                  </h4>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    addToCart({
-                      productId: prod.id,
-                      slug: prod.slug,
-                      nameBn: prod.nameBn,
-                      nameEn: prod.nameEn,
-                      brand: prod.brand,
-                      image: prod.image,
-                      unit: prod.unit,
-                      sellingPrice: prod.price,
-                      mrp: prod.mrp,
-                      prescriptionRequired: prod.requiresRx,
-                      stock: prod.stockCount,
-                      quantity: 1,
-                    })
-                  }
-                  className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all"
-                  title={isBn ? 'কার্টে যোগ করুন' : 'Add to cart'}
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
+                <div className="mt-4 flex items-center justify-between pt-3 border-t border-border">
+                  <div>
+                    <span className="text-xs font-extrabold text-primary">
+                      {formatPrice(prod.price, isBn ? 'bn' : 'en')}
+                    </span>
+                    {prod.mrp > prod.price && (
+                      <span className="ml-1.5 text-[10px] text-muted-foreground line-through">
+                        {formatPrice(prod.mrp, isBn ? 'bn' : 'en')}
+                      </span>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isOut) {
+                        dispatch(
+                          openPreOrderModal({
+                            item: {
+                              productId: prod.id,
+                              slug: prod.slug,
+                              nameBn: prod.nameBn,
+                              nameEn: prod.nameEn,
+                              brand: prod.brand,
+                              image: prod.image,
+                              unit: prod.unit,
+                              sellingPrice: prod.price,
+                              mrp: prod.mrp,
+                              prescriptionRequired: prod.requiresRx,
+                              stock: 0,
+                              quantity: 1,
+                            },
+                            requestedQuantity: 1,
+                            availableStock: 0,
+                          })
+                        );
+                        return;
+                      }
+
+                      addToCart({
+                        productId: prod.id,
+                        slug: prod.slug,
+                        nameBn: prod.nameBn,
+                        nameEn: prod.nameEn,
+                        brand: prod.brand,
+                        image: prod.image,
+                        unit: prod.unit,
+                        sellingPrice: prod.price,
+                        mrp: prod.mrp,
+                        prescriptionRequired: prod.requiresRx,
+                        stock: prod.stockCount,
+                        quantity: 1,
+                      });
+                    }}
+                    className={cn(
+                      'flex h-8 w-8 items-center justify-center rounded-xl transition-all cursor-pointer',
+                      'bg-primary/10 text-primary hover:bg-primary hover:text-white'
+                    )}
+                    title={isOut ? (isBn ? 'Pre-Order করুন' : 'Pre-Order') : (isBn ? 'কার্টে যোগ করুন' : 'Add to cart')}
+                  >
+                    {isOut ? <Clock className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

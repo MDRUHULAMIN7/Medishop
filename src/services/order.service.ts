@@ -1,7 +1,17 @@
 import { apiClient, getAccessToken } from '@/lib/apiClient';
 
 export interface CheckoutPayload {
-  items?: Array<{ productId: string; quantity: number }>;
+  items?: Array<{
+    productId: string;
+    unit?: string;
+    unitMultiplier?: number;
+    unitPrice?: number;
+    totalPrice?: number;
+    quantity: number;
+    availableQuantity?: number;
+    preOrderQuantity?: number;
+    fulfillmentType?: 'immediate' | 'preorder' | 'mixed';
+  }>;
   shippingAddressId?: string;
   shippingAddress?: {
     recipientName: string;
@@ -12,16 +22,27 @@ export interface CheckoutPayload {
     addressLine: string;
     postalCode?: string;
   };
-  paymentMethod: 'cod' | 'bkash' | 'nagad' | 'card';
+  paymentMethod: 'cod' | 'bkash' | 'nagad' | 'card' | 'rocket' | 'banking' | 'sslcommerz' | 'stripe' | string;
   couponCode?: string;
   prescriptionId?: string;
   deliveryCharge?: number;
+  isPreOrder?: boolean;
+  isSplitDelivery?: boolean;
+  shipment1DeliveryMethod?: string;
+  shipment2DeliveryMethod?: string;
   note?: string;
 }
 
 export interface UpdateOrderStatusPayload {
   orderStatus?: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded';
+  paymentStatus?: 'pending' | 'partially_paid' | 'paid' | 'failed' | 'refunded';
+  shipment1Status?: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  shipment2Status?: 'pending' | 'sourcing' | 'ready_to_ship' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  shipment1PaymentStatus?: 'pending' | 'paid' | 'failed';
+  shipment2PaymentStatus?: 'pending' | 'paid' | 'failed';
+  targetShipment?: 'all' | 'shipment1' | 'shipment2';
+  paidAmount?: number;
+  cancellationReason?: string;
   note?: string;
 }
 
@@ -71,7 +92,7 @@ export class OrderService {
   }
 
   /**
-   * Admin / Staff: Update order status (orderStatus, paymentStatus, note)
+   * Admin / Staff: Update order status, payment status, or shipment lifecycles
    */
   public async updateOrderStatus(id: string, payload: UpdateOrderStatusPayload): Promise<any> {
     return apiClient<any>(`/orders/${id}/status`, {
@@ -81,46 +102,47 @@ export class OrderService {
   }
 
   /**
-   * Cancel order
+   * User / Admin: Cancel an order if pending
    */
-  public async cancelOrder(id: string, note?: string): Promise<any> {
-    return apiClient<any>(`/orders/${id}/status`, {
-      method: 'PATCH',
-      body: JSON.stringify({ orderStatus: 'cancelled', note }),
+  public async cancelOrder(id: string, reason?: string): Promise<any> {
+    return apiClient<any>(`/orders/${id}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
     });
   }
 
   /**
-   * Download PDF Invoice directly as PDF File
+   * Download official invoice as PDF from backend endpoint
    */
-  public async downloadInvoicePdf(id: string, orderNumber?: string): Promise<void> {
-    if (typeof window === 'undefined') return;
+  public async downloadInvoicePdf(orderId: string, orderNumber: string): Promise<void> {
     try {
       const token = getAccessToken();
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+      const url = `${baseUrl}/orders/${orderId}/invoice/download`;
 
-      const authHeader = token ? (token.startsWith('Bearer ') ? token : `Bearer ${token}`) : '';
-
-      const response = await fetch(`http://localhost:5000/api/v1/orders/${id}/invoice/download`, {
+      const response = await fetch(url, {
+        method: 'GET',
         headers: {
-          ...(authHeader ? { Authorization: authHeader } : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to download PDF: ${response.statusText}`);
+        throw new Error('Failed to download invoice PDF');
       }
 
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = url;
-      link.download = `invoice-${orderNumber || id}.pdf`;
+      link.href = downloadUrl;
+      link.download = `Invoice-${orderNumber}.pdf`;
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('PDF download error:', err);
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err: any) {
+      console.error('Invoice download error:', err);
+      throw err;
     }
   }
 }

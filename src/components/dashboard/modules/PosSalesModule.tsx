@@ -18,6 +18,7 @@ import {
 import { toast } from 'sonner';
 import { ProductService, Product } from '@/services/product.service';
 import { PosService, PosSaleRecord } from '@/services/pos.service';
+import { useBranding } from '@/context/BrandingContext';
 
 interface PosSalesModuleProps {
   isBn?: boolean;
@@ -30,6 +31,7 @@ interface CartPosItem {
 }
 
 export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
+  const { settings } = useBranding();
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [search, setSearch] = useState('');
@@ -447,9 +449,11 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
             {/* Printable Area */}
             <div id="printable-pos-receipt" className="p-4 rounded-2xl border border-dashed border-border bg-white text-slate-900 space-y-3">
               <div className="text-center space-y-0.5">
-                <h2 className="text-lg font-black tracking-tight">mediShop Pharmacy</h2>
-                <p className="text-[10px] text-slate-600">Mirpur-10, Dhaka-1216 • DGDA #10294</p>
-                <p className="text-[10px] text-slate-600">Hotline: 16263 • support@medishop.com</p>
+                <h2 className="text-lg font-black tracking-tight">{settings?.general?.siteName || 'mediShop'} Pharmacy</h2>
+                <p className="text-[10px] text-slate-600">{settings?.general?.address || 'House 42, Road 11, Banani, Dhaka-1213, Bangladesh'}</p>
+                <p className="text-[10px] text-slate-600">
+                  Hotline: {settings?.general?.contactPhone || '16780'} • {settings?.general?.contactEmail || 'support@medishop.com.bd'}
+                </p>
               </div>
 
               <div className="border-t border-b border-dashed border-slate-300 py-1.5 text-[11px] space-y-0.5">
@@ -489,7 +493,7 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
               </div>
 
               <div className="text-center pt-2 border-t border-dashed border-slate-300 text-[10px] text-slate-500">
-                <p>Thank you for shopping at mediShop!</p>
+                <p>Thank you for shopping at {settings?.general?.siteName || 'mediShop'}!</p>
                 <p>Get well soon • Stay Healthy</p>
               </div>
             </div>

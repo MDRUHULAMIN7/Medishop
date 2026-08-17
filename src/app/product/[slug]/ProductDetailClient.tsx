@@ -12,10 +12,12 @@ import {
   ChevronDown,
   Package,
   Check,
+  Clock,
 } from 'lucide-react';
 import { Product } from '@/types/home';
 import { formatBDT, cn } from '@/lib/utils';
-import { useAppSelector } from '@/store';
+import { useAppDispatch, useAppSelector } from '@/store';
+import { openPreOrderModal } from '@/store/slices/cartSlice';
 import { ProductGallery } from '@/components/pdp/ProductGallery';
 import { PrescriptionNotice } from '@/components/pdp/PrescriptionNotice';
 import { QuantitySelector } from '@/components/pdp/QuantitySelector';
@@ -115,6 +117,7 @@ function PackagingDropdown({
 }
 
 export function ProductDetailClient({ product }: ProductDetailClientProps) {
+  const dispatch = useAppDispatch();
   const [quantity, setQuantity] = useState(1);
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
@@ -140,6 +143,33 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const effectivePrice = activeOption.price;
   const effectiveMrp = activeOption.mrp;
   const discountPercent = effectiveMrp > effectivePrice ? Math.round(((effectiveMrp - effectivePrice) / effectiveMrp) * 100) : 0;
+
+  const handleIncreaseQuantity = () => {
+    if (activeOption.stock > 0 && quantity >= activeOption.stock) {
+      dispatch(
+        openPreOrderModal({
+          item: {
+            productId: product.id,
+            slug: product.slug,
+            nameEn: product.nameEn,
+            nameBn: product.nameBn,
+            brand: typeof product.brand === 'object' ? (product.brand as any)?.name : product.brand,
+            sellingPrice: effectivePrice,
+            mrp: effectiveMrp,
+            image: product.image,
+            unit: selectedUnit,
+            quantity: quantity + 1,
+            prescriptionRequired: Boolean(product.requiresRx),
+            stock: activeOption.stock,
+          },
+          requestedQuantity: quantity + 1,
+          availableStock: activeOption.stock,
+        })
+      );
+      return;
+    }
+    setQuantity((q) => q + 1);
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -170,10 +200,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         <div className="flex flex-col gap-4">
           {/* Brand Link */}
           <Link
-            href={`/products?brands=${encodeURIComponent(product.brand)}`}
+            href={`/products?brands=${encodeURIComponent(typeof product.brand === 'object' ? (product.brand as any)?.name || '' : product.brand || '')}`}
             className="inline-flex text-xs font-bold uppercase tracking-wider text-primary hover:underline"
           >
-            {product.brand}
+            {typeof product.brand === 'object' ? (product.brand as any)?.name || '' : product.brand || ''}
           </Link>
 
           {/* Titles */}
@@ -198,10 +228,17 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
             <span className="text-muted-foreground">•</span>
 
-            <div className="flex items-center gap-1 font-semibold text-emerald-600">
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-              <span>{isBn ? 'স্টকে আছে' : 'In Stock'}</span>
-            </div>
+            {activeOption.stock > 0 && product.inStock !== false ? (
+              <div className="flex items-center gap-1 font-semibold text-emerald-600">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                <span>{isBn ? 'স্টকে আছে' : 'In Stock'}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/25">
+                <Clock className="h-3.5 w-3.5 text-primary shrink-0" />
+                <span>{isBn ? 'স্টক শেষ (প্রি-অর্ডার উপলব্ধ)' : 'Out of Stock (Pre-Order Available)'}</span>
+              </div>
+            )}
           </div>
 
           {/* Price Block (Fully Responsive Layout) */}
@@ -240,7 +277,8 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             <div className="flex flex-col gap-1.5 shrink-0">
               <QuantitySelector
                 quantity={quantity}
-                onIncrease={() => setQuantity((q) => q + 1)}
+                max={activeOption.stock > 0 ? activeOption.stock : 99}
+                onIncrease={handleIncreaseQuantity}
                 onDecrease={() => setQuantity((q) => Math.max(1, q - 1))}
               />
             </div>
@@ -256,6 +294,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             selectedUnit={selectedUnit}
             price={effectivePrice}
             mrp={effectiveMrp}
+            stock={activeOption.stock}
           />
 
           {/* Trust Guarantees Bar (Clean Border & Spacing) */}
@@ -285,6 +324,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         selectedUnit={selectedUnit}
         price={effectivePrice}
         mrp={effectiveMrp}
+        stock={activeOption.stock}
       />
     </div>
   );

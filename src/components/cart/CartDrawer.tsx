@@ -121,6 +121,20 @@ export function CartDrawer() {
                   </div>
                 )}
 
+                {/* Pre-Order Notice Banner if cart has Pre-Order items */}
+                {items.some((item) => Boolean(item.preOrderQuantity && item.preOrderQuantity > 0) || Boolean(item.allowPreOrder)) && (
+                  <div className="mx-4 mt-2.5 rounded-xl border border-primary/20 bg-primary/5 p-2.5 flex items-center gap-2 text-xs">
+                    <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-black text-primary border border-primary/20 shrink-0">
+                      {isBn ? 'Pre-Order' : 'Pre-Order'}
+                    </span>
+                    <p className="text-[11px] text-muted-foreground line-clamp-1">
+                      {isBn
+                        ? 'কার্টে প্রি-অর্ডারের ওষুধ রয়েছে (ডেলিভারি ৩-৫ দিন)'
+                        : 'Includes pre-order medicines (3-5 days delivery)'}
+                    </p>
+                  </div>
+                )}
+
                 {/* Item List / Empty State */}
                 <div className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar bg-background">
                   {items.length === 0 ? (

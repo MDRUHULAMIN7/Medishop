@@ -21,6 +21,7 @@ import { PrescriptionQueue } from '@/components/dashboard/PrescriptionQueue';
 import { StockLedgerManager } from '@/components/dashboard/StockLedgerManager';
 import { ReportsManager } from '@/components/dashboard/ReportsManager';
 import { StaffManager } from '@/components/dashboard/StaffManager';
+import { AdminChatManager } from '@/components/dashboard/AdminChatManager';
 import { Loader2 } from 'lucide-react';
 
 function AdminContent() {
@@ -28,6 +29,10 @@ function AdminContent() {
   const tab = searchParams.get('tab') || 'overview';
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
+
+  if (tab === 'chat' || tab === 'livechat') {
+    return <AdminChatManager />;
+  }
 
   if (tab === 'products') {
     return <ProductManager />;

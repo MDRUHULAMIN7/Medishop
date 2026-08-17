@@ -50,8 +50,19 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
     const userRole = reduxUser.role || 'customer';
 
-    // 2. Strict Role Route Protection
-    if (pathname?.includes('/dashboard/admin') && userRole !== 'admin') {
+    // 2. Strict Customer Role Block - Customers have no dashboard
+    if (userRole === 'customer') {
+      toast.error(
+        isBn
+          ? 'কাস্টমার একাউন্টের জন্য ড্যাশবোর্ড প্রযোজ্য নয়। আপনার প্রোফাইল পেজে রিডাইরেক্ট করা হচ্ছে।'
+          : 'Customer accounts do not have access to the staff dashboard.'
+      );
+      router.replace('/profile');
+      return;
+    }
+
+    // 3. Strict Admin Route Protection
+    if (pathname?.includes('/dashboard/admin') && !['admin', 'super_admin'].includes(userRole)) {
       toast.error(
         isBn ? 'এই এডমিন পেজে প্রবেশের অনুমতি নেই।' : 'Access denied. You do not have Admin permissions.'
       );

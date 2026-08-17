@@ -49,6 +49,8 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <link rel="icon" href={settings.general?.favicon || '/favicon.ico'} />
+        <link rel="shortcut icon" href={settings.general?.favicon || '/favicon.ico'} />
         <link rel="stylesheet" href="https://fonts.maateen.me/solaiman-lipi/font.css" />
         <style
           id="dynamic-branding"

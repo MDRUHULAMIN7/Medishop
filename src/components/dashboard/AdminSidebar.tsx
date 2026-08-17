@@ -2,6 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { useBranding } from '@/context/BrandingContext';
 import {
   LayoutDashboard,
   Package,
@@ -61,8 +63,10 @@ export function AdminSidebar({
   onCloseMobile,
 }: AdminSidebarProps) {
   const language = useAppSelector((state) => state.ui.language);
-  const user = useAppSelector((state) => state.auth.user);
   const isBn = language === 'bn';
+  const { settings } = useBranding();
+  const siteName = settings.general?.siteName || 'mediShop';
+  const user = useAppSelector((state) => state.auth.user);
 
   const menuItems = [
     {
@@ -168,12 +172,27 @@ export function AdminSidebar({
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between px-2">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-white font-bold shadow-md transition-transform group-hover:scale-105">
-              <Pill className="h-5.5 w-5.5" />
-            </div>
-            <div className="flex flex-col">
+            {settings.general?.logoLight &&
+            settings.general.logoLight !== '/images/logo.png' &&
+            settings.general.logoLight.trim() !== '' ? (
+              <div className="relative h-10 w-10 rounded-2xl overflow-hidden shadow-md transition-transform group-hover:scale-105 shrink-0 border border-primary/20 bg-white">
+                <Image
+                  src={settings.general.logoLight}
+                  alt={siteName}
+                  fill
+                  className="object-cover"
+                  sizes="40px"
+                  priority
+                />
+              </div>
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-white font-bold shadow-md transition-transform group-hover:scale-105 shrink-0">
+                <Pill className="h-5.5 w-5.5" />
+              </div>
+            )}
+            <div className="flex flex-col justify-center">
               <span className="font-serif-title text-2xl font-extrabold tracking-tight text-primary leading-none">
-                mediShop
+                {siteName}
               </span>
               <span className="text-[10px] font-bold tracking-wider uppercase text-muted-foreground mt-0.5">
                 {isBn ? 'এডমিন প্যানেল v2.0' : 'Admin Panel v2.0'}

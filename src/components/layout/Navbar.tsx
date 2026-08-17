@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -10,20 +11,18 @@ import {
   Upload,
   ChevronDown,
   LogOut,
-  UserCheck,
-  Package,
-  Pill,
   X,
   Phone,
   ShieldCheck,
   Truck,
-  Globe,
   LayoutDashboard,
   Bell,
+  ShoppingBag,
+  MapPin,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { setSearchQuery, setLanguage } from '@/store/slices/uiSlice';
-import { openAuthModal, logout } from '@/store/slices/authSlice';
+import { setSearchQuery, setLanguage, toggleMobileSearch } from '@/store/slices/uiSlice';
+import { openAuthModal } from '@/store/slices/authSlice';
 import { openPrescriptionModal, closePrescriptionModal } from '@/store/slices/uiSlice';
 import { UploadPrescriptionModal } from '@/components/modals/UploadPrescriptionModal';
 import { NotificationDrawer } from '@/components/notifications/NotificationDrawer';
@@ -32,11 +31,11 @@ import { useScrollPosition } from '@/hooks/useScrollPosition';
 import { MobileMenuDrawer } from './MobileMenuDrawer';
 import { MobileSearchOverlay } from './MobileSearchOverlay';
 import { SearchAutocomplete } from '@/components/search/SearchAutocomplete';
-import { HOTLINE_NUMBER, HOTLINE_TEL } from '@/lib/constants';
+import { HOTLINE_NUMBER } from '@/lib/constants';
 import { cn } from '@/lib/utils';
-
 import { useBranding } from '@/context/BrandingContext';
 import { useAuth } from '@/hooks/useAuth';
+import { RBAC_ROLES_CONFIG, getRoleDashboardTitle } from '@/config/rbac.config';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -57,10 +56,18 @@ export function Navbar() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  const searchContainerRef = useRef<HTMLDivElement | null>(null);
+  const accountDropdownRef = useRef<HTMLDivElement | null>(null);
+
+  const isStaffOrAdmin = Boolean(user?.role && user.role !== 'customer');
+  const roleConfig = user?.role ? RBAC_ROLES_CONFIG[user.role] : null;
+
   const fetchUnreadCount = useCallback(async () => {
     if (!isAuthenticated) return;
-    const count = await notificationService.getUnreadCount();
-    setUnreadCount(count);
+    try {
+      const count = await notificationService.getUnreadCount();
+      setUnreadCount(count);
+    } catch {}
   }, [isAuthenticated]);
 
   useEffect(() => {
@@ -68,6 +75,27 @@ export function Navbar() {
     const interval = setInterval(fetchUnreadCount, 30000);
     return () => clearInterval(interval);
   }, [fetchUnreadCount]);
+
+  // Click outside listener for Search suggestions & User dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(e.target as Node)
+      ) {
+        setIsSearchFocused(false);
+      }
+      if (
+        accountDropdownRef.current &&
+        !accountDropdownRef.current.contains(e.target as Node)
+      ) {
+        setIsAccountDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   if (pathname?.startsWith('/dashboard')) {
     return null;
@@ -81,39 +109,40 @@ export function Navbar() {
     }
   };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     setIsAccountDropdownOpen(false);
-    await executeLogout();
+    executeLogout();
   };
 
   return (
     <>
-      {/* Top Info Header Bar (Desktop & Tablet) */}
-      <div className="hidden bg-primary-dark text-white text-xs py-1.5 px-4 md:block border-b border-white/10">
-        <div className="mx-auto flex max-w-[1700px] items-center justify-between px-4 sm:px-6 lg:px-8">
+      {/* Top Banner Bar */}
+      <div className="bg-primary-dark text-white text-xs py-1.5 px-4 hidden md:block border-b border-primary/20">
+        <div className="mx-auto flex justify-between items-center max-w-[1700px]">
           <div className="flex items-center gap-6">
             <span className="flex items-center gap-1.5 font-medium text-white/90">
               <ShieldCheck className="h-3.5 w-3.5 text-accent" />
-              {isBn ? 'ডিজিডিএ অনুমোদিত অনলাইন ফার্মেসি' : 'DGDA Approved Pharmacy (#DAR-2026-BD)'}
+              {isBn ? '১০০% আসল ও রেজিস্টার্ড ফার্মাসিস্ট দ্বারা ভেরিফাইড ওষুধ' : '100% Genuine Medicines & Doctor Verified'}
             </span>
-            <span className="flex items-center gap-1.5 text-white/80">
-              <Truck className="h-3.5 w-3.5 text-sky-300" />
-              {isBn ? 'ঢাকায় ৪-৬ ঘণ্টায় সেম-ডে এক্সপ্রেস ডেলিভারি' : 'Same-day express delivery in Dhaka'}
+            <span className="text-white/30">|</span>
+            <span className="flex items-center gap-1.5 font-medium text-white/90">
+              <Truck className="h-3.5 w-3.5 text-accent" />
+              {isBn ? 'সারা বাংলাদেশে দ্রুত ক্যাশ অন ডেলিভারি' : 'Fast Cash On Delivery Nationwide'}
             </span>
           </div>
 
           <div className="flex items-center gap-4">
             <a
-              href={HOTLINE_TEL}
+              href={`tel:${settings.general?.contactPhone || HOTLINE_NUMBER}`}
               className="flex items-center gap-1.5 font-bold text-accent hover:underline"
             >
               <Phone className="h-3.5 w-3.5" />
-              <span>{HOTLINE_NUMBER} (24/7)</span>
+              <span>{settings.general?.contactPhone || HOTLINE_NUMBER} (24/7)</span>
             </a>
             <span className="text-white/30">|</span>
             <button
               onClick={() => dispatch(setLanguage(isBn ? 'en' : 'bn'))}
-              className="font-semibold text-white/90 hover:text-white transition-colors"
+              className="font-semibold text-white/90 hover:text-white transition-colors cursor-pointer"
             >
               {isBn ? 'English' : 'বাংলা'}
             </button>
@@ -121,7 +150,7 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Main Navigation Header */}
+      {/* Main Sticky Navbar */}
       <header
         className={cn(
           'sticky top-0 z-40 w-full bg-background/98 backdrop-blur-md transition-all duration-200 border-b border-border',
@@ -129,111 +158,96 @@ export function Navbar() {
         )}
       >
         <div className="mx-auto flex flex-col md:flex-row md:items-center justify-between max-w-[1700px] px-4 sm:px-6 lg:px-8 h-auto md:h-[72px]">
-          {/* Mobile Top Row: Logo & Language Toggle + Sign In Button */}
+          {/* Logo & Mobile Actions */}
           <div className="flex h-14 md:h-full items-center justify-between w-full md:w-auto shrink-0">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl bg-primary text-white font-bold shadow-md transition-transform group-hover:scale-105 shrink-0">
-                <Pill className="h-5 w-5 md:h-5.5 md:w-5.5" />
-              </div>
+            <Link href="/" className="flex items-center gap-2.5 group">
+              {settings.general?.logoLight &&
+              settings.general.logoLight !== '/images/logo.png' &&
+              settings.general.logoLight.trim() !== '' ? (
+                <div className="relative h-9 w-9 md:h-10 md:w-10 rounded-xl overflow-hidden shadow-md transition-transform group-hover:scale-105 shrink-0 border border-primary/20 bg-white">
+                  <Image
+                    src={settings.general.logoLight}
+                    alt={settings.general?.siteName || 'mediShop'}
+                    fill
+                    sizes="40px"
+                    className="object-contain p-1"
+                    priority
+                  />
+                </div>
+              ) : (
+                <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl bg-primary text-white font-bold shadow-md transition-transform group-hover:scale-105 shrink-0">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+              )}
               <div className="flex flex-col justify-center">
                 <span className="font-serif-title text-2xl md:text-3xl font-extrabold tracking-tight text-primary leading-none">
                   {settings.general?.siteName || 'mediShop'}
                 </span>
                 <span className="hidden sm:inline-block text-[10px] font-bold tracking-wider uppercase text-muted-foreground mt-0.5">
-                  {isBn ? 'অনলাইন ফার্মেসি ও হেলথকেয়ার' : (settings.general?.tagline || 'Online Pharmacy BD')}
+                  {isBn ? 'অনলাইন ফার্মেসি ও হেলথকেয়ার' : (settings.general?.tagline || 'Online Pharmacy BD')}
                 </span>
               </div>
             </Link>
 
-            {/* Mobile Header Right Actions */}
+            {/* Mobile Header Right Icons */}
             <div className="flex items-center gap-1.5 md:hidden">
               <button
-                onClick={() => dispatch(setLanguage(isBn ? 'en' : 'bn'))}
-                aria-label="Toggle Language"
-                className="flex h-8 items-center gap-1 rounded-full border border-border/80 bg-muted/50 px-2.5 text-xs font-bold text-foreground transition-colors hover:bg-primary/10 hover:text-primary active:scale-95 shrink-0"
+                type="button"
+                onClick={() => dispatch(toggleMobileSearch())}
+                aria-label={isBn ? 'অনুসন্ধান করুন' : 'Open search'}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-muted/50 text-foreground transition-colors hover:bg-primary/10 hover:text-primary active:scale-95 shrink-0 cursor-pointer"
               >
-                <Globe className="h-3.5 w-3.5 text-primary" />
-                <span>{isBn ? 'EN' : 'বাং'}</span>
+                <Search className="h-4.5 w-4.5" />
               </button>
 
               {isAuthenticated ? (
-                <Link
-                  href="/profile"
-                  aria-label={isBn ? 'মাই প্রোফাইল' : 'My Profile'}
-                  className="flex h-8 items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 text-xs font-bold text-primary transition-all active:scale-95 shrink-0"
+                <button
+                  type="button"
+                  onClick={() => setIsNotificationsOpen(true)}
+                  aria-label="Notifications"
+                  className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-muted/50 text-foreground transition-colors hover:bg-muted active:scale-95 shrink-0 cursor-pointer"
                 >
-                  <UserIcon className="h-3.5 w-3.5" />
-                  <span className="max-w-[65px] truncate">
-                    {user?.name?.split(' ')[0] || (isBn ? 'প্রোফাইল' : 'Profile')}
-                  </span>
-                </Link>
+                  <Bell className="h-4.5 w-4.5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[9px] font-extrabold text-white">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </button>
               ) : (
                 <button
+                  type="button"
                   onClick={() => dispatch(openAuthModal('signin'))}
-                  aria-label={isBn ? 'সাইন ইন' : 'Sign In'}
-                  className="flex h-8 items-center justify-center rounded-full bg-primary px-3 text-xs font-bold text-white shadow-2xs transition-all hover:bg-primary-dark active:scale-95 shrink-0"
+                  className="flex h-9 items-center gap-1.5 rounded-full bg-primary px-3 text-xs font-bold text-white shadow-2xs hover:bg-primary-dark transition-all active:scale-95 shrink-0 cursor-pointer"
                 >
+                  <UserIcon className="h-3.5 w-3.5" />
                   <span>{isBn ? 'সাইন ইন' : 'Sign In'}</span>
                 </button>
               )}
             </div>
           </div>
 
-          {/* Mobile Search Bar with Autocomplete */}
-          <div className="pb-3 md:hidden w-full relative">
-            <form onSubmit={handleSearchSubmit} className="relative flex items-center">
-              <button type="submit" aria-label={isBn ? 'অনুসন্ধান করুন' : 'Submit search'} className="absolute left-3.5 p-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer">
-                <Search className="h-4 w-4" />
-              </button>
-              <input
-                type="search"
-                value={searchQuery}
-                onFocus={() => setIsSearchFocused(true)}
-                onChange={(e) => dispatch(setSearchQuery(e.target.value))}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleSearchSubmit(e);
-                  }
-                }}
-                placeholder={
-                  isBn
-                    ? 'ওষুধ খুঁজুন (যেমন: Napa, Sergel)...'
-                    : 'Search medicine (e.g. Napa, Sergel)...'
-                }
-                className="w-full rounded-full border border-border bg-muted/40 py-2 pl-10 pr-9 text-xs font-medium text-foreground placeholder:text-muted-foreground transition-colors focus:border-primary focus:bg-background focus:ring-0 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => dispatch(setSearchQuery(''))}
-                  aria-label={isBn ? 'মুছে ফেলুন' : 'Clear search'}
-                  className="absolute right-3 rounded-full p-1 text-muted-foreground hover:text-foreground cursor-pointer"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </form>
-
-            {/* Search Autocomplete Overlay */}
-            <SearchAutocomplete
-              query={searchQuery}
-              isOpen={isSearchFocused}
-              onClose={() => setIsSearchFocused(false)}
-            />
-          </div>
-
-          {/* Desktop Search Bar with Autocomplete (Unified Height h-11) */}
-          <div className="hidden flex-1 max-w-2xl mx-6 lg:mx-8 md:flex items-center relative my-auto">
+          {/* Desktop Search Bar with Live Autocomplete */}
+          <div
+            ref={searchContainerRef}
+            className="hidden flex-1 max-w-2xl mx-6 lg:mx-8 md:flex items-center relative my-auto"
+          >
             <form onSubmit={handleSearchSubmit} className="relative flex items-center w-full">
-              <button type="submit" aria-label={isBn ? 'অনুসন্ধান করুন' : 'Submit search'} className="absolute left-4 p-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+              <button
+                type="submit"
+                aria-label={isBn ? 'অনুসন্ধান করুন' : 'Submit search'}
+                className="absolute left-4 p-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+              >
                 <Search className="h-4.5 w-4.5" />
               </button>
               <input
                 type="search"
                 value={searchQuery}
                 onFocus={() => setIsSearchFocused(true)}
-                onChange={(e) => dispatch(setSearchQuery(e.target.value))}
+                onChange={(e) => {
+                  dispatch(setSearchQuery(e.target.value));
+                  if (!isSearchFocused) setIsSearchFocused(true);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     handleSearchSubmit(e);
@@ -244,7 +258,7 @@ export function Navbar() {
                     ? 'ওষুধ বা স্বাস্থ্য সামগ্রী খুঁজুন (যেমন: Napa, Sergel)...'
                     : 'Search medicines or healthcare items (Ex: Napa, Sergel)...'
                 }
-                className="h-11 w-full rounded-2xl border border-border bg-muted/30 pl-11 pr-10 text-xs sm:text-sm font-medium text-foreground placeholder:text-muted-foreground transition-all focus:border-primary focus:bg-background focus:ring-0 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+                className="h-11 w-full rounded-2xl border border-border bg-muted/30 pl-11 pr-10 text-xs sm:text-sm font-medium text-foreground placeholder:text-muted-foreground transition-all focus:border-primary focus:bg-background focus:ring-2 focus:ring-primary/20 focus:outline-hidden [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
               />
               {searchQuery && (
                 <button
@@ -258,7 +272,7 @@ export function Navbar() {
               )}
             </form>
 
-            {/* Search Autocomplete Overlay */}
+            {/* Mounted Search Autocomplete Suggestions */}
             <SearchAutocomplete
               query={searchQuery}
               isOpen={isSearchFocused}
@@ -266,7 +280,7 @@ export function Navbar() {
             />
           </div>
 
-          {/* Desktop Right Actions (Unified Height h-11) */}
+          {/* Desktop Right Actions (Cart removed, sticky cart takes over) */}
           <div className="hidden md:flex items-center gap-3 shrink-0 my-auto">
             {/* Upload Prescription Button */}
             <button
@@ -278,7 +292,7 @@ export function Navbar() {
               <span>{isBn ? 'প্রেসক্রিপশন আপলোড' : 'Upload Prescription'}</span>
             </button>
 
-            {/* Notifications Bell Button */}
+            {/* Notification Bell */}
             {isAuthenticated && (
               <button
                 type="button"
@@ -288,26 +302,27 @@ export function Navbar() {
               >
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[9px] font-extrabold text-white animate-pulse">
+                  <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[9px] font-extrabold text-white animate-pulse">
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
               </button>
             )}
 
-            {/* Account / User Section */}
+            {/* User Profile Dropdown */}
             {isAuthenticated ? (
-              <div className="relative">
+              <div ref={accountDropdownRef} className="relative">
                 <button
+                  type="button"
                   onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
                   aria-expanded={isAccountDropdownOpen}
-                  aria-label={isBn ? 'ইউজার একাউন্ট মেনু' : 'User Account Menu'}
-                  className="flex h-11 items-center gap-2 rounded-2xl border border-border p-1.5 pr-3 transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary shrink-0"
+                  aria-label={isBn ? 'ইউজার অ্যাকাউন্ট মেনু' : 'User Account Menu'}
+                  className="flex h-11 items-center gap-2 rounded-2xl border border-border p-1.5 pr-3 transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary shrink-0 cursor-pointer"
                 >
                   <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary font-bold text-xs text-white">
                     {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                   </div>
-                  <span className="hidden max-w-[100px] truncate text-xs font-bold text-foreground md:inline-block">
+                  <span className="hidden max-w-[110px] truncate text-xs font-bold text-foreground md:inline-block">
                     {user?.name || (isBn ? 'গ্রাহক' : 'Account')}
                   </span>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -320,33 +335,69 @@ export function Navbar() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 8 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 mt-2 w-52 rounded-2xl border border-border bg-background p-1.5 shadow-xl ring-1 ring-black/5"
+                      className="absolute right-0 mt-2 w-56 rounded-2xl border border-border bg-background p-1.5 shadow-2xl ring-1 ring-black/5 z-50"
                     >
-                      <div className="border-b border-border px-3 py-2">
-                        <p className="text-xs font-bold text-foreground truncate">
+                      <div className="border-b border-border px-3 py-2.5">
+                        <p className="text-xs font-extrabold text-foreground truncate">
                           {user?.name}
                         </p>
-                        <p className="text-[11px] text-muted-foreground truncate">
+                        <p className="text-[11px] text-muted-foreground truncate mt-0.5">
                           {user?.phone || user?.email}
                         </p>
+                        {isStaffOrAdmin && roleConfig && (
+                          <span className="inline-flex items-center gap-1 mt-1.5 rounded-full px-2 py-0.5 text-[9px] font-black border bg-primary/10 text-primary border-primary/20">
+                            <ShieldCheck className="h-2.5 w-2.5" />
+                            <span>{isBn ? roleConfig.titleBn : roleConfig.titleEn}</span>
+                          </span>
+                        )}
                       </div>
+
                       <div className="py-1 space-y-1">
-                        <Link
-                          href="/dashboard/admin"
-                          onClick={() => setIsAccountDropdownOpen(false)}
-                          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-extrabold text-primary bg-primary/10 hover:bg-primary hover:text-white transition-all shadow-xs"
-                        >
-                          <LayoutDashboard className="h-4 w-4" />
-                          <span>{isBn ? 'এডমিন ড্যাশবোর্ড' : 'Admin Dashboard'}</span>
-                        </Link>
+                        {/* If Staff/Admin, show dynamic Dashboard link */}
+                        {isStaffOrAdmin && (
+                          <Link
+                            href="/dashboard"
+                            onClick={() => setIsAccountDropdownOpen(false)}
+                            className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-extrabold text-primary bg-primary/10 hover:bg-primary hover:text-white transition-all shadow-xs"
+                          >
+                            <LayoutDashboard className="h-4 w-4" />
+                            <span>{getRoleDashboardTitle(user?.role, isBn)}</span>
+                          </Link>
+                        )}
+
+                        {/* Profile Link */}
                         <Link
                           href="/profile"
                           onClick={() => setIsAccountDropdownOpen(false)}
                           className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted transition-colors"
                         >
                           <UserIcon className="h-4 w-4 text-primary" />
-                          <span>{isBn ? 'মাই প্রোফাইল' : 'My Profile'}</span>
+                          <span>{isBn ? 'আমার প্রোফাইল' : 'My Profile'}</span>
                         </Link>
+
+                        {/* Customer Specific Links */}
+                        {!isStaffOrAdmin && (
+                          <>
+                            <Link
+                              href="/profile?tab=orders"
+                              onClick={() => setIsAccountDropdownOpen(false)}
+                              className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted transition-colors"
+                            >
+                              <ShoppingBag className="h-4 w-4 text-primary" />
+                              <span>{isBn ? 'আমার অর্ডারসমূহ' : 'My Orders'}</span>
+                            </Link>
+                            <Link
+                              href="/profile?tab=addresses"
+                              onClick={() => setIsAccountDropdownOpen(false)}
+                              className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted transition-colors"
+                            >
+                              <MapPin className="h-4 w-4 text-primary" />
+                              <span>{isBn ? 'ডেলিভারি ঠিকানা' : 'Delivery Addresses'}</span>
+                            </Link>
+                          </>
+                        )}
+
+                        {/* Logout Button */}
                         <button
                           type="button"
                           onClick={handleLogout}
@@ -362,8 +413,9 @@ export function Navbar() {
               </div>
             ) : (
               <button
+                type="button"
                 onClick={() => dispatch(openAuthModal('signin'))}
-                className="flex h-11 items-center gap-2 rounded-2xl bg-primary px-5 text-xs sm:text-sm font-bold text-white shadow-md transition-all hover:bg-primary-dark active:scale-98 shrink-0"
+                className="flex h-11 items-center gap-2 rounded-2xl bg-primary px-5 text-xs sm:text-sm font-bold text-white shadow-md transition-all hover:bg-primary-dark active:scale-98 shrink-0 cursor-pointer"
               >
                 <UserIcon className="h-4.5 w-4.5" />
                 <span>{isBn ? 'সাইন ইন' : 'Sign In'}</span>
@@ -378,7 +430,6 @@ export function Navbar() {
       <UploadPrescriptionModal
         isOpen={isPrescriptionModalOpen}
         onClose={() => dispatch(closePrescriptionModal())}
-        isBn={isBn}
       />
       <NotificationDrawer
         isOpen={isNotificationsOpen}

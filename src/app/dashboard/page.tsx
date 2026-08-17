@@ -11,7 +11,11 @@ export default function DashboardIndexPage() {
 
   useEffect(() => {
     const role = reduxUser?.role || 'customer';
-    const targetRoute = RBAC_ROLES_CONFIG[role]?.route || '/dashboard/customer';
+    if (role === 'customer') {
+      router.replace('/profile');
+      return;
+    }
+    const targetRoute = RBAC_ROLES_CONFIG[role]?.route || '/dashboard/admin';
     router.replace(targetRoute);
   }, [reduxUser, router]);
 

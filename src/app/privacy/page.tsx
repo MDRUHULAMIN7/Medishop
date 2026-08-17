@@ -1,25 +1,30 @@
 'use client';
 
 import React from 'react';
-import { ShieldCheck, Lock, Eye, FileText, Database, UserCheck } from 'lucide-react';
+import { ShieldCheck, Lock, Database, UserCheck, FileText, CheckCircle } from 'lucide-react';
 import { useAppSelector } from '@/store';
-import { COMPANY_EMAIL_PRIMARY } from '@/lib/constants';
+import { useBranding } from '@/context/BrandingContext';
 
 export default function PrivacyPage() {
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
+  const { settings } = useBranding();
+
+  const siteName = settings.general?.siteName || 'mediShop';
+  const contactEmail = settings.general?.contactEmail || 'support@medishop.com.bd';
+  const privacyText = settings.legal?.privacyContent;
 
   return (
     <div className="min-h-screen bg-background text-foreground py-8 md:py-12">
       <div className="mx-auto max-w-[1000px] px-4 sm:px-6 lg:px-8 space-y-8">
         {/* Header */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary-soft px-3.5 py-1 text-xs font-semibold text-primary">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary">
             <Lock className="h-4 w-4" />
             <span>{isBn ? 'ডেটা নিরাপত্তা ও গোপনীয়তা' : 'Data Privacy & Security'}</span>
           </div>
           <h1 className="font-serif-title text-3xl sm:text-4xl font-bold text-foreground">
-            {isBn ? 'গোপনীয়তা নীতি (Privacy Policy)' : 'Privacy Policy'}
+            {isBn ? `গোপনীয়তা নীতি (${siteName})` : `Privacy Policy (${siteName})`}
           </h1>
           <p className="text-xs text-muted-foreground">
             {isBn ? 'সর্বশেষ আপডেট: আগস্ট ২০২৬' : 'Last Updated: August 2026'}
@@ -27,7 +32,17 @@ export default function PrivacyPage() {
         </div>
 
         {/* Content Box */}
-        <div className="rounded-3xl border border-border bg-background p-6 sm:p-10 space-y-6 text-xs sm:text-sm leading-relaxed text-muted-foreground">
+        <div className="rounded-3xl border border-border bg-card p-6 sm:p-10 space-y-6 text-xs sm:text-sm leading-relaxed text-muted-foreground shadow-xs">
+          {privacyText && (
+            <section className="space-y-2 rounded-2xl bg-primary/5 p-4 border border-primary/20">
+              <h2 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-primary" />
+                <span>{isBn ? 'অফিসিয়াল গোপনীয়তা বিবৃতি' : 'Official Privacy Statement'}</span>
+              </h2>
+              <p className="whitespace-pre-line text-foreground/90 font-medium">{privacyText}</p>
+            </section>
+          )}
+
           <section className="space-y-2">
             <h2 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-primary" />
@@ -35,8 +50,8 @@ export default function PrivacyPage() {
             </h2>
             <p>
               {isBn
-                ? 'মেডিশপ (mediShop) আপনার ব্যক্তিগত তথ্য ও মেডিকেল প্রেসক্রিপশনের সর্বোচ্চ গোপনীয়তা ও নিরাপত্তা রক্ষায় প্রতিশ্রুতিবদ্ধ। আমরা ডিজিডিএ নীতি ও স্বাস্থ্যসেবা প্রোটোকল মেনে তথ্য সংগ্রহ ও সংরক্ষণ করি।'
-                : 'mediShop is committed to protecting the privacy and confidentiality of your personal health data and medical prescriptions following standard healthcare data protocols.'}
+                ? `${siteName} আপনার ব্যক্তিগত তথ্য ও মেডিকেল প্রেসক্রিপশনের সর্বোচ্চ গোপনীয়তা ও নিরাপত্তা রক্ষায় প্রতিশ্রুতিবদ্ধ। আমরা ডিজিডিএ নীতি ও স্বাস্থ্যসেবা প্রোটোকল মেনে তথ্য সংগ্রহ ও সংরক্ষণ করি।`
+                : `${siteName} is committed to protecting the privacy and confidentiality of your personal health data and medical prescriptions following standard healthcare data protocols.`}
             </p>
           </section>
 
@@ -59,7 +74,7 @@ export default function PrivacyPage() {
             </h2>
             <p>
               {isBn
-                ? 'আপনার আপলোড করা প্রেসক্রিপশন কেবলমাত্র আমাদের নিবন্ধিত গ্র্যাজুয়েট ফার্মাসিস্ট টিম ভেরিফিকেশন ও ওষুধ প্যাফ করার জন্য ব্যবহার করেন। আপনার মেডিকেল ডেটা কোনো তৃতীয় পক্ষের নিকট বিক্রি বা শেয়ার করা হয় না।'
+                ? 'আপনার আপলোড করা প্রেসক্রিপশন কেবলমাত্র আমাদের নিবন্ধিত গ্র্যাজুয়েট ফার্মাসিস্ট টিম ভেরিফিকেশন ও ওষুধ প্রসেস করার জন্য ব্যবহার করেন। আপনার মেডিকেল ডেটা কোনো তৃতীয় পক্ষের নিকট বিক্রি বা শেয়ার করা হয় না।'
                 : 'Your uploaded prescriptions are strictly viewed by our licensed graduate pharmacists for validation and order processing. We never sell or share medical documents with third parties.'}
             </p>
           </section>
@@ -74,7 +89,7 @@ export default function PrivacyPage() {
                 ? 'আপনার নিজের তথ্য দেখতে, আপডেট করতে বা আমাদের ডাটাবেজ থেকে মুছে ফেলার জন্য আমাদের ইমেইলে সরাসরি অনুরোধ পাঠাতে পারেন:'
                 : 'You have full rights to request access, correction, or deletion of your personal history by emailing us at:'}
             </p>
-            <p className="font-bold text-primary">{COMPANY_EMAIL_PRIMARY}</p>
+            <p className="font-bold text-primary">{contactEmail}</p>
           </section>
         </div>
       </div>

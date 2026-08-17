@@ -19,6 +19,58 @@ export function normalizeOrder(o: any) {
   const deliveryCharge = o.deliveryCharge ?? o.summary?.deliveryCharge ?? 60;
   const couponDiscount = o.couponDiscount ?? o.summary?.couponDiscount ?? 0;
   const mrpDiscount = o.discountTotal ?? o.summary?.mrpDiscount ?? 0;
+  const isSplitDelivery = Boolean(o.isSplitDelivery);
+
+  const buildDeliveryMethod = (source?: any, fallbackCode?: string) => {
+    if (!source && !fallbackCode) return null;
+    const code = String(source?.code || source?.id || fallbackCode || '').trim();
+    const normalizedCode = code || 'standard';
+    const nameEn = source?.nameEn || source?.name || normalizedCode.replace(/[_-]+/g, ' ');
+    const nameBn = source?.nameBn || source?.name || nameEn;
+    return {
+      id: source?.id || normalizedCode,
+      nameEn,
+      nameBn,
+      descriptionEn: source?.descriptionEn || source?.estimatedDaysEn || '',
+      descriptionBn: source?.descriptionBn || source?.estimatedDaysBn || '',
+      charge: Number(source?.charge ?? deliveryCharge ?? 60),
+      estimatedDeliveryEn: source?.estimatedDaysEn || source?.estimatedDeliveryEn || '2 - 3 working days',
+      estimatedDeliveryBn: source?.estimatedDaysBn || source?.estimatedDeliveryBn || '২ - ৩ কার্যদিবস',
+      isPopular: Boolean(source?.isPopular),
+    };
+  };
+
+  const shipment1DeliveryMethodDetails = buildDeliveryMethod(
+    o.shipment1DeliveryMethodDetails,
+    o.shipment1DeliveryMethod
+  );
+  const shipment2DeliveryMethodDetails = buildDeliveryMethod(
+    o.shipment2DeliveryMethodDetails,
+    o.shipment2DeliveryMethod
+  );
+  const deliveryMethod =
+    buildDeliveryMethod(o.deliveryMethod, o.shipment1DeliveryMethod) ||
+    shipment1DeliveryMethodDetails ||
+    shipment2DeliveryMethodDetails || {
+      id: 'standard',
+      nameEn: 'Standard Home Delivery',
+      nameBn: 'স্ট্যান্ডার্ড হোম ডেলিভারি',
+      descriptionEn: '2 - 3 working days',
+      descriptionBn: '২ - ৩ কার্যদিবস',
+      charge: deliveryCharge,
+      estimatedDeliveryEn: '2 - 3 working days',
+      estimatedDeliveryBn: '২ - ৩ কার্যদিবস',
+      isPopular: true,
+    };
+
+  const estimatedDeliveryDate =
+    o.estimatedDeliveryDate ||
+    (isSplitDelivery
+      ? [shipment1DeliveryMethodDetails?.estimatedDeliveryEn, shipment2DeliveryMethodDetails?.estimatedDeliveryEn]
+          .filter(Boolean)
+          .join(' + ')
+      : deliveryMethod.estimatedDeliveryEn) ||
+    '2-3 Working Days';
 
   const orderStatus = (o.orderStatus || o.status || 'pending').toLowerCase();
   const paymentStatus = (o.paymentStatus || 'pending').toLowerCase();
@@ -50,7 +102,14 @@ export function normalizeOrder(o: any) {
       nameEn: i.nameEn || i.name || 'Medicine',
       nameBn: i.nameBn || i.name || 'ওষুধ',
       quantity: i.quantity || 1,
+      unit: i.unit || i.unitType || 'pcs',
+      unitMultiplier: i.unitMultiplier,
       unitPrice: i.unitPrice || i.effectiveUnitPrice || 0,
+      effectiveUnitPrice: i.effectiveUnitPrice || i.unitPrice || 0,
+      availableQuantity: i.availableQuantity,
+      preOrderQuantity: i.preOrderQuantity,
+      fulfillmentType: i.fulfillmentType,
+      totalPrice: i.totalPrice || (i.unitPrice || i.effectiveUnitPrice || 0) * (i.quantity || 1),
       image: i.image || '',
     })),
     shippingAddress: {
@@ -67,11 +126,16 @@ export function normalizeOrder(o: any) {
     },
     paymentStatus,
     orderStatus,
-    deliveryMethod: o.deliveryMethod || {
-      id: 'standard',
-      nameEn: 'Standard Home Delivery',
-      nameBn: 'স্ট্যান্ডার্ড হোম ডেলিভারি',
-    },
+    isPreOrder: Boolean(
+      o.isPreOrder ||
+        (Array.isArray(o.items) && o.items.some((item: any) => Number(item.preOrderQuantity || 0) > 0 || item.fulfillmentType !== 'immediate'))
+    ),
+    isSplitDelivery,
+    shipment1DeliveryMethod: o.shipment1DeliveryMethod,
+    shipment2DeliveryMethod: o.shipment2DeliveryMethod,
+    deliveryMethod,
+    shipment1DeliveryMethodDetails,
+    shipment2DeliveryMethodDetails,
     summary: {
       subtotal,
       mrpDiscount,
@@ -79,7 +143,7 @@ export function normalizeOrder(o: any) {
       deliveryCharge,
       grandTotal,
     },
-    estimatedDeliveryDate: o.estimatedDeliveryDate || '2-3 Working Days',
+    estimatedDeliveryDate,
     createdAt: o.createdAt || new Date().toISOString(),
     timeline: o.timeline || [
       {

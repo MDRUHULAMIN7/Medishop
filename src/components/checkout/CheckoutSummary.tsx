@@ -17,6 +17,7 @@ interface CheckoutSummaryProps {
   paymentMethod: PaymentMethod;
   isSubmitting: boolean;
   onPlaceOrder: () => void;
+  isSplitDelivery?: boolean;
   isBn?: boolean;
 }
 
@@ -28,6 +29,7 @@ export function CheckoutSummary({
   paymentMethod,
   isSubmitting,
   onPlaceOrder,
+  isSplitDelivery = false,
   isBn = true,
 }: CheckoutSummaryProps) {
   const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
@@ -55,10 +57,17 @@ export function CheckoutSummary({
           </div>
 
           <div className="flex justify-between text-gray-600">
-            <span>{isBn ? 'ডেলিভারি চার্জ' : 'Delivery Charge'}</span>
+            <span>
+              {isBn ? 'ডেলিভারি চার্জ' : 'Delivery Charge'}
+              {isSplitDelivery && (
+                <span className="text-[11px] font-bold text-primary ml-1">
+                  {isBn ? '(২ চালান)' : '(2 Shipments)'}
+                </span>
+              )}
+            </span>
             <span className="font-bold text-gray-900">
               {summary.deliveryCharge === 0 ? (
-                <span className="text-blue-600">{isBn ? 'ফ্রি' : 'Free'}</span>
+                <span className="text-primary">{isBn ? 'ফ্রি' : 'Free'}</span>
               ) : (
                 formatPrice(summary.deliveryCharge, isBn ? 'bn' : 'en')
               )}
@@ -76,7 +85,7 @@ export function CheckoutSummary({
 
           <div className="pt-3 border-t border-gray-100 flex justify-between items-baseline">
             <span className="text-base font-bold text-gray-900">{isBn ? 'সর্বমোট মূল্য' : 'Total Amount'}</span>
-            <span className="text-2xl font-bold text-gray-900">
+            <span className="text-2xl font-bold text-primary">
               {formatPrice(summary.grandTotal, isBn ? 'bn' : 'en')}
             </span>
           </div>
@@ -91,12 +100,12 @@ export function CheckoutSummary({
           </p>
         )}
 
-        {/* CTA Place Order Button matching Screenshot */}
+        {/* CTA Place Order Button */}
         <button
           type="button"
           onClick={onPlaceOrder}
           disabled={isSubmitting || !selectedAddress}
-          className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 px-4 text-sm font-bold text-white shadow-md hover:bg-blue-700 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary py-3.5 px-4 text-sm font-bold text-white shadow-md hover:bg-primary-dark active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
         >
           {isSubmitting ? (
             <>
@@ -119,43 +128,53 @@ export function CheckoutSummary({
         </p>
       </div>
 
-      {/* Card 2: Order Items (3) matching Screenshot */}
+      {/* Card 2: Order Items with Pre-Order Identification */}
       <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-xs space-y-3">
         <h4 className="text-sm font-bold text-gray-900 pb-2 border-b border-gray-100">
           {isBn ? `অর্ডারকৃত পণ্যসমূহ (${items.length})` : `Order Items (${items.length})`}
         </h4>
 
         <div className="space-y-3 max-h-60 overflow-y-auto custom-scrollbar pr-1">
-          {items.map((item) => (
-            <div key={item.productId} className="flex items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200 p-0.5">
-                  <img
-                    src={item.image || '/images/placeholder.png'}
-                    alt={item.nameEn}
-                    className="h-full w-full object-contain"
-                  />
+          {items.map((item) => {
+            const hasPreOrder = Boolean(item.preOrderQuantity && item.preOrderQuantity > 0);
+            return (
+              <div key={item.productId} className="flex items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200 p-0.5">
+                    <img
+                      src={item.image || '/images/placeholder.png'}
+                      alt={item.nameEn}
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-bold text-gray-900 truncate">
+                      {isBn ? item.nameBn || item.nameEn : item.nameEn}
+                    </p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[11px] text-gray-400">
+                        {item.unit || 'Tablet'} • Qty: {item.quantity}
+                      </span>
+                      {hasPreOrder && (
+                        <span className="rounded-md bg-primary/10 border border-primary/20 px-1.5 py-0.2 text-[9px] font-black text-primary">
+                          {isBn ? `Pre-Order: +${item.preOrderQuantity}` : `Pre-Order: +${item.preOrderQuantity}`}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="font-bold text-gray-900 truncate">
-                    {isBn ? item.nameBn || item.nameEn : item.nameEn}
-                  </p>
-                  <p className="text-[11px] text-gray-400">
-                    {item.unit || 'Tablet'} • Qty: {item.quantity}
-                  </p>
-                </div>
-              </div>
 
-              <span className="font-bold text-gray-900 shrink-0">
-                {formatPrice(item.sellingPrice * item.quantity, isBn ? 'bn' : 'en')}
-              </span>
-            </div>
-          ))}
+                <span className="font-bold text-gray-900 shrink-0">
+                  {formatPrice(item.sellingPrice * item.quantity, isBn ? 'bn' : 'en')}
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         <Link
           href="/cart"
-          className="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 py-2.5 text-xs font-bold text-blue-600 hover:bg-gray-50 transition-colors"
+          className="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 py-2.5 text-xs font-bold text-primary hover:bg-gray-50 transition-colors"
         >
           <ShoppingCart className="h-4 w-4" />
           <span>{isBn ? 'কার্ট পরিবর্তন করুন' : 'View & Edit Cart'}</span>

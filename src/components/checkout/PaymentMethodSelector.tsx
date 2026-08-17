@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Banknote, CreditCard, Building2, Check, CreditCard as CardIcon } from 'lucide-react';
+import { CreditCard as CardIcon } from 'lucide-react';
 import { PaymentMethod, PaymentMethodId } from '@/types/checkout';
 import { cn } from '@/lib/utils';
+import { PaymentBrandIcon } from '@/components/common/PaymentBrandIcon';
 
 interface PaymentMethodSelectorProps {
   methods: PaymentMethod[];
@@ -18,104 +19,57 @@ export function PaymentMethodSelector({
   onSelect,
   isBn = true,
 }: PaymentMethodSelectorProps) {
-  const getIcon = (id: PaymentMethodId) => {
-    switch (id) {
-      case 'cod':
-        return (
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 shrink-0">
-            <Banknote className="h-5 w-5" />
-          </div>
-        );
-      case 'bkash':
-        return (
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e2136e] text-white font-black text-[11px] tracking-tight shrink-0 shadow-xs">
-            <span>bKash</span>
-          </div>
-        );
-      case 'nagad':
-        return (
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f7921e] text-white font-black text-[11px] tracking-tight shrink-0 shadow-xs">
-            <span>নগদ</span>
-          </div>
-        );
-      case 'card':
-        return (
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 shrink-0">
-            <CreditCard className="h-5 w-5" />
-          </div>
-        );
-      case 'banking':
-        return (
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 shrink-0">
-            <Building2 className="h-5 w-5" />
-          </div>
-        );
-      default:
-        return (
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 shrink-0">
-            <CreditCard className="h-5 w-5" />
-          </div>
-        );
-    }
-  };
-
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600">
           <CardIcon className="h-5 w-5" />
         </div>
         <div>
-          <h3 className="text-base font-bold text-gray-900">
-            {isBn ? 'পেমেন্ট মেথড' : 'Payment Method'}
+          <h3 className="text-base font-bold text-foreground">
+            {isBn ? 'পেমেন্ট মাধ্যম' : 'Payment Method'}
           </h3>
-          <p className="text-xs text-gray-500">
-            {isBn ? 'আপনার পছন্দসই পেমেন্ট মাধ্যম সিলেক্ট করুন' : 'Select a secure payment method'}
+          <p className="text-xs text-muted-foreground">
+            {isBn ? 'পছন্দসই পেমেন্ট মাধ্যম বেছে নিন' : 'Select your preferred payment method'}
           </p>
         </div>
       </div>
 
-      {/* Grid of Payment Method Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
         {methods.map((method) => {
           const isSelected = method.id === selectedId;
 
           return (
-            <div
+            <button
+              type="button"
               key={method.id}
               onClick={() => onSelect(method.id)}
               className={cn(
-                'relative flex cursor-pointer items-center justify-between rounded-2xl p-4 transition-all duration-200',
+                'relative flex h-[100px] sm:h-[110px] w-full cursor-pointer flex-col items-center justify-center rounded-2xl border p-2 text-center transition-all select-none',
                 isSelected
-                  ? 'border-2 border-blue-600 bg-white shadow-xs'
-                  : 'border border-gray-200 bg-white hover:border-gray-300'
+                  ? 'border-2 border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/30 shadow-xs ring-2 ring-indigo-200/60 dark:ring-indigo-800/40'
+                  : 'border-border bg-background hover:border-border/80 hover:bg-muted/40'
               )}
             >
-              <div className="flex items-center gap-3 min-w-0 pr-2">
-                {getIcon(method.id)}
-                <div className="min-w-0">
-                  <h4 className="text-sm font-bold text-gray-900 truncate">
-                    {isBn ? method.nameBn : method.nameEn}
-                  </h4>
-                  <p className="text-xs text-gray-500 truncate">
-                    {isBn ? method.descriptionBn : method.descriptionEn}
-                  </p>
+              {/* Radio Indicator */}
+              <div className="absolute left-2.5 top-2.5">
+                <div
+                  className={cn(
+                    'flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full transition-all',
+                    isSelected
+                      ? 'border-2 border-indigo-600 bg-indigo-600'
+                      : 'border-2 border-muted-foreground/30 bg-background'
+                  )}
+                >
+                  {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
                 </div>
               </div>
 
-              {/* Radio Checkmark on Right */}
-              <div
-                className={cn(
-                  'flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-all',
-                  isSelected
-                    ? 'bg-blue-600 text-white'
-                    : 'border-2 border-gray-300 bg-white'
-                )}
-              >
-                {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
+              {/* Centered Brand Icon */}
+              <div className="flex h-full w-full items-center justify-center pt-1">
+                <PaymentBrandIcon code={method.id} isBn={isBn} />
               </div>
-            </div>
+            </button>
           );
         })}
       </div>

@@ -41,9 +41,8 @@ export function QuantitySelector({
         <button
           type="button"
           onClick={onIncrease}
-          disabled={quantity >= max}
           aria-label={isBn ? 'পরিমাণ বাড়ান' : 'Increase quantity'}
-          className="flex h-8 w-8 items-center justify-center rounded-xl bg-background text-foreground transition-all hover:bg-muted disabled:opacity-40"
+          className="flex h-8 w-8 items-center justify-center rounded-xl bg-background text-foreground transition-all hover:bg-muted hover:text-primary active:scale-95 cursor-pointer"
         >
           <Plus className="h-3.5 w-3.5" />
         </button>

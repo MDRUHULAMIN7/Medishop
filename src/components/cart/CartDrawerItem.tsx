@@ -35,7 +35,7 @@ export function CartDrawerItem({
         />
         {item.prescriptionRequired && (
           <div
-            className="absolute left-1 top-1 rounded-md bg-amber-500 p-0.5 text-[9px] font-bold text-white shadow-xs"
+            className="absolute left-1 top-1 rounded-md bg-primary p-0.5 text-[9px] font-bold text-white shadow-xs"
             title={isBn ? 'প্রেসক্রিপশন প্রয়োজন' : 'Rx Required'}
           >
             <Pill className="h-3 w-3" />
@@ -68,7 +68,7 @@ export function CartDrawerItem({
           </div>
 
           {/* Unit & Price */}
-          <div className="mt-1 flex items-baseline gap-2">
+          <div className="mt-1 flex items-center gap-2 flex-wrap">
             <span className="text-xs font-bold text-primary">
               {formatPrice(item.sellingPrice, isBn ? 'bn' : 'en')}
             </span>
@@ -78,6 +78,11 @@ export function CartDrawerItem({
               </span>
             )}
             <span className="text-[10px] text-muted-foreground">/ {item.unit}</span>
+            {Boolean(item.preOrderQuantity && item.preOrderQuantity > 0) && (
+              <span className="rounded-md bg-primary/10 border border-primary/20 px-1.5 py-0.5 text-[9px] font-black text-primary">
+                {isBn ? `Pre-Order: +${item.preOrderQuantity}` : `Pre-Order: +${item.preOrderQuantity}`}
+              </span>
+            )}
           </div>
         </div>
 

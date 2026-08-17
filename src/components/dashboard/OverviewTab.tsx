@@ -20,11 +20,14 @@ import { useAppSelector } from '@/store';
 import { formatBDT } from '@/lib/utils';
 import { adminService, DashboardSummaryResponse } from '@/services/admin.service';
 import { orderService } from '@/services/order.service';
+import { useBranding } from '@/context/BrandingContext';
 import { toast } from 'sonner';
 
 export function OverviewTab() {
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
+  const { settings } = useBranding();
+  const siteName = settings.general?.siteName || 'mediShop';
 
   const [summary, setSummary] = useState<DashboardSummaryResponse | null>(null);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
@@ -113,7 +116,7 @@ export function OverviewTab() {
             <span>{isBn ? 'দৈনিক ডিজিটাল হেলথ সামারি' : 'Daily Healthcare Analytics'}</span>
           </span>
           <h2 className="font-serif-title text-2xl sm:text-3xl font-extrabold tracking-tight">
-            {isBn ? 'স্বাগতম, মেডিশপ এডমিন ড্যাশবোর্ডে!' : 'Welcome to mediShop Admin Control!'}
+            {isBn ? `স্বাগতম, ${siteName} এডমিন ড্যাশবোর্ডে!` : `Welcome to ${siteName} Admin Control!`}
           </h2>
           <p className="text-xs sm:text-sm text-white/90 leading-relaxed">
             {isBn

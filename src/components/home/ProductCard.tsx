@@ -12,11 +12,12 @@ import {
   Minus,
   Plus,
   ShoppingCart,
+  Clock,
   X,
 } from 'lucide-react';
 import { Product } from '@/services/product.service';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { addToCart, updateQuantity } from '@/store/slices/cartSlice';
+import { addToCart, updateQuantity, openPreOrderModal, openCartDrawer } from '@/store/slices/cartSlice';
 import { formatBDT, cn } from '@/lib/utils';
 import { useFlyToCart } from '@/context/FlyToCartContext';
 import { toast } from 'sonner';
@@ -43,9 +44,25 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
 
   const activeOption = useMemo(() => {
     return unitOptions.find((u) => u.value === selectedUnit) || unitOptions[0] || {
-      value: 'pcs', labelBn: 'পিস', labelEn: 'Piece', price: product.price, mrp: product.mrp, stock: product.stockCount
+      value: 'pcs',
+      labelBn: 'পিস',
+      labelEn: 'Piece',
+      price: product.price,
+      mrp: product.mrp,
+      stock: product.stockCount,
     };
   }, [unitOptions, selectedUnit, product]);
+
+  const isOutOfStock =
+    (activeOption.stock !== undefined ? activeOption.stock <= 0 : false) ||
+    (product.stockCount !== undefined ? product.stockCount <= 0 : false) ||
+    product.inStock === false;
+  const availableStock =
+    activeOption.stock !== undefined
+      ? activeOption.stock
+      : product.stockCount !== undefined
+      ? product.stockCount
+      : 0;
 
   const cartItems = useAppSelector((state) => state.cart.items);
   const cartItem = cartItems.find((i) => i.productId === product.id && i.unit === selectedUnit);
@@ -72,6 +89,7 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
   const handleOpenAddFlow = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
     setIsAddFlowOpen(true);
     setPendingQuantity(1);
   };
@@ -92,6 +110,33 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
       e.stopPropagation();
     }
 
+    const targetQty = quantityInCart + pendingQuantity;
+
+    if (isOutOfStock || availableStock < targetQty) {
+      dispatch(
+        openPreOrderModal({
+          item: {
+            productId: product.id,
+            slug: product.slug,
+            nameEn: product.nameEn || product.name,
+            nameBn: product.nameBn || product.name,
+            brand: typeof product.brand === 'object' ? product.brand?.name : product.brand,
+            sellingPrice: activeOption.price,
+            mrp: activeOption.mrp,
+            image: product.image,
+            unit: selectedUnit,
+            quantity: pendingQuantity,
+            prescriptionRequired: Boolean(product.requiresRx || product.requiresPrescription),
+            stock: Math.max(0, availableStock),
+          },
+          requestedQuantity: targetQty,
+          availableStock: Math.max(0, availableStock),
+        })
+      );
+      setIsAddFlowOpen(false);
+      return;
+    }
+
     triggerFlyToCart(selectedUnit);
 
     dispatch(
@@ -107,11 +152,12 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
         unit: selectedUnit,
         quantity: pendingQuantity,
         prescriptionRequired: Boolean(product.requiresRx || product.requiresPrescription),
-        stock: activeOption.stock,
+        stock: availableStock,
       })
     );
 
     toast.success(isBn ? 'কার্টে যোগ হয়েছে' : `${product.nameEn || product.name} added to cart`);
+    dispatch(openCartDrawer());
     setIsAddFlowOpen(false);
     setPendingQuantity(1);
   };
@@ -119,6 +165,30 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
   const handleIncrease = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (quantityInCart >= availableStock) {
+      dispatch(
+        openPreOrderModal({
+          item: {
+            productId: product.id,
+            slug: product.slug,
+            nameEn: product.nameEn || product.name,
+            nameBn: product.nameBn || product.name,
+            brand: typeof product.brand === 'object' ? product.brand?.name : product.brand,
+            sellingPrice: activeOption.price,
+            mrp: activeOption.mrp,
+            image: product.image,
+            unit: currentUnit,
+            quantity: quantityInCart + 1,
+            prescriptionRequired: Boolean(product.requiresRx || product.requiresPrescription),
+            stock: availableStock,
+          },
+          requestedQuantity: quantityInCart + 1,
+          availableStock,
+        })
+      );
+      return;
+    }
 
     triggerFlyToCart(currentUnit);
 
@@ -160,6 +230,12 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
           {product.discountPercent > 0 && (
             <span className="absolute left-1.5 top-1.5 sm:left-2 sm:top-2 rounded-md bg-accent px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-[11px] font-bold text-slate-900 shadow-xs">
               {product.discountPercent}% {isBn ? 'ছাড়' : 'Off'}
+            </span>
+          )}
+
+          {isOutOfStock && (
+            <span className="absolute left-1.5 bottom-1.5 sm:left-2 sm:bottom-2 rounded-md bg-primary/95 text-white font-extrabold px-1.5 py-0.5 text-[9px] sm:text-[10px] shadow-xs backdrop-blur-xs">
+              {isBn ? 'প্রি-অর্ডার' : 'Pre-Order'}
             </span>
           )}
 
@@ -288,7 +364,7 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
                     {/* Dynamic Unit Segment Switcher */}
                     <div
                       className={cn(
-                        'grid gap-1 rounded-lg bg-muted/50 p-1',
+                        'grid gap-1',
                         unitOptions.length === 1
                           ? 'grid-cols-1'
                           : unitOptions.length === 2
@@ -313,7 +389,7 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
                               'py-1 text-center text-[10px] sm:text-[11px] font-bold rounded-md transition-all cursor-pointer',
                               isSelected
                                 ? 'bg-primary text-white shadow-2xs font-extrabold'
-                                : 'text-muted-foreground hover:bg-background/80 hover:text-foreground'
+                                : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'
                             )}
                           >
                             {isBn ? option.labelBn : option.labelEn}
@@ -345,22 +421,55 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
+                            if (availableStock > 0 && pendingQuantity >= availableStock) {
+                              dispatch(
+                                openPreOrderModal({
+                                  item: {
+                                    productId: product.id,
+                                    slug: product.slug,
+                                    nameEn: product.nameEn || product.name,
+                                    nameBn: product.nameBn || product.name,
+                                    brand: typeof product.brand === 'object' ? product.brand?.name : product.brand,
+                                    sellingPrice: activeOption.price,
+                                    mrp: activeOption.mrp,
+                                    image: product.image,
+                                    unit: selectedUnit,
+                                    quantity: pendingQuantity + 1,
+                                    prescriptionRequired: Boolean(product.requiresRx || product.requiresPrescription),
+                                    stock: availableStock,
+                                  },
+                                  requestedQuantity: pendingQuantity + 1,
+                                  availableStock,
+                                })
+                              );
+                              setIsAddFlowOpen(false);
+                              return;
+                            }
                             setPendingQuantity((q) => q + 1);
                           }}
-                          className="flex h-6 w-6 items-center justify-center rounded text-primary hover:bg-primary/10 active:scale-95 transition-colors"
+                          className="flex h-6 w-6 items-center justify-center rounded text-primary hover:bg-primary/10 active:scale-95 transition-colors cursor-pointer"
                         >
                           <Plus className="h-3 w-3 stroke-[2.5]" />
                         </button>
                       </div>
 
-                      {/* Confirm Add Button */}
+                      {/* Confirm Add or Pre-Order Button */}
                       <button
                         type="button"
                         onClick={handleAddToCart}
-                        className="flex h-8 sm:h-9 w-full sm:w-auto items-center justify-center gap-1 rounded-lg bg-primary px-2.5 text-[11px] sm:text-xs font-bold text-white shadow-2xs hover:bg-primary-dark active:scale-95 transition-all"
+                        className="flex h-8 sm:h-9 w-full sm:w-auto items-center justify-center gap-1 rounded-lg bg-primary hover:bg-primary-dark text-white px-2.5 text-[11px] sm:text-xs font-bold shadow-2xs active:scale-95 transition-all cursor-pointer"
                       >
-                        <ShoppingCart className="h-3 w-3 shrink-0" />
-                        <span className="whitespace-nowrap">{isBn ? 'যোগ করুন' : 'Confirm'}</span>
+                        {isOutOfStock ? (
+                          <>
+                            <Clock className="h-3 w-3 shrink-0" />
+                            <span className="whitespace-nowrap">{isBn ? 'Pre-Order করুন' : 'Pre-Order'}</span>
+                          </>
+                        ) : (
+                          <>
+                            <ShoppingCart className="h-3 w-3 shrink-0" />
+                            <span className="whitespace-nowrap">{isBn ? 'যোগ করুন' : 'Confirm'}</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   </motion.div>
@@ -373,11 +482,26 @@ export const ProductCard = memo(function ProductCard({ product }: ProductCardPro
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.96 }}
                     transition={{ duration: 0.15 }}
-                    className="flex h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-primary/30 bg-primary-soft/60 px-2 text-xs sm:text-sm font-bold text-primary shadow-2xs transition-all duration-200 hover:bg-primary hover:text-white active:scale-[0.98]"
+                    className={cn(
+                      'flex h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl px-2 text-xs sm:text-sm font-bold shadow-2xs transition-all duration-200 active:scale-[0.98]',
+                      isOutOfStock
+                        ? 'border border-primary/40 bg-primary/10 text-primary hover:bg-primary hover:text-white'
+                        : 'border border-primary/30 bg-primary-soft/60 text-primary hover:bg-primary hover:text-white'
+                    )}
                   >
-                    <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                    <span className="truncate">{isBn ? 'কার্টে যোগ করুন' : 'Add to Bag'}</span>
-                    <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                    {isOutOfStock ? (
+                      <>
+                        <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                        <span className="truncate">{isBn ? 'Pre-Order করুন' : 'Pre-Order Now'}</span>
+                        <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                        <span className="truncate">{isBn ? 'কার্টে যোগ করুন' : 'Add to Bag'}</span>
+                        <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                      </>
+                    )}
                   </motion.button>
                 )}
               </AnimatePresence>

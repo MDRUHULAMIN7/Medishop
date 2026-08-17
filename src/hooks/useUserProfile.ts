@@ -102,11 +102,11 @@ export function useUserProfile() {
   );
 
   /**
-   * Upload Avatar image file with strict 5MB size limit validation.
+   * Upload Avatar image file with Sharp optimization.
    */
   const uploadAvatar = useCallback(
     async (file: File) => {
-      const MAX_SIZE_MB = 5;
+      const MAX_SIZE_MB = 10;
       const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
       if (file.size > MAX_SIZE_BYTES) {
@@ -121,25 +121,25 @@ export function useUserProfile() {
         return { success: false, message: errorMsg };
       }
 
-      return new Promise<{ success: boolean; avatarUrl?: string }>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          const base64String = reader.result as string;
-          const result = await updateProfile({ avatar: base64String });
-          if (result.success && result.user?.avatar) {
-            resolve({ success: true, avatarUrl: result.user.avatar });
-          } else {
-            resolve({ success: false });
-          }
-        };
-        reader.onerror = () => {
-          toast.error(isBn ? 'ছবিটি প্রসেস করতে ব্যর্থ হয়েছে' : 'Failed to read image file');
-          resolve({ success: false });
-        };
-        reader.readAsDataURL(file);
-      });
+      try {
+        setIsSaving(true);
+        const updatedUser = await UserProfileService.uploadAvatar(file);
+        dispatch(setUser(updatedUser));
+        toast.success(
+          isBn
+            ? 'প্রোফাইল ছবি সফলভাবে আপডেট হয়েছে!'
+            : 'Profile picture updated successfully!'
+        );
+        return { success: true, avatarUrl: updatedUser.avatar || undefined, user: updatedUser };
+      } catch (err: any) {
+        const errorMsg = err.message || (isBn ? 'ছবি আপলোড করতে সমস্যা হয়েছে' : 'Failed to upload avatar');
+        toast.error(errorMsg);
+        return { success: false, message: errorMsg };
+      } finally {
+        setIsSaving(false);
+      }
     },
-    [isBn, updateProfile]
+    [dispatch, isBn]
   );
 
   return {

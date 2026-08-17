@@ -1,25 +1,30 @@
 'use client';
 
 import React from 'react';
-import { RotateCcw, ShieldAlert, CheckCircle2, RefreshCw, AlertCircle } from 'lucide-react';
+import { RotateCcw, ShieldAlert, CheckCircle2, RefreshCw } from 'lucide-react';
 import { useAppSelector } from '@/store';
-import { COMPANY_EMAIL_PRIMARY, HOTLINE_NUMBER } from '@/lib/constants';
+import { useBranding } from '@/context/BrandingContext';
 
 export default function RefundPolicyPage() {
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
+  const { settings } = useBranding();
+
+  const siteName = settings.general?.siteName || 'mediShop';
+  const refundText = settings.legal?.refundPolicyContent;
+  const invoiceTerms = settings.legal?.invoiceTerms;
 
   return (
     <div className="min-h-screen bg-background text-foreground py-8 md:py-12">
       <div className="mx-auto max-w-[1000px] px-4 sm:px-6 lg:px-8 space-y-8">
         {/* Header */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary-soft px-3.5 py-1 text-xs font-semibold text-primary">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary">
             <RotateCcw className="h-4 w-4" />
             <span>{isBn ? 'ফেরত ও রিফান্ড নীতিমালা' : 'Returns & Refund Terms'}</span>
           </div>
           <h1 className="font-serif-title text-3xl sm:text-4xl font-bold text-foreground">
-            {isBn ? 'ফেরত ও রিফান্ড নীতি (Return Policy)' : 'Return & Refund Policy'}
+            {isBn ? `ফেরত ও রিফান্ড নীতি (${siteName})` : `Return & Refund Policy (${siteName})`}
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground">
             {isBn ? 'সহজ ৭ দিনের রিটার্ন সুবিধা এবং দ্রুততম রিফান্ড প্রক্রিয়া' : 'Hassle-free 7-day returns and fast refund processing'}
@@ -27,7 +32,22 @@ export default function RefundPolicyPage() {
         </div>
 
         {/* Policy Detail Sections */}
-        <div className="rounded-3xl border border-border bg-background p-6 sm:p-10 space-y-6 text-xs sm:text-sm leading-relaxed text-muted-foreground">
+        <div className="rounded-3xl border border-border bg-card p-6 sm:p-10 space-y-6 text-xs sm:text-sm leading-relaxed text-muted-foreground shadow-xs">
+          {refundText && (
+            <section className="space-y-2 rounded-2xl bg-primary/5 p-4 border border-primary/20">
+              <h2 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-primary" />
+                <span>{isBn ? 'অফিসিয়াল রিফান্ড বিবৃতি' : 'Official Refund Statement'}</span>
+              </h2>
+              <p className="whitespace-pre-line text-foreground/90 font-medium">{refundText}</p>
+              {invoiceTerms && (
+                <p className="text-xs text-muted-foreground pt-1 border-t border-primary/10 mt-2">
+                  <strong>{isBn ? 'ইনভয়েস শর্ত:' : 'Invoice Terms:'}</strong> {invoiceTerms}
+                </p>
+              )}
+            </section>
+          )}
+
           <section className="space-y-2">
             <h2 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-primary" />

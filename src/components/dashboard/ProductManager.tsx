@@ -24,16 +24,24 @@ import {
   History,
   Boxes,
   Eye,
+  MoreVertical,
+  Copy,
+  TrendingUp,
+  TrendingDown,
+  Shield,
 } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useBrands } from '@/hooks/useBrands';
-import { Product, UnitPriceOption, PackagingTier } from '@/services/product.service';
+import { Product, UnitPriceOption, PackagingTier, ProductService } from '@/services/product.service';
 import { useAppSelector } from '@/store';
 import { formatBDT } from '@/lib/utils';
+import { formatNumber } from '@/utils/cart';
 import { toast } from 'sonner';
 import { CustomSelect } from '@/components/ui/CustomSelect';
 import { apiClient } from '@/lib/apiClient';
+
+import { createPortal } from 'react-dom';
 
 const DOSAGE_FORMS = [
   { value: 'tablet', label: 'Tablet (ট্যাবলেট)' },
@@ -41,24 +49,202 @@ const DOSAGE_FORMS = [
   { value: 'capsule', label: 'Capsule (ক্যাপসুল)' },
   { value: 'saline', label: 'Saline (স্যালাইন)' },
   { value: 'injection', label: 'Injection (ইনজেকশন)' },
-  { value: 'ointment', label: 'Ointment (মলম/ক্রিম)' },
+  { value: 'ointment', label: 'Ointment (মলম)' },
   { value: 'drop', label: 'Drop (ড্রপ)' },
   { value: 'inhaler', label: 'Inhaler (ইনহেলার)' },
   { value: 'powder', label: 'Powder (পাউডার)' },
-  { value: 'suppository', label: 'Suppository (সার্পোজিটরি)' },
+  { value: 'suppository', label: 'Suppository (সাপোজিটরি)' },
   { value: 'other', label: 'Other (অন্যান্য)' },
 ];
 
 const UNIT_TYPES = [
-  { value: 'pcs', label: 'Pcs (পিস)', labelBn: 'পিস', labelEn: 'Piece' },
+  { value: 'pcs', label: 'Piece (পিস)', labelBn: 'পিস', labelEn: 'Pcs' },
   { value: 'strip', label: 'Strip (পাতা)', labelBn: 'পাতা', labelEn: 'Strip' },
   { value: 'box', label: 'Box (বক্স)', labelBn: 'বক্স', labelEn: 'Box' },
   { value: 'bottle', label: 'Bottle (বোতল)', labelBn: 'বোতল', labelEn: 'Bottle' },
   { value: 'tube', label: 'Tube (টিউব)', labelBn: 'টিউব', labelEn: 'Tube' },
-  { value: 'gm', label: 'Gm (গ্রাম)', labelBn: 'গ্রাম', labelEn: 'Gm' },
+  { value: 'gm', label: 'Gram (গ্রাম)', labelBn: 'গ্রাম', labelEn: 'Gm' },
   { value: 'ml', label: 'Ml (মিলি)', labelBn: 'মিলি', labelEn: 'Ml' },
   { value: 'pack', label: 'Pack (প্যাক)', labelBn: 'প্যাক', labelEn: 'Pack' },
 ];
+
+function ProductActionsMenu({
+  product,
+  isBn,
+  onView,
+  onAudit,
+  onEdit,
+  onDuplicate,
+  onDelete,
+}: {
+  product: Product;
+  isBn: boolean;
+  onView: () => void;
+  onAudit: () => void;
+  onEdit: () => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
+}) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
+  const [coords, setCoords] = React.useState<{ top: number; left: number; openUp: boolean }>({
+    top: 0,
+    left: 0,
+    openUp: false,
+  });
+
+  const updateCoordinates = () => {
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    const menuHeight = 220;
+    const menuWidth = 192;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUp = spaceBelow < menuHeight && rect.top > menuHeight;
+
+    const top = openUp ? rect.top - menuHeight - 6 : rect.bottom + 6;
+    const left = Math.max(10, Math.min(window.innerWidth - menuWidth - 10, rect.right - menuWidth));
+
+    setCoords({ top, left, openUp });
+  };
+
+  const handleToggle = () => {
+    if (!isOpen) {
+      updateCoordinates();
+    }
+    setIsOpen((prev) => !prev);
+  };
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const handleScrollOrResize = () => {
+      setIsOpen(false);
+    };
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target as Node) &&
+        !(e.target as Element)?.closest?.('.product-actions-portal-menu')
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('scroll', handleScrollOrResize, true);
+    window.addEventListener('resize', handleScrollOrResize);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
+    };
+  }, [isOpen]);
+
+  return (
+    <div className="relative inline-block text-left">
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={handleToggle}
+        aria-expanded={isOpen}
+        aria-label="Product options"
+        className="flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer shadow-2xs"
+      >
+        <MoreVertical className="h-4 w-4" />
+      </button>
+
+      {isOpen && typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: coords.openUp ? 5 : -5 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.12 }}
+              style={{
+                position: 'fixed',
+                top: `${coords.top}px`,
+                left: `${coords.left}px`,
+                zIndex: 99999,
+              }}
+              className="product-actions-portal-menu w-48 rounded-2xl border border-border bg-background p-1.5 shadow-2xl space-y-0.5"
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  onView();
+                }}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted transition-colors cursor-pointer"
+              >
+                <Eye className="h-3.5 w-3.5 text-blue-600" />
+                <span>{isBn ? 'বিস্তারিত দেখুন' : 'View Details'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  onEdit();
+                }}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted transition-colors cursor-pointer"
+              >
+                <Edit2 className="h-3.5 w-3.5 text-amber-600" />
+                <span>{isBn ? 'এডিট করুন' : 'Edit Product'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  onDuplicate();
+                }}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted transition-colors cursor-pointer"
+              >
+                <Copy className="h-3.5 w-3.5 text-purple-600" />
+                <span>{isBn ? 'ডুপ্লিকেট করুন' : 'Duplicate Product'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  onAudit();
+                }}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted transition-colors cursor-pointer"
+              >
+                <History className="h-3.5 w-3.5 text-emerald-600" />
+                <span>{isBn ? 'স্টক ও অডিট লেজার' : 'Stock & Audit'}</span>
+              </button>
+
+              <div className="my-1 border-t border-border" />
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  onDelete();
+                }}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>{isBn ? 'ডিলিট করুন' : 'Delete Product'}</span>
+              </button>
+            </motion.div>
+          </AnimatePresence>,
+          document.body
+        )}
+    </div>
+  );
+}
 
 export function ProductManager() {
   const router = useRouter();
@@ -94,6 +280,7 @@ export function ProductManager() {
     category: categoryQuery || undefined,
     brand: brandQuery || undefined,
     dosageForm: dosageQuery || undefined,
+    isAdmin: true,
   });
 
   const { categories } = useCategories(true);
@@ -124,6 +311,7 @@ export function ProductManager() {
     description: '',
     category: '',
     brand: '',
+    buyingPrice: 0,
     price: 0,
     discountPrice: 0,
     stock: 100,
@@ -133,7 +321,7 @@ export function ProductManager() {
     isFeatured: true,
     images: [] as string[],
     unitPrices: [
-      { unit: 'pcs', baseUnitQty: 1, unitLabelBn: 'পিস', unitLabelEn: 'Piece', price: 0, mrp: 0, stock: 100, isDefault: true },
+      { unit: 'pcs', baseUnitQty: 1, unitLabelBn: 'পিস', unitLabelEn: 'Piece', buyingPrice: 0, price: 0, mrp: 0, stock: 100, isDefault: true },
     ] as (UnitPriceOption & { baseUnitQty?: number })[],
   });
 
@@ -290,6 +478,7 @@ export function ProductManager() {
           baseUnitQty: defaultQty,
           unitLabelBn: defaultUnit.labelBn,
           unitLabelEn: defaultUnit.labelEn,
+          buyingPrice: 0,
           price: prev.price || 0,
           mrp: prev.price || 0,
           stock: 50,
@@ -346,6 +535,7 @@ export function ProductManager() {
       baseUnitQty: Number(u.baseUnitQty || 1),
       unitLabelBn: u.unitLabelBn || (u.unit === 'pcs' ? 'পিস' : u.unit === 'strip' ? 'পাতা' : u.unit === 'box' ? 'বক্স' : u.unit === 'bottle' ? 'বোতল' : u.unit === 'tube' ? 'টিউব' : u.unit === 'pack' ? 'প্যাক' : u.unit),
       unitLabelEn: u.unitLabelEn || u.unit,
+      buyingPrice: Number(u.buyingPrice || 0),
       price: Number(u.price),
       mrp: u.mrp ? Number(u.mrp) : Number(u.price),
       discountPrice: u.discountPrice ? Number(u.discountPrice) : undefined,
@@ -357,6 +547,7 @@ export function ProductManager() {
     const packagingPayload: PackagingTier[] = allTiers.map((u) => ({
       unit: u.unit,
       baseUnitQty: Number(u.baseUnitQty || 1),
+      buyingPrice: Number(u.buyingPrice || 0),
       price: Number(u.price),
       mrp: u.mrp ? Number(u.mrp) : Number(u.price),
       discountPrice: u.discountPrice ? Number(u.discountPrice) : undefined,
@@ -377,6 +568,7 @@ export function ProductManager() {
       description: formData.description.trim() || undefined,
       category: formData.category,
       brand: formData.brand,
+      buyingPrice: Number(defaultTier ? defaultTier.buyingPrice || 0 : formData.buyingPrice || 0),
       price: Number(defaultTier ? defaultTier.price : formData.price),
       discountPrice: defaultTier && defaultTier.discountPrice ? Number(defaultTier.discountPrice) : (formData.discountPrice ? Number(formData.discountPrice) : undefined),
       stock: Number(formData.stock),
@@ -410,6 +602,7 @@ export function ProductManager() {
       description: '',
       category: categories[0]?.id || '',
       brand: brands[0]?.id || '',
+      buyingPrice: 0,
       price: 0,
       discountPrice: 0,
       stock: 100,
@@ -419,7 +612,7 @@ export function ProductManager() {
       isFeatured: true,
       images: [],
       unitPrices: [
-        { unit: 'pcs', baseUnitQty: 1, unitLabelBn: 'পিস', unitLabelEn: 'Piece', price: 0, mrp: 0, stock: 100, isDefault: true },
+        { unit: 'pcs', baseUnitQty: 1, unitLabelBn: 'পিস', unitLabelEn: 'Piece', buyingPrice: 0, price: 0, mrp: 0, stock: 100, isDefault: true },
       ],
     });
   };
@@ -454,13 +647,14 @@ export function ProductManager() {
           baseUnitQty: Number(u.baseUnitQty || u.multiplier || 1),
           unitLabelBn: u.unitLabelBn || (u.unit === 'pcs' ? 'পিস' : u.unit === 'strip' ? 'পাতা' : u.unit === 'box' ? 'বক্স' : u.unit === 'bottle' ? 'বোতল' : u.unit === 'tube' ? 'টিউব' : u.unit === 'pack' ? 'প্যাক' : u.unit),
           unitLabelEn: u.unitLabelEn || u.unit || 'pcs',
+          buyingPrice: u.buyingPrice !== undefined ? Number(u.buyingPrice) : ((p as any).buyingPrice ? Number((p as any).buyingPrice) * Number(u.baseUnitQty || u.multiplier || 1) : 0),
           price: Number(u.price || p.price || 0),
           mrp: u.mrp ? Number(u.mrp) : Number(u.price || p.price || 0),
           discountPrice: u.discountPrice ? Number(u.discountPrice) : undefined,
           stock: u.stock !== undefined ? Number(u.stock) : Number(p.stockCount || p.stock || 0),
           isDefault: Boolean(u.isDefault),
         }))
-      : [{ unit: p.unitType || 'pcs', baseUnitQty: 1, unitLabelBn: 'পিস', unitLabelEn: 'Piece', price: p.price, mrp: p.mrp, stock: p.stockCount || p.stock, isDefault: true }];
+      : [{ unit: p.unitType || 'pcs', baseUnitQty: 1, unitLabelBn: 'পিস', unitLabelEn: 'Piece', buyingPrice: (p as any).buyingPrice || 0, price: p.price, mrp: p.mrp, stock: p.stockCount || p.stock, isDefault: true }];
 
     setFormData({
       name: p.name,
@@ -473,6 +667,7 @@ export function ProductManager() {
       description: p.description || '',
       category: resolvedCatId,
       brand: resolvedBrandId,
+      buyingPrice: (p as any).buyingPrice || 0,
       price: p.price,
       discountPrice: p.discountPrice || 0,
       stock: p.stockCount || p.stock || 0,
@@ -491,7 +686,7 @@ export function ProductManager() {
     setIsAddModalOpen(true);
 
     try {
-      const fullProduct = await apiClient<Product>(`/products/${summaryProduct.id}`);
+      const fullProduct = await ProductService.getProductByIdOrSlug(summaryProduct.id, true);
       if (fullProduct) {
         populateFormWithProduct(fullProduct);
       }
@@ -510,8 +705,8 @@ export function ProductManager() {
           </h2>
           <p className="text-xs text-muted-foreground font-medium mt-0.5">
             {isBn
-              ? `মোট ${pagination.total} টি নিবন্ধিত ওষুধ ডাটাবেজে যুক্ত আছে`
-              : `Total ${pagination.total} registered products in catalog`}
+              ? `মোট ${formatNumber(pagination.total, 'bn')} টি নিবন্ধিত ওষুধ ডাটাবেজে যুক্ত আছে`
+              : `Total ${formatNumber(pagination.total, 'en')} registered products in catalog`}
           </p>
         </div>
 
@@ -590,7 +785,7 @@ export function ProductManager() {
       ) : (
         <>
           <div className="overflow-hidden rounded-3xl border border-border bg-background shadow-2xs">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto min-h-[300px]">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="border-b border-border bg-muted/40 font-bold uppercase tracking-wider text-muted-foreground">
@@ -663,19 +858,31 @@ export function ProductManager() {
 
                         {/* Multi-Unit Pricing Badge Tiers */}
                         <td className="py-3 px-4">
-                          <div className="flex flex-col gap-1">
+                          <div className="flex flex-col gap-1.5">
                             {p.unitPrices && p.unitPrices.length > 0 ? (
                               p.unitPrices.map((u, idx) => (
-                                <div key={idx} className="flex items-center gap-1.5 text-[11px]">
-                                  <span className="rounded-md bg-muted px-1.5 py-0.5 font-extrabold text-foreground uppercase text-[10px]">
-                                    {u.unitLabelBn || u.unit}
-                                  </span>
-                                  <span className="font-extrabold text-primary">
-                                    {formatBDT(u.price)}
-                                  </span>
-                                  <span className="text-[10px] text-muted-foreground">
-                                    ({u.stock} {u.unit})
-                                  </span>
+                                <div key={idx} className="flex flex-col gap-0.5 border-b border-border/40 pb-1 last:border-b-0 last:pb-0">
+                                  <div className="flex items-center gap-1.5 text-[11px]">
+                                    <span className="rounded-md bg-muted px-1.5 py-0.5 font-extrabold text-foreground uppercase text-[10px]">
+                                      {u.unitLabelBn || u.unit}
+                                    </span>
+                                    <span className="font-extrabold text-primary">
+                                      {formatBDT(u.price)}
+                                    </span>
+                                    <span className="text-[10px] text-muted-foreground">
+                                      ({u.stock} {u.unit})
+                                    </span>
+                                  </div>
+                                  {Number((u as any).buyingPrice || 0) > 0 && (
+                                    <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                                      <span>{isBn ? 'ক্রয়:' : 'Cost:'} <strong className="text-emerald-700 dark:text-emerald-400 font-extrabold">{formatBDT(Number((u as any).buyingPrice))}</strong></span>
+                                      {Number(u.price) > Number((u as any).buyingPrice) && (
+                                        <span className="text-emerald-600 font-black text-[9px]">
+                                          (+{Math.round(((Number(u.price) - Number((u as any).buyingPrice)) / Number(u.price)) * 100)}%)
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                               ))
                             ) : (
@@ -722,36 +929,21 @@ export function ProductManager() {
 
                         {/* Actions */}
                         <td className="py-3 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <button
-                              onClick={() => setViewingProduct(p)}
-                              className="rounded-xl border border-border p-1.5 text-muted-foreground hover:border-primary hover:text-primary transition-all cursor-pointer"
-                              title={isBn ? 'প্রোডাক্ট ডিটেইলস প্রিভিউ' : 'View Product Details'}
-                            >
-                              <Eye className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              onClick={() => openAuditModal(p)}
-                              className="rounded-xl border border-border p-1.5 text-muted-foreground hover:border-primary hover:text-primary transition-all cursor-pointer"
-                              title={isBn ? 'ব্যাচ ও স্টক লেজার অডিট' : 'Batches & Audit Ledger'}
-                            >
-                              <History className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              onClick={() => openEditModal(p)}
-                              className="rounded-xl border border-border p-1.5 text-muted-foreground hover:border-primary hover:text-primary transition-all cursor-pointer"
-                              title="Edit"
-                            >
-                              <Edit2 className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              onClick={() => setDeletingProductId(p.id)}
-                              className="rounded-xl border border-border p-1.5 text-muted-foreground hover:border-rose-500 hover:text-rose-500 transition-all cursor-pointer"
-                              title="Delete"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
+                          <ProductActionsMenu
+                            product={p}
+                            isBn={isBn}
+                            onView={() => setViewingProduct(p)}
+                            onAudit={() => openAuditModal(p)}
+                            onEdit={() => openEditModal(p)}
+                            onDuplicate={() => {
+                              populateFormWithProduct(p);
+                              setEditingProduct(null);
+                              setFormData((prev) => ({ ...prev, name: `${p.name} (Copy)` }));
+                              setIsAddModalOpen(true);
+                              toast.info(isBn ? 'প্রোডাক্টের কপি তৈরি করা হচ্ছে' : 'Duplicating product details');
+                            }}
+                            onDelete={() => setDeletingProductId(p.id)}
+                          />
                         </td>
                       </tr>
                     );
@@ -771,9 +963,10 @@ export function ProductManager() {
                   onChange={(e) => handleLimitChange(Number(e.target.value))}
                   className="h-8 rounded-xl border border-border bg-background px-2 text-xs font-bold text-foreground"
                 >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
+                  <option value={10}>{formatNumber(10, isBn ? 'bn' : 'en')}</option>
+                  <option value={20}>{formatNumber(20, isBn ? 'bn' : 'en')}</option>
+                  <option value={50}>{formatNumber(50, isBn ? 'bn' : 'en')}</option>
+                  <option value={100}>{formatNumber(100, isBn ? 'bn' : 'en')}</option>
                 </select>
               </div>
 
@@ -800,7 +993,7 @@ export function ProductManager() {
                           : 'border border-border hover:bg-muted text-foreground'
                       }`}
                     >
-                      {p}
+                      {formatNumber(p, isBn ? 'bn' : 'en')}
                     </button>
                   ))}
                 </div>
@@ -980,7 +1173,7 @@ export function ProductManager() {
                       <div className="flex items-center gap-2">
                         <Layers className="h-4 w-4 text-primary" />
                         <h4 className="font-bold text-foreground text-xs uppercase tracking-wider">
-                          {isBn ? 'প্যাকেজিং ইউনিট প্রাইসিং ও কনভার্সন (Packaging Tiers)' : 'Packaging Unit Pricing & Conversion'}
+                          {isBn ? 'প্যাকেজিং ইউনিট প্রাইসিং, ক্রয় মূল্য ও কনভার্সন (Packaging Tiers)' : 'Packaging Unit Pricing, Procurement Cost & Conversion'}
                         </h4>
                       </div>
                       <button
@@ -996,7 +1189,7 @@ export function ProductManager() {
                     {formData.unitPrices.map((tier, idx) => (
                       <div
                         key={idx}
-                        className="grid grid-cols-1 sm:grid-cols-5 gap-2.5 items-end rounded-xl border border-border/80 bg-background p-3 shadow-2xs"
+                        className="grid grid-cols-1 sm:grid-cols-6 gap-2 items-end rounded-xl border border-border/80 bg-background p-3 shadow-2xs"
                       >
                         {/* Unit Selector */}
                         <div>
@@ -1029,6 +1222,23 @@ export function ProductManager() {
                             value={tier.baseUnitQty === 0 ? '' : tier.baseUnitQty}
                             onChange={(e) => updateUnitPriceTier(idx, 'baseUnitQty', e.target.value === '' ? '' : Number(e.target.value))}
                             className="h-9 w-full rounded-lg border border-primary/40 bg-primary/5 px-2 text-xs font-bold text-primary focus:border-primary focus:ring-0 focus:outline-none transition-colors"
+                          />
+                        </div>
+
+                        {/* Buying Price / Cost Price per Unit */}
+                        <div>
+                          <label className="text-[10px] font-bold text-muted-foreground block mb-1">
+                            {isBn ? 'ক্রয় মূল্য (৳)' : 'Cost Price (৳)'}
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            step={0.01}
+                            onFocus={(e) => e.target.select()}
+                            value={tier.buyingPrice === 0 ? '' : (tier.buyingPrice || '')}
+                            onChange={(e) => updateUnitPriceTier(idx, 'buyingPrice', e.target.value === '' ? 0 : Number(e.target.value))}
+                            placeholder="0.00"
+                            className="h-9 w-full rounded-lg border border-border bg-background px-2 text-xs font-bold focus:border-primary focus:ring-0 focus:outline-none transition-colors"
                           />
                         </div>
 
@@ -1501,6 +1711,7 @@ export function ProductManager() {
                         <thead className="bg-muted/50 font-bold uppercase text-muted-foreground">
                           <tr>
                             <th className="py-2 px-3">Unit</th>
+                            <th className="py-2 px-3">Cost Price</th>
                             <th className="py-2 px-3">Selling Price</th>
                             <th className="py-2 px-3">MRP</th>
                             <th className="py-2 px-3">Unit Stock</th>
@@ -1511,6 +1722,7 @@ export function ProductManager() {
                             viewingProduct.unitPrices.map((u, i) => (
                               <tr key={i} className="hover:bg-muted/20">
                                 <td className="py-2 px-3 font-bold text-foreground">{u.unitLabelBn || u.unit}</td>
+                                <td className="py-2 px-3 font-bold text-emerald-600 dark:text-emerald-400">{formatBDT(Number((u as any).buyingPrice || 0))}</td>
                                 <td className="py-2 px-3 font-bold text-primary">{formatBDT(u.price)}</td>
                                 <td className="py-2 px-3 text-muted-foreground">{formatBDT(u.mrp || u.price)}</td>
                                 <td className="py-2 px-3 font-semibold">{u.stock} {u.unit}</td>
@@ -1519,6 +1731,7 @@ export function ProductManager() {
                           ) : (
                             <tr>
                               <td className="py-2 px-3 font-bold text-foreground">{viewingProduct.unitType || 'pcs'}</td>
+                              <td className="py-2 px-3 font-bold text-emerald-600 dark:text-emerald-400">{formatBDT(Number((viewingProduct as any).buyingPrice || 0))}</td>
                               <td className="py-2 px-3 font-bold text-primary">{formatBDT(viewingProduct.price)}</td>
                               <td className="py-2 px-3 text-muted-foreground">{formatBDT(viewingProduct.mrp || viewingProduct.price)}</td>
                               <td className="py-2 px-3 font-semibold">{viewingProduct.stockCount || viewingProduct.stock}</td>

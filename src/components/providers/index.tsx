@@ -9,6 +9,7 @@ import { getQueryClient } from '@/lib/queryClient';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { CartDrawer } from '@/components/cart/CartDrawer';
+import { PreOrderModal } from '@/components/cart/PreOrderModal';
 import { FlyToCartProvider } from '@/context/FlyToCartContext';
 import { FloatingCartWidget } from '@/components/cart/FloatingCartWidget';
 
@@ -37,6 +38,9 @@ export function AppProviders({ children }: ProvidersProps) {
               
               {/* Global Cart Slide-over Drawer */}
               <CartDrawer />
+
+              {/* Global Pre-Order Modal */}
+              <PreOrderModal />
               
               {/* Global Toast Notifications */}
               <Toaster

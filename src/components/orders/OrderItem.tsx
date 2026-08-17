@@ -21,7 +21,13 @@ export function OrderItem({ item, isBn = true }: OrderItemProps) {
   );
   const qty = Number(item.quantity || 1);
   const totalPrice = Number((item as any).totalPrice ?? unitPrice * qty);
-  const unitLabel = (item as any).unitType || item.unit || '';
+  const unitLabel = item.unit || (item as any).unitType || '';
+  const preOrderQty = Number((item as any).preOrderQuantity || 0);
+  const availQty = Number(
+    (item as any).availableQuantity ??
+      ((item as any).stock !== undefined ? Math.min((item as any).stock, qty) : qty)
+  );
+  const isMixed = (item as any).fulfillmentType === 'mixed';
 
   return (
     <div className="flex items-center justify-between gap-3 py-3 border-b border-border last:border-0">
@@ -30,7 +36,7 @@ export function OrderItem({ item, isBn = true }: OrderItemProps) {
           {item.image ? (
             <Image
               src={item.image}
-              alt={isBn ? item.nameBn || item.name : item.nameEn || item.name}
+              alt={isBn ? item.nameBn || (item as any).name : item.nameEn || (item as any).name}
               fill
               className="object-contain"
             />
@@ -44,7 +50,7 @@ export function OrderItem({ item, isBn = true }: OrderItemProps) {
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
             <h4 className="text-xs font-bold text-foreground truncate">
-              {isBn ? item.nameBn || item.name : item.nameEn || item.name}
+              {isBn ? item.nameBn || (item as any).name : item.nameEn || (item as any).name}
             </h4>
             {item.prescriptionRequired && (
               <span className="rounded bg-amber-100 p-0.5 text-[9px] text-amber-800 font-bold">
@@ -56,6 +62,20 @@ export function OrderItem({ item, isBn = true }: OrderItemProps) {
             {item.brand || 'MediShop'} • {formatPrice(unitPrice, isBn ? 'bn' : 'en')} × {qty}
             {unitLabel ? ` (${unitLabel})` : ''}
           </p>
+          {(preOrderQty > 0 || isMixed) && (
+            <div className="flex flex-wrap items-center gap-1.5 mt-1">
+              {availQty > 0 && (
+                <span className="rounded bg-emerald-50 px-1.5 py-0.2 text-[9px] font-bold text-emerald-700 border border-emerald-200">
+                  {isBn ? `স্টক: ${availQty}` : `In-Stock: ${availQty}`}
+                </span>
+              )}
+              {preOrderQty > 0 && (
+                <span className="rounded bg-primary/10 px-1.5 py-0.2 text-[9px] font-bold text-primary border border-primary/20">
+                  {isBn ? `প্রি-অর্ডার: +${preOrderQty}` : `Pre-Order: +${preOrderQty}`}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

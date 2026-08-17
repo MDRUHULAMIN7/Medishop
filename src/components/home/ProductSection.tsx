@@ -67,8 +67,8 @@ export function ProductSection({
         icon={icon}
       />
 
-      {/* Grid Layout */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
+      {/* Grid Layout (5 columns on desktop) */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}

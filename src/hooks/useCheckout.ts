@@ -19,7 +19,7 @@ import { checkoutService } from '@/services/checkout.service';
 import { orderService } from '@/services/order.service';
 import { settingsService } from '@/services/settings.service';
 import { PricingEngine } from '@/utils/pricing';
-import { DeliveryMethod, PaymentMethod } from '@/types/checkout';
+import { DeliveryMethod, DeliveryMethodId, PaymentMethod } from '@/types/checkout';
 
 export function useCheckout() {
   const dispatch = useAppDispatch();
@@ -129,6 +129,23 @@ export function useCheckout() {
     };
 
   // Compute total financial summary incorporating selected delivery method
+  const hasPreOrderItems = items.some(
+    (item) => Boolean(item.preOrderQuantity && item.preOrderQuantity > 0) || Boolean(item.allowPreOrder)
+  );
+  const hasInStockItems = items.some(
+    (item) => (item.stock !== undefined ? item.stock > 0 : true) && (!item.preOrderQuantity || item.quantity > item.preOrderQuantity)
+  );
+  const canSplitDelivery = hasPreOrderItems && hasInStockItems;
+
+  const [isSplitDelivery, setIsSplitDelivery] = useState(false);
+  const [shipment1DeliveryMethodId, setShipment1DeliveryMethodId] = useState<DeliveryMethodId>(deliveryMethod.id);
+  const [shipment2DeliveryMethodId, setShipment2DeliveryMethodId] = useState<DeliveryMethodId>(deliveryMethod.id);
+
+  const shipment1Method =
+    availableDeliveryMethods.find((m) => m.id === shipment1DeliveryMethodId) || deliveryMethod;
+  const shipment2Method =
+    availableDeliveryMethods.find((m) => m.id === shipment2DeliveryMethodId) || deliveryMethod;
+
   const shippingOption = {
     id: deliveryMethod.id,
     nameEn: deliveryMethod.nameEn,
@@ -139,15 +156,27 @@ export function useCheckout() {
     estimatedDeliveryBn: deliveryMethod.estimatedDeliveryBn,
   };
 
-  const summary = PricingEngine.calculateCartSummary(
+  const rawSummary = PricingEngine.calculateCartSummary(
     items,
     appliedCoupon,
     shippingOption
   );
 
+  const effectiveDeliveryCharge = isSplitDelivery
+    ? shipment1Method.charge + shipment2Method.charge
+    : rawSummary.deliveryCharge;
+
+  const summary = {
+    ...rawSummary,
+    deliveryCharge: effectiveDeliveryCharge,
+    grandTotal: Math.max(0, rawSummary.subtotal - rawSummary.couponDiscount + effectiveDeliveryCharge),
+  };
+
   const handleSetDeliveryMethod = useCallback(
     (id: any) => {
       dispatch(setDeliveryMethodId(id));
+      setShipment1DeliveryMethodId(id);
+      setShipment2DeliveryMethodId(id);
       checkoutService.saveSelectionsToStorage({
         selectedAddressId,
         selectedDeliveryMethodId: id,
@@ -201,7 +230,16 @@ export function useCheckout() {
       const checkoutItems = items
         .map((i) => ({
           productId: i.productId || (i as any).product?.id || (i as any).product?._id || '',
+          unit: i.unit || (i as any).unitType || 'pcs',
+          unitMultiplier: (i as any).unitMultiplier || (i.unit === 'box' ? 20 : (i.unit === 'strip' ? 10 : 1)),
+          unitPrice: i.sellingPrice,
+          totalPrice: (i.sellingPrice || 0) * (i.quantity || 1),
           quantity: i.quantity,
+          availableQuantity: i.stock !== undefined ? Math.min(i.stock, i.quantity) : i.quantity,
+          preOrderQuantity: i.preOrderQuantity || (i.allowPreOrder ? Math.max(0, i.quantity - (i.stock || 0)) : 0),
+          fulfillmentType: ((i.preOrderQuantity && i.preOrderQuantity > 0)
+            ? (i.stock && i.stock > 0 ? 'mixed' : 'preorder')
+            : 'immediate') as 'immediate' | 'preorder' | 'mixed',
         }))
         .filter((i) => i.productId && i.quantity > 0);
 
@@ -220,6 +258,10 @@ export function useCheckout() {
         paymentMethod: paymentMethod.id as any,
         couponCode: appliedCoupon?.code,
         deliveryCharge: summary.deliveryCharge,
+        isPreOrder: hasPreOrderItems,
+        isSplitDelivery,
+        shipment1DeliveryMethod: isSplitDelivery ? shipment1Method.id : deliveryMethod.id,
+        shipment2DeliveryMethod: isSplitDelivery ? shipment2Method.id : undefined,
         note: notes,
       });
 
@@ -254,9 +296,13 @@ export function useCheckout() {
     paymentMethod,
     summary,
     notes,
+    appliedCoupon,
     isBn,
     router,
-    appliedCoupon,
+    hasPreOrderItems,
+    isSplitDelivery,
+    shipment1Method,
+    shipment2Method,
   ]);
 
   return {
@@ -269,6 +315,16 @@ export function useCheckout() {
     summary,
     notes,
     isSubmitting,
+    hasPreOrderItems,
+    canSplitDelivery,
+    isSplitDelivery,
+    setIsSplitDelivery,
+    shipment1DeliveryMethodId,
+    setShipment1DeliveryMethodId,
+    shipment2DeliveryMethodId,
+    setShipment2DeliveryMethodId,
+    shipment1Method,
+    shipment2Method,
     setDeliveryMethod: handleSetDeliveryMethod,
     setPaymentMethod: handleSetPaymentMethod,
     setNotes: handleSetNotes,

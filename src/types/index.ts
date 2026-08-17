@@ -12,7 +12,16 @@ export type AuthModalView =
   | 'otp'
   | 'forgot';
 
-export type UserRole = 'customer' | 'pharmacist' | 'sales_staff' | 'inventory_manager' | 'admin';
+export type UserRole =
+  | 'customer'
+  | 'pharmacist'
+  | 'pharmacist_verifier'
+  | 'sales_staff'
+  | 'inventory_manager'
+  | 'order_manager'
+  | 'marketing_editor'
+  | 'admin'
+  | 'super_admin';
 export type UserStatus = 'active' | 'blocked';
 
 export interface UserAddress {

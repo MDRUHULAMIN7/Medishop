@@ -18,6 +18,7 @@ export default function CheckoutPage() {
     paymentMethod,
     summary,
     isSubmitting,
+    isSplitDelivery,
     placeOrder,
     isBn,
   } = useCheckout();
@@ -102,6 +103,7 @@ export default function CheckoutPage() {
               paymentMethod={paymentMethod}
               isSubmitting={isSubmitting}
               onPlaceOrder={placeOrder}
+              isSplitDelivery={isSplitDelivery}
               isBn={isBn}
             />
           </div>

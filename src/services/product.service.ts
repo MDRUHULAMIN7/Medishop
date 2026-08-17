@@ -4,6 +4,7 @@ export interface UnitPriceOption {
   unit: string;
   unitLabelBn?: string;
   unitLabelEn?: string;
+  buyingPrice?: number;
   price: number;
   mrp?: number;
   discountPrice?: number;
@@ -16,6 +17,7 @@ export interface UnitPriceOption {
 export interface PackagingTier {
   unit: string;
   baseUnitQty: number;
+  buyingPrice?: number;
   price: number;
   mrp?: number;
   discountPrice?: number;
@@ -42,6 +44,7 @@ export interface Product {
   category: any;
   brand: any;
   categoryId: string;
+  buyingPrice?: number;
   price: number;
   mrp: number;
   discountPrice?: number;
@@ -78,6 +81,7 @@ export interface CreateProductPayload {
   tags?: string[];
   category: string;
   brand: string;
+  buyingPrice?: number;
   price: number;
   discountPrice?: number;
   stock: number;
@@ -102,6 +106,7 @@ export interface ProductQueryParams {
   page?: number;
   limit?: number;
   includeInactive?: boolean;
+  isAdmin?: boolean;
 }
 
 export interface ProductListResponse {
@@ -142,39 +147,50 @@ export const ProductService = {
     const price = Number(p.price || 0);
     const mrp = Number(p.mrp || p.price || 0);
 
+    const totalBaseStock = Number(p.stockCount ?? p.stockCached ?? p.stock ?? 0);
+
     const rawPackaging = Array.isArray(p.packaging) && p.packaging.length > 0
-      ? p.packaging.map((pack: any) => ({
-          unit: pack.unit || 'pcs',
-          unitLabelBn: pack.unitLabelBn || (pack.unit === 'pcs' ? 'পিস' : pack.unit === 'strip' ? 'পাতা' : pack.unit === 'box' ? 'বক্স' : pack.unit === 'bottle' ? 'বোতল' : pack.unit === 'tube' ? 'টিউব' : pack.unit === 'pack' ? 'প্যাক' : pack.unit),
-          unitLabelEn: pack.unitLabelEn || pack.unit || 'pcs',
-          price: Number(pack.price || price),
-          mrp: pack.mrp ? Number(pack.mrp) : Number(pack.price || price),
-          discountPrice: pack.discountPrice ? Number(pack.discountPrice) : undefined,
-          stock: pack.stock !== undefined ? Number(pack.stock) : Math.floor(Number(p.stockCached || p.stock || 0) / Number(pack.baseUnitQty || 1)),
-          multiplier: Number(pack.baseUnitQty || 1),
-          isDefault: Boolean(pack.isDefault),
-        }))
+      ? p.packaging.map((pack: any) => {
+          const multiplier = Number(pack.baseUnitQty || pack.multiplier || 1);
+          return {
+            unit: pack.unit || 'pcs',
+            unitLabelBn: pack.unitLabelBn || (pack.unit === 'pcs' ? 'পিস' : pack.unit === 'strip' ? 'পাতা' : pack.unit === 'box' ? 'বক্স' : pack.unit === 'bottle' ? 'বোতল' : pack.unit === 'tube' ? 'টিউব' : pack.unit === 'pack' ? 'প্যাক' : pack.unit),
+            unitLabelEn: pack.unitLabelEn || pack.unit || 'pcs',
+            buyingPrice: pack.buyingPrice !== undefined ? Number(pack.buyingPrice) : (p.buyingPrice ? Number(p.buyingPrice) * multiplier : 0),
+            price: Number(pack.price || price),
+            mrp: pack.mrp ? Number(pack.mrp) : Number(pack.price || price),
+            discountPrice: pack.discountPrice ? Number(pack.discountPrice) : undefined,
+            stock: Math.floor(totalBaseStock / multiplier),
+            multiplier,
+            isDefault: Boolean(pack.isDefault),
+          };
+        })
       : Array.isArray(p.unitPrices) && p.unitPrices.length > 0
-      ? p.unitPrices.map((u: any) => ({
-          unit: u.unit || p.unitType || 'pcs',
-          unitLabelBn: u.unitLabelBn || (u.unit === 'pcs' ? 'পিস' : u.unit === 'strip' ? 'পাতা' : u.unit === 'box' ? 'বক্স' : u.unit === 'bottle' ? 'বোতল' : u.unit === 'tube' ? 'টিউব' : u.unit === 'pack' ? 'প্যাক' : u.unit),
-          unitLabelEn: u.unitLabelEn || u.unit || 'pcs',
-          price: Number(u.price || price),
-          mrp: u.mrp ? Number(u.mrp) : Number(u.price || price),
-          discountPrice: u.discountPrice ? Number(u.discountPrice) : undefined,
-          stock: u.stock !== undefined ? Number(u.stock) : Number(p.stock || 0),
-          multiplier: Number(u.multiplier || 1),
-          isDefault: Boolean(u.isDefault),
-        }))
+      ? p.unitPrices.map((u: any) => {
+          const multiplier = Number(u.multiplier || u.baseUnitQty || 1);
+          return {
+            unit: u.unit || p.unitType || 'pcs',
+            unitLabelBn: u.unitLabelBn || (u.unit === 'pcs' ? 'পিস' : u.unit === 'strip' ? 'পাতা' : u.unit === 'box' ? 'বক্স' : u.unit === 'bottle' ? 'বোতল' : u.unit === 'tube' ? 'টিউব' : u.unit === 'pack' ? 'প্যাক' : u.unit),
+            unitLabelEn: u.unitLabelEn || u.unit || 'pcs',
+            buyingPrice: u.buyingPrice !== undefined ? Number(u.buyingPrice) : (p.buyingPrice ? Number(p.buyingPrice) * multiplier : 0),
+            price: Number(u.price || price),
+            mrp: u.mrp ? Number(u.mrp) : Number(u.price || price),
+            discountPrice: u.discountPrice ? Number(u.discountPrice) : undefined,
+            stock: Math.floor(totalBaseStock / multiplier),
+            multiplier,
+            isDefault: Boolean(u.isDefault),
+          };
+        })
       : [
           {
             unit: p.unitType || 'pcs',
             unitLabelBn: p.unitType === 'pcs' ? 'পিস' : p.unitType === 'strip' ? 'পাতা' : p.unitType === 'box' ? 'বক্স' : p.unitType || 'pcs',
             unitLabelEn: p.unitType || 'pcs',
+            buyingPrice: Number(p.buyingPrice || 0),
             price,
             mrp,
             discountPrice: p.discountPrice ? Number(p.discountPrice) : undefined,
-            stock: Number(p.stock || 0),
+            stock: totalBaseStock,
             multiplier: 1,
             isDefault: true,
           },
@@ -206,6 +222,7 @@ export const ProductService = {
       reviewCount: p.reviewCount || 12,
       categoryId: categoryId || '',
       brandName: brandStr,
+      buyingPrice: p.buyingPrice !== undefined ? Number(p.buyingPrice) : 0,
     };
   },
 
@@ -249,6 +266,9 @@ export const ProductService = {
     if (params.includeInactive === true) {
       query.append('includeInactive', 'true');
     }
+    if (params.isAdmin === true) {
+      query.append('isAdmin', 'true');
+    }
 
     const response = await apiClient<any>(`/products?${query.toString()}`, {
       method: 'GET',
@@ -261,8 +281,6 @@ export const ProductService = {
     let totalPages = 1;
 
     if (response && typeof response === 'object') {
-      const meta = response.meta || response.pagination;
-
       if (Array.isArray(response)) {
         rawProducts = response;
       } else if (Array.isArray(response.products)) {
@@ -271,14 +289,16 @@ export const ProductService = {
         rawProducts = response.data;
       }
 
+      const meta = response.meta || response.pagination || (Array.isArray(response) ? (response as any).meta : undefined) || (response.total !== undefined ? { total: response.total, page: response.page, limit: response.limit, totalPages: response.totalPages } : undefined);
+
       if (meta) {
-        total = meta.total || meta.totalCount || rawProducts.length;
-        page = meta.page || page;
-        limit = meta.limit || limit;
-        totalPages = meta.pages || meta.totalPage || meta.totalPages || Math.ceil(total / limit) || 1;
+        total = Number(meta.total !== undefined ? meta.total : (meta.totalCount !== undefined ? meta.totalCount : rawProducts.length));
+        page = Number(meta.page || params.page || 1);
+        limit = Number(meta.limit || params.limit || 10);
+        totalPages = Number(meta.totalPages || meta.pages || meta.totalPage || Math.ceil(total / limit) || 1);
       } else {
         total = rawProducts.length;
-        totalPages = Math.ceil(total / limit) || 1;
+        totalPages = Math.ceil(total / (params.limit || 10)) || 1;
       }
     }
 
@@ -321,8 +341,9 @@ export const ProductService = {
   /**
    * Get single product by ID or Slug.
    */
-  async getProductByIdOrSlug(idOrSlug: string): Promise<Product> {
-    const p = await apiClient<any>(`/products/${idOrSlug}`, {
+  async getProductByIdOrSlug(idOrSlug: string, isAdmin?: boolean): Promise<Product> {
+    const endpoint = isAdmin ? `/products/${idOrSlug}?isAdmin=true` : `/products/${idOrSlug}`;
+    const p = await apiClient<any>(endpoint, {
       method: 'GET',
     });
     return this.formatProduct(p);

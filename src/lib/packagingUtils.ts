@@ -51,7 +51,7 @@ export function getProductUnitOptions(product: any): FormattedUnitOption[] {
         labelEn,
         price: Number(u.price || basePrice),
         mrp: Number(u.mrp || u.price || baseMrp),
-        stock: u.stock !== undefined ? Number(u.stock) : Math.floor(totalStock / baseQty),
+        stock: Math.floor(totalStock / baseQty),
         baseUnitQty: baseQty,
       };
     });

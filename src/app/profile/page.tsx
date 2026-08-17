@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { UserProfileModule } from '@/components/profile/UserProfileModule';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Loader2 } from 'lucide-react';
 import { useAppSelector } from '@/store';
 
 export default function ProfilePage() {
@@ -23,7 +23,15 @@ export default function ProfilePage() {
         </nav>
 
         {/* Profile & Address Container Module */}
-        <UserProfileModule isBn={isBn} />
+        <Suspense
+          fallback={
+            <div className="flex h-64 items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          }
+        >
+          <UserProfileModule isBn={isBn} />
+        </Suspense>
       </div>
     </div>
   );

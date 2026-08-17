@@ -96,14 +96,16 @@ export function QuantitySelector({
 
       <motion.button
         type="button"
-        whileTap={{ scale: isMaxReached || isLoading ? 1 : 0.9 }}
+        whileTap={{ scale: isLoading ? 1 : 0.9 }}
         onClick={onIncrease}
-        disabled={isMaxReached || isLoading}
+        disabled={isLoading}
         aria-label={isBn ? 'পরিমাণ বাড়ান' : 'Increase quantity'}
         className={cn(
-          'flex items-center justify-center font-medium transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary',
-          isMaxReached || isLoading
+          'flex items-center justify-center font-medium transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary cursor-pointer',
+          isLoading
             ? 'cursor-not-allowed text-muted-foreground/40'
+            : isMaxReached
+            ? 'bg-primary/10 text-primary shadow-xs hover:bg-primary hover:text-white'
             : 'bg-background text-foreground shadow-xs hover:bg-muted hover:text-primary active:bg-muted/80',
           currentSize.button
         )}

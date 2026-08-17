@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   Pill,
@@ -32,10 +33,12 @@ import {
   COMPANY_OFFICE_TITLE_EN,
   COMPANY_OFFICE_TITLE_BN,
 } from '@/lib/constants';
+import { useBranding } from '@/context/BrandingContext';
 
 export function Footer() {
   const pathname = usePathname();
   const language = useAppSelector((state) => state.ui.language);
+  const { settings } = useBranding();
   const [openSection, setOpenSection] = useState<string | null>(null);
 
   if (pathname?.startsWith('/dashboard')) {
@@ -43,6 +46,10 @@ export function Footer() {
   }
 
   const isBn = language === 'bn';
+  const siteName = settings.general?.siteName || 'mediShop';
+  const hotline = settings.general?.contactPhone || HOTLINE_NUMBER;
+  const email = settings.general?.contactEmail || COMPANY_EMAIL_PRIMARY;
+  const address = settings.general?.address || (isBn ? COMPANY_ADDRESS_BN : COMPANY_ADDRESS_EN);
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section);
@@ -150,12 +157,26 @@ export function Footer() {
         <div className="hidden grid-cols-1 gap-8 md:grid md:grid-cols-4">
           {/* Column 1: Brand Info */}
           <div className="flex flex-col gap-4">
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white font-bold">
-                <Pill className="h-5 w-5" />
-              </div>
+            <Link href="/" className="flex items-center gap-2.5 group">
+              {settings.general?.logoLight &&
+              settings.general.logoLight !== '/images/logo.png' &&
+              settings.general.logoLight.trim() !== '' ? (
+                <div className="relative h-9 w-9 rounded-xl overflow-hidden shadow-md transition-transform group-hover:scale-105 shrink-0 border border-primary/20 bg-white">
+                  <Image
+                    src={settings.general.logoLight}
+                    alt={siteName}
+                    fill
+                    className="object-cover"
+                    sizes="36px"
+                  />
+                </div>
+              ) : (
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white font-bold shadow-md transition-transform group-hover:scale-105 shrink-0">
+                  <Pill className="h-5 w-5" />
+                </div>
+              )}
               <span className="font-serif-title text-2xl font-bold text-primary">
-                mediShop
+                {siteName}
               </span>
             </Link>
             <p className="text-xs leading-relaxed text-muted-foreground">
@@ -172,7 +193,7 @@ export function Footer() {
           {/* Column 2: About & Info */}
           <div>
             <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">
-              {isBn ? 'মেডিশপ সম্পর্কে' : 'About mediShop'}
+              {isBn ? `${siteName} সম্পর্কে` : `About ${siteName}`}
             </h3>
             <ul className="mt-4 flex flex-col gap-2.5 text-xs text-muted-foreground">
               {MOCK_FOOTER_NAV.about.map((link, idx) => (
@@ -216,8 +237,8 @@ export function Footer() {
               <li className="flex items-start gap-2.5">
                 <Phone className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                 <div className="flex flex-col gap-0.5">
-                  <a href={HOTLINE_TEL} className="font-semibold text-foreground hover:text-primary transition-colors">
-                    {HOTLINE_NUMBER}
+                  <a href={`tel:${hotline}`} className="font-semibold text-foreground hover:text-primary transition-colors">
+                    {hotline}
                   </a>
                   <a href={PHONE_SECONDARY_TEL} className="font-semibold text-foreground hover:text-primary transition-colors">
                     {PHONE_SECONDARY}
@@ -227,8 +248,8 @@ export function Footer() {
               <li className="flex items-start gap-2.5">
                 <Mail className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                 <div className="flex flex-col gap-0.5">
-                  <a href={`mailto:${COMPANY_EMAIL_PRIMARY}`} className="hover:text-primary transition-colors">
-                    {COMPANY_EMAIL_PRIMARY}
+                  <a href={`mailto:${email}`} className="hover:text-primary transition-colors">
+                    {email}
                   </a>
                   <a href={`mailto:${COMPANY_EMAIL_SECONDARY}`} className="hover:text-primary transition-colors">
                     {COMPANY_EMAIL_SECONDARY}
@@ -241,7 +262,7 @@ export function Footer() {
                   <span className="font-bold text-foreground block">
                     {isBn ? COMPANY_OFFICE_TITLE_BN : COMPANY_OFFICE_TITLE_EN}
                   </span>
-                  <span>{isBn ? COMPANY_ADDRESS_BN : COMPANY_ADDRESS_EN}</span>
+                  <span>{address}</span>
                 </div>
               </li>
             </ul>
@@ -256,7 +277,7 @@ export function Footer() {
                 <Pill className="h-5 w-5" />
               </div>
               <span className="font-serif-title text-xl font-bold text-primary">
-                mediShop
+                {siteName}
               </span>
             </Link>
             <p className="text-xs text-muted-foreground">
@@ -272,7 +293,7 @@ export function Footer() {
               onClick={() => toggleSection('about')}
               className="flex w-full items-center justify-between py-1 text-sm font-bold text-foreground"
             >
-              <span>{isBn ? 'মেডিশপ সম্পর্কে' : 'About mediShop'}</span>
+              <span>{isBn ? `${siteName} সম্পর্কে` : `About ${siteName}`}</span>
               <ChevronDown
                 className={cn(
                   'h-4 w-4 transition-transform',
@@ -336,9 +357,9 @@ export function Footer() {
             </button>
             {openSection === 'contact' && (
               <div className="mt-3 flex flex-col gap-2.5 pl-2 text-xs text-muted-foreground">
-                <p className="font-semibold text-foreground">{HOTLINE_NUMBER} / {PHONE_SECONDARY}</p>
-                <p>{COMPANY_EMAIL_PRIMARY}</p>
-                <p>{isBn ? COMPANY_ADDRESS_BN : COMPANY_ADDRESS_EN}</p>
+                <p className="font-semibold text-foreground">{hotline}</p>
+                <p>{email}</p>
+                <p>{address}</p>
               </div>
             )}
           </div>

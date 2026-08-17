@@ -28,9 +28,19 @@ export function OrderCard({ order, isBn = true }: OrderCardProps) {
       {/* Top Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-border">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-sm font-extrabold text-foreground">{order.orderNumber}</h3>
             <OrderStatusBadge status={order.orderStatus} isBn={isBn} />
+            {(order as any).isPreOrder && (
+              <span className="rounded-md bg-primary/10 border border-primary/20 px-1.5 py-0.2 text-[9px] font-black text-primary">
+                Pre-Order
+              </span>
+            )}
+            {(order as any).isSplitDelivery && (
+              <span className="rounded-md bg-blue-50 border border-blue-200 px-1.5 py-0.2 text-[9px] font-bold text-blue-700">
+                ২ চালান
+              </span>
+            )}
           </div>
           <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
             <Clock className="h-3 w-3" />

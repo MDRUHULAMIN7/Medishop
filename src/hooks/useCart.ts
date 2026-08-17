@@ -5,6 +5,7 @@ import {
   addToCart as addToCartAction,
   removeFromCart as removeFromCartAction,
   updateQuantity as updateQuantityAction,
+  openPreOrderModal,
   clearCart as clearCartAction,
   openCartDrawer,
   closeCartDrawer,
@@ -106,15 +107,19 @@ export function useCart() {
   const handleAddToCart = useCallback(
     async (item: CartItem, showDrawer: boolean = true) => {
       const addQty = item.quantity || 1;
-      const existing = items.find((i) => i.productId === item.productId);
+      const existing = items.find(
+        (i) => i.productId === item.productId && (!item.unit || i.unit === item.unit)
+      );
       const targetQuantity = (existing?.quantity || 0) + addQty;
-      const availableStock = item.stock !== undefined ? item.stock : 999;
+      const availableStock = item.stock !== undefined ? item.stock : 0;
 
-      if (availableStock < targetQuantity) {
-        toast.error(
-          isBn
-            ? `পর্যাপ্ত স্টক নেই (সর্বোচ্চ উপলব্ধ: ${availableStock})`
-            : `Insufficient stock (max available: ${availableStock})`
+      if (availableStock <= 0 || availableStock < targetQuantity) {
+        dispatch(
+          openPreOrderModal({
+            item: { ...item, stock: Math.max(0, availableStock) },
+            requestedQuantity: targetQuantity,
+            availableStock: Math.max(0, availableStock),
+          })
         );
         return false;
       }
@@ -170,12 +175,14 @@ export function useCart() {
         return;
       }
 
-      const availableStock = currentItem.stock !== undefined ? currentItem.stock : 999;
-      if (availableStock < quantity) {
-        toast.error(
-          isBn
-            ? `পর্যাপ্ত স্টক নেই (সর্বোচ্চ উপলব্ধ: ${availableStock})`
-            : `Insufficient stock (max available: ${availableStock})`
+      const availableStock = currentItem.stock !== undefined ? currentItem.stock : 0;
+      if (availableStock <= 0 || availableStock < quantity) {
+        dispatch(
+          openPreOrderModal({
+            item: currentItem,
+            requestedQuantity: quantity,
+            availableStock: Math.max(0, availableStock),
+          })
         );
         return;
       }

@@ -23,6 +23,7 @@ export type RbacTabId =
   | 'ledger'
   | 'pos_sales'
   | 'orders'
+  | 'chat'
   | 'prescriptions'
   | 'coupons'
   | 'banners'
@@ -49,8 +50,20 @@ export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
   admin: {
     role: 'admin',
     route: '/dashboard/admin',
-    titleEn: 'Super Administrator',
-    titleBn: 'সিস্টেম এডমিন',
+    titleEn: 'Admin',
+    titleBn: 'এডমিন',
+    descriptionEn: 'Full system control, categories & manufacturer brand management',
+    descriptionBn: 'সম্পূর্ণ সিস্টেম একসেস, ক্যাটাগরি ও ব্রান্ড ম্যানেজমেন্ট',
+    badgeBg: 'bg-rose-50 text-rose-700 border-rose-200',
+    badgeText: 'text-rose-700',
+    badgeBorder: 'border-rose-200',
+    iconName: 'ShieldAlert',
+  },
+  super_admin: {
+    role: 'super_admin',
+    route: '/dashboard/admin',
+    titleEn: 'Admin',
+    titleBn: 'এডমিন',
     descriptionEn: 'Full system control, categories & manufacturer brand management',
     descriptionBn: 'সম্পূর্ণ সিস্টেম একসেস, ক্যাটাগরি ও ব্রান্ড ম্যানেজমেন্ট',
     badgeBg: 'bg-rose-50 text-rose-700 border-rose-200',
@@ -61,10 +74,22 @@ export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
   pharmacist: {
     role: 'pharmacist',
     route: '/dashboard/admin',
-    titleEn: 'Licensed Pharmacist',
-    titleBn: 'রেজিস্টার্ড ফার্মাসিস্ট',
-    descriptionEn: 'Verify categories & drug classifications',
+    titleEn: 'Pharmacist',
+    titleBn: 'ফার্মাসিস্ট',
+    descriptionEn: 'Verify categories & prescription orders',
     descriptionBn: 'প্রেসক্রিপশন ও ড্রাগ ক্যাটাগরি ভেরিফিকেশন',
+    badgeBg: 'bg-sky-50 text-sky-700 border-sky-200',
+    badgeText: 'text-sky-700',
+    badgeBorder: 'border-sky-200',
+    iconName: 'Stethoscope',
+  },
+  pharmacist_verifier: {
+    role: 'pharmacist_verifier',
+    route: '/dashboard/admin',
+    titleEn: 'Pharmacist Verifier',
+    titleBn: 'প্রেসক্রিপশন ভেরিফায়ার',
+    descriptionEn: 'Verify prescriptions & patient orders',
+    descriptionBn: 'প্রেসক্রিপশন ভেরিফিকেশন ও রিভিউ',
     badgeBg: 'bg-sky-50 text-sky-700 border-sky-200',
     badgeText: 'text-sky-700',
     badgeBorder: 'border-sky-200',
@@ -73,14 +98,26 @@ export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
   sales_staff: {
     role: 'sales_staff',
     route: '/dashboard/admin',
-    titleEn: 'Sales & POS Staff',
-    titleBn: 'সেলস ও কাউন্টার স্টাফ',
-    descriptionEn: 'Counter POS & product category lookup',
-    descriptionBn: 'কাউন্টার পিওএস ও ক্যাটাগরি লুকআপ',
+    titleEn: 'Sales Staff',
+    titleBn: 'সেলস স্টাফ',
+    descriptionEn: 'Counter POS & customer order processing',
+    descriptionBn: 'কাউন্টার পিওএস ও অর্ডার প্রসেসিং',
     badgeBg: 'bg-amber-50 text-amber-700 border-amber-200',
     badgeText: 'text-amber-700',
     badgeBorder: 'border-amber-200',
     iconName: 'ShoppingCart',
+  },
+  order_manager: {
+    role: 'order_manager',
+    route: '/dashboard/admin',
+    titleEn: 'Order Manager',
+    titleBn: 'অর্ডার ম্যানেজার',
+    descriptionEn: 'Manage orders, fulfillment & delivery dispatch',
+    descriptionBn: 'কাস্টমার অর্ডার ও ডেলিভারি ডিসপ্যাচ',
+    badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    badgeText: 'text-emerald-700',
+    badgeBorder: 'border-emerald-200',
+    iconName: 'ShoppingBag',
   },
   inventory_manager: {
     role: 'inventory_manager',
@@ -94,11 +131,23 @@ export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
     badgeBorder: 'border-indigo-200',
     iconName: 'Package',
   },
+  marketing_editor: {
+    role: 'marketing_editor',
+    route: '/dashboard/admin',
+    titleEn: 'Marketing Editor',
+    titleBn: 'মার্কেটিং এডিটর',
+    descriptionEn: 'Manage coupons, sliders & customer reviews',
+    descriptionBn: 'কুপন, হোম স্লাইডার ও রিভিউ মডারেশন',
+    badgeBg: 'bg-purple-50 text-purple-700 border-purple-200',
+    badgeText: 'text-purple-700',
+    badgeBorder: 'border-purple-200',
+    iconName: 'Megaphone',
+  },
   customer: {
     role: 'customer',
     route: '/profile',
-    titleEn: 'Customer / Patient',
-    titleBn: 'গ্রাহক / পেশেন্ট',
+    titleEn: 'Customer',
+    titleBn: 'গ্রাহক',
     descriptionEn: 'Manage personal profile & shipping addresses',
     descriptionBn: 'প্রোফাইল সেটিং ও শিপিং এড্রেস বুক',
     badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -106,6 +155,26 @@ export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
     badgeBorder: 'border-emerald-200',
     iconName: 'User',
   },
+};
+
+export const getRoleDashboardTitle = (role?: string, isBn = true): string => {
+  switch (role) {
+    case 'pharmacist':
+    case 'pharmacist_verifier':
+      return isBn ? 'ফার্মাসিস্ট ড্যাশবোর্ড' : 'Pharmacist Dashboard';
+    case 'sales_staff':
+      return isBn ? 'সেলস ড্যাশবোর্ড' : 'Sales Dashboard';
+    case 'inventory_manager':
+      return isBn ? 'ইনভেন্টরি ড্যাশবোর্ড' : 'Inventory Dashboard';
+    case 'order_manager':
+      return isBn ? 'অর্ডার ড্যাশবোর্ড' : 'Order Dashboard';
+    case 'marketing_editor':
+      return isBn ? 'মার্কেটিং ড্যাশবোর্ড' : 'Marketing Dashboard';
+    case 'super_admin':
+    case 'admin':
+    default:
+      return isBn ? 'এডমিন ড্যাশবোর্ড' : 'Admin Dashboard';
+  }
 };
 
 export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
@@ -117,7 +186,7 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
     descriptionBn: 'ওষুধ, ইমেজ ফাইল আপলোড ও স্টকে প্রোডাক্ট ক্যাটালগ',
     iconName: 'Pill',
     category: 'inventory',
-    roles: ['admin', 'inventory_manager', 'pharmacist', 'sales_staff', 'customer'],
+    roles: ['admin', 'super_admin', 'inventory_manager', 'pharmacist', 'sales_staff'],
     targetRoute: '/dashboard/admin?tab=products',
   },
   {
@@ -128,7 +197,7 @@ export const RBAC_MENU_ITEMS: RbacMenuItem[] = [
     descriptionBn: 'ক্যাটাগরি ও ডিজিডিএ ম্যানুফ্যাকচারার ব্র্যান্ডস ম্যানেজমেন্ট',
     iconName: 'Tags',
     category: 'inventory',
-    roles: ['admin', 'inventory_manager', 'pharmacist', 'sales_staff', 'customer'],
-    targetRoute: '/dashboard/admin?tab=categories',
+    roles: ['admin', 'super_admin', 'inventory_manager', 'pharmacist'],
+    targetRoute: '/dashboard/admin?tab=inventory_categories',
   },
 ];

@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/apiClient';
+import { apiClient, getAccessToken } from '@/lib/apiClient';
 import { User } from '@/types';
 
 export interface UpdateProfilePayload {
@@ -58,5 +58,34 @@ export const UserProfileService = {
     }
 
     return updatedUser;
+  },
+
+  /**
+   * Direct avatar upload via multipart FormData to Sharp pipeline
+   */
+  async uploadAvatar(file: File): Promise<User> {
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    const token = getAccessToken();
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/users/me/avatar`, {
+      method: 'PATCH',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+      credentials: 'include',
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'Avatar upload failed');
+    }
+
+    const user = data.data.user;
+    if (user) {
+      user.avatarUrl = user.avatar || undefined;
+    }
+    return user;
   },
 };

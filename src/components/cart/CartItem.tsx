@@ -69,10 +69,24 @@ export function CartItem({
               {item.unit || (item as any).dosageForm || '30 Capsules'}
             </p>
 
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 mt-1 border border-emerald-200">
-              <CheckCircle2 className="h-3 w-3" />
-              <span>{isBn ? 'স্টকে আছে' : 'In Stock'}</span>
-            </span>
+            {item.preOrderQuantity && item.preOrderQuantity > 0 ? (
+              <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                {item.stock !== undefined && item.stock > 0 && (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
+                    <CheckCircle2 className="h-3 w-3" />
+                    <span>{isBn ? `স্টকে আছে: ${item.stock}টি` : `In-Stock: ${item.stock}`}</span>
+                  </span>
+                )}
+                <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-black text-primary border border-primary/20">
+                  <span>{isBn ? `Pre-Order: +${item.preOrderQuantity}টি` : `Pre-Order: +${item.preOrderQuantity}`}</span>
+                </span>
+              </div>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 mt-1 border border-emerald-200">
+                <CheckCircle2 className="h-3 w-3" />
+                <span>{isBn ? 'স্টকে আছে' : 'In Stock'}</span>
+              </span>
+            )}
           </div>
         </div>
 

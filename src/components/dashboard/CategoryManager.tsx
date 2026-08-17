@@ -19,6 +19,7 @@ import {
 import { useAppSelector } from '@/store';
 import { useCategories } from '@/hooks/useCategories';
 import { Category } from '@/services/category.service';
+import { formatNumber } from '@/utils/cart';
 import { toast } from 'sonner';
 
 export function CategoryManager() {
@@ -27,7 +28,7 @@ export function CategoryManager() {
 
   // Server-side URL String Pagination Parameters
   const pageParam = parseInt(searchParams.get('page') || '1', 10);
-  const limitParam = parseInt(searchParams.get('limit') || '10', 10);
+  const limitParam = parseInt(searchParams.get('limit') || '20', 10);
 
   const currentPage = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
   const itemsPerPage = isNaN(limitParam) || limitParam < 1 ? 10 : limitParam;
@@ -303,8 +304,8 @@ export function CategoryManager() {
             <div className="flex items-center gap-4 text-muted-foreground font-semibold">
               <span>
                 {isBn
-                  ? `মোট ${totalItems} টির মধ্যে ${totalItems > 0 ? startIndex + 1 : 0}-${endIndex} দেখাচ্ছে`
-                  : `Showing ${totalItems > 0 ? startIndex + 1 : 0} to ${endIndex} of ${totalItems} entries`}
+                  ? `মোট ${formatNumber(totalItems, 'bn')} টির মধ্যে ${totalItems > 0 ? formatNumber(startIndex + 1, 'bn') : 0}-${formatNumber(endIndex, 'bn')} দেখাচ্ছে`
+                  : `Showing ${totalItems > 0 ? formatNumber(startIndex + 1, 'en') : 0} to ${formatNumber(endIndex, 'en')} of ${formatNumber(totalItems, 'en')} entries`}
               </span>
 
               <div className="flex items-center gap-1.5">
@@ -314,10 +315,10 @@ export function CategoryManager() {
                   onChange={(e) => handleLimitChange(Number(e.target.value))}
                   className="rounded-xl border border-border bg-background px-2 py-1 text-xs font-bold text-foreground focus:border-primary focus:outline-none"
                 >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
+                  <option value={5}>{formatNumber(5, isBn ? 'bn' : 'en')}</option>
+                  <option value={10}>{formatNumber(10, isBn ? 'bn' : 'en')}</option>
+                  <option value={20}>{formatNumber(20, isBn ? 'bn' : 'en')}</option>
+                  <option value={50}>{formatNumber(50, isBn ? 'bn' : 'en')}</option>
                 </select>
               </div>
             </div>
@@ -345,7 +346,7 @@ export function CategoryManager() {
                         : 'border border-border hover:bg-muted text-foreground'
                     }`}
                   >
-                    {p}
+                    {formatNumber(p, isBn ? 'bn' : 'en')}
                   </button>
                 ))}
               </div>

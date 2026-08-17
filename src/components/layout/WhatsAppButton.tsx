@@ -1,12 +1,15 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Phone, MessageSquare } from 'lucide-react';
+import { X, Phone } from 'lucide-react';
 import { WHATSAPP_LINK, HOTLINE_TEL, HOTLINE_NUMBER, MESSENGER_LINK } from '@/lib/constants';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { usePathname } from 'next/navigation';
 import { toggleQuickContact, setQuickContactOpen } from '@/store/slices/uiSlice';
+import { settingsService } from '@/services/settings.service';
+import { LiveChatWidget } from '../chat/LiveChatWidget';
+import { SupportAvatarIcon } from '../chat/SupportAvatarIcon';
 
 export function WhatsAppButton() {
   const pathname = usePathname();
@@ -15,6 +18,23 @@ export function WhatsAppButton() {
   const containerRef = useRef<HTMLDivElement>(null);
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
+
+  const [isLiveChatOpen, setIsLiveChatOpen] = useState(false);
+  const [contactPhone, setContactPhone] = useState(HOTLINE_NUMBER);
+
+  useEffect(() => {
+    settingsService.getPublicSettings().then((s) => {
+      if (s?.general?.contactPhone) {
+        setContactPhone(s.general.contactPhone);
+      }
+    });
+  }, []);
+
+  // Dynamic WhatsApp link from configured site settings phone
+  const cleanedDigits = contactPhone.replace(/[^0-9]/g, '');
+  const dynamicWhatsAppLink = cleanedDigits
+    ? `https://wa.me/${cleanedDigits.startsWith('88') ? cleanedDigits : '88' + cleanedDigits}`
+    : WHATSAPP_LINK;
 
   const handleClose = () => {
     dispatch(setQuickContactOpen(false));
@@ -52,12 +72,26 @@ export function WhatsAppButton() {
 
   const contactOptions = [
     {
+      id: 'livechat',
+      titleBn: 'লাইভ ফার্মাসিস্ট চ্যাট',
+      titleEn: 'Live Chat Support',
+      subBn: 'রিয়েল-টাইম সমাধান',
+      subEn: 'Real-Time Pharmacist',
+      isAction: true,
+      onClick: () => {
+        handleClose();
+        setIsLiveChatOpen(true);
+      },
+      bgColor: 'bg-indigo-600 hover:bg-indigo-700',
+      icon: <SupportAvatarIcon className="h-6 w-6" />,
+    },
+    {
       id: 'call',
       titleBn: 'সরাসরি কল (২৪/৭)',
       titleEn: 'Call Support (24/7)',
-      subBn: HOTLINE_NUMBER,
-      subEn: HOTLINE_NUMBER,
-      href: HOTLINE_TEL,
+      subBn: contactPhone,
+      subEn: contactPhone,
+      href: `tel:${contactPhone.replace(/[^0-9+]/g, '')}`,
       bgColor: 'bg-primary hover:bg-primary-dark',
       icon: <Phone className="h-5 w-5 text-white" />,
     },
@@ -81,7 +115,7 @@ export function WhatsAppButton() {
       titleEn: 'WhatsApp Chat',
       subBn: '২৪/৭ অ্যাক্টিভ',
       subEn: 'Always Active',
-      href: WHATSAPP_LINK,
+      href: dynamicWhatsAppLink,
       bgColor: 'bg-[#25D366] hover:bg-[#20ba5a]',
       icon: (
         <svg className="h-5.5 w-5.5 fill-current text-white" viewBox="0 0 24 24">
@@ -92,100 +126,132 @@ export function WhatsAppButton() {
   ];
 
   return (
-    <aside
-      ref={containerRef}
-      aria-label="Quick Customer Support Menu"
-      className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-50 flex flex-col items-end gap-3"
-    >
-      {/* Speed Dial Options Container */}
-      <AnimatePresence>
-        {isOpen && (
-          <div className="flex flex-col items-end gap-3 mb-1">
-            {contactOptions.map((opt, index) => (
-              <motion.div
-                key={opt.id}
-                initial={{ opacity: 0, y: 28, scale: 0.85 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 20, scale: 0.85 }}
-                transition={{
-                  type: 'spring',
-                  stiffness: 340,
-                  damping: 23,
-                  delay: (contactOptions.length - 1 - index) * 0.06,
-                }}
-                className="flex items-center gap-2.5 group"
-              >
-                {/* Option Text Label */}
-                <a
-                  href={opt.href}
-                  target={opt.href.startsWith('http') ? '_blank' : '_self'}
-                  rel="noopener noreferrer"
-                  onClick={handleClose}
-                  className="rounded-xl border border-border/80 bg-background/95 backdrop-blur-md px-3 py-1.5 shadow-md transition-all hover:bg-background hover:scale-102 flex flex-col items-end"
+    <>
+      <aside
+        ref={containerRef}
+        aria-label="Quick Customer Support Menu"
+        className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-50 flex flex-col items-end gap-3"
+      >
+        {/* Speed Dial Options Container */}
+        <AnimatePresence>
+          {isOpen && (
+            <div className="flex flex-col items-end gap-3 mb-1">
+              {contactOptions.map((opt, index) => (
+                <motion.div
+                  key={opt.id}
+                  initial={{ opacity: 0, y: 28, scale: 0.85 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 20, scale: 0.85 }}
+                  transition={{
+                    type: 'spring',
+                    stiffness: 340,
+                    damping: 23,
+                    delay: (contactOptions.length - 1 - index) * 0.06,
+                  }}
+                  className="flex items-center gap-2.5 group"
                 >
-                  <span className="text-xs font-bold text-foreground leading-tight">
-                    {isBn ? opt.titleBn : opt.titleEn}
-                  </span>
-                  <span className="text-[10px] font-medium text-muted-foreground">
-                    {isBn ? opt.subBn : opt.subEn}
-                  </span>
-                </a>
+                  {/* Option Text Label */}
+                  {opt.isAction ? (
+                    <button
+                      type="button"
+                      onClick={opt.onClick}
+                      className="rounded-2xl border border-border/80 bg-background/95 backdrop-blur-md px-3.5 py-2 shadow-md transition-all hover:bg-background hover:scale-102 flex flex-col items-end cursor-pointer"
+                    >
+                      <span className="text-xs font-bold text-foreground leading-tight">
+                        {isBn ? opt.titleBn : opt.titleEn}
+                      </span>
+                      <span className="text-[10px] font-medium text-muted-foreground">
+                        {isBn ? opt.subBn : opt.subEn}
+                      </span>
+                    </button>
+                  ) : (
+                    <a
+                      href={opt.href}
+                      target={opt.href?.startsWith('http') ? '_blank' : '_self'}
+                      rel="noopener noreferrer"
+                      onClick={handleClose}
+                      className="rounded-2xl border border-border/80 bg-background/95 backdrop-blur-md px-3.5 py-2 shadow-md transition-all hover:bg-background hover:scale-102 flex flex-col items-end"
+                    >
+                      <span className="text-xs font-bold text-foreground leading-tight">
+                        {isBn ? opt.titleBn : opt.titleEn}
+                      </span>
+                      <span className="text-[10px] font-medium text-muted-foreground">
+                        {isBn ? opt.subBn : opt.subEn}
+                      </span>
+                    </a>
+                  )}
 
-                {/* Option Circular Icon Button */}
-                <a
-                  href={opt.href}
-                  target={opt.href.startsWith('http') ? '_blank' : '_self'}
-                  rel="noopener noreferrer"
-                  onClick={handleClose}
-                  aria-label={isBn ? opt.titleBn : opt.titleEn}
-                  className={`flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-full text-white shadow-lg transition-transform duration-200 active:scale-90 hover:scale-110 ${opt.bgColor}`}
-                >
-                  {opt.icon}
-                </a>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </AnimatePresence>
+                  {/* Option Squircle Icon Button */}
+                  {opt.isAction ? (
+                    <button
+                      type="button"
+                      onClick={opt.onClick}
+                      aria-label={isBn ? opt.titleBn : opt.titleEn}
+                      className={`flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl text-white shadow-lg transition-transform duration-200 active:scale-90 hover:scale-105 cursor-pointer ${opt.bgColor}`}
+                    >
+                      {opt.icon}
+                    </button>
+                  ) : (
+                    <a
+                      href={opt.href}
+                      target={opt.href?.startsWith('http') ? '_blank' : '_self'}
+                      rel="noopener noreferrer"
+                      onClick={handleClose}
+                      aria-label={isBn ? opt.titleBn : opt.titleEn}
+                      className={`flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl text-white shadow-lg transition-transform duration-200 active:scale-90 hover:scale-105 ${opt.bgColor}`}
+                    >
+                      {opt.icon}
+                    </a>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </AnimatePresence>
 
-      {/* Main Trigger Button */}
-      <div className="relative flex items-center gap-2 group">
-        {/* Tooltip Popup on Hover (when closed) */}
-        {!isOpen && (
-          <span className="hidden sm:inline-block opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0 bg-foreground text-background text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg whitespace-nowrap pointer-events-none">
-            {isBn ? 'সাহায্য ও মেসেজ করুন' : 'Quick Support & Chat'}
-          </span>
-        )}
-
-        <button
-          type="button"
-          onClick={handleToggle}
-          aria-expanded={isOpen}
-          aria-label={isBn ? 'মেসেজ ও কন্টাক্ট অপশন খুলুন' : 'Open Contact Options'}
-          className={`relative flex h-13 w-13 sm:h-14 sm:w-14 items-center justify-center rounded-full text-white shadow-xl transition-all duration-300 active:scale-95 hover:scale-105 ${
-            isOpen
-              ? 'bg-slate-900 ring-4 ring-slate-900/30'
-              : 'bg-primary hover:bg-primary-dark ring-4 ring-primary/20'
-          }`}
-        >
-          {/* Subtle background pulse animation when closed */}
+        {/* Main Trigger Button */}
+        <div className="relative flex items-center gap-2 group">
           {!isOpen && (
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-25 pointer-events-none" />
+            <span className="hidden sm:inline-block opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0 bg-foreground text-background text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg whitespace-nowrap pointer-events-none">
+              {isBn ? 'সাহায্য ও লাইভ চ্যাট' : 'Live Support & Chat'}
+            </span>
           )}
 
-          {/* Icon with smooth rotation transition */}
-          <motion.div
-            animate={{ rotate: isOpen ? 90 : 0 }}
-            transition={{ duration: 0.2 }}
+          <button
+            type="button"
+            onClick={handleToggle}
+            aria-expanded={isOpen}
+            aria-label={isBn ? 'লাইভ সাপোর্ট ও কন্টাক্ট অপশন খুলুন' : 'Open Live Support & Contact'}
+            className={`relative flex h-13 w-13 sm:h-14 sm:w-14 items-center justify-center rounded-2xl sm:rounded-[20px] text-white shadow-xl transition-all duration-300 active:scale-95 hover:scale-105 ${
+              isOpen
+                ? 'bg-slate-900 ring-4 ring-slate-900/20'
+                : 'bg-primary hover:bg-primary-dark ring-4 ring-primary/20'
+            }`}
           >
-            {isOpen ? (
-              <X className="h-6 w-6 text-white" />
-            ) : (
-              <MessageSquare className="h-6 w-6 text-white" />
+            {!isOpen && (
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-2xl sm:rounded-[20px] bg-primary opacity-20 pointer-events-none" />
             )}
-          </motion.div>
-        </button>
-      </div>
-    </aside>
+
+            <motion.div
+              animate={{ rotate: isOpen ? 90 : 0 }}
+              transition={{ duration: 0.2 }}
+              className="flex items-center justify-center"
+            >
+              {isOpen ? (
+                <X className="h-6 w-6 text-white" />
+              ) : (
+                <SupportAvatarIcon className="h-9 w-9 sm:h-10 sm:w-10" showOnlineDot />
+              )}
+            </motion.div>
+          </button>
+        </div>
+      </aside>
+
+      {/* Live Chat Modal Widget */}
+      <LiveChatWidget
+        isOpen={isLiveChatOpen}
+        onClose={() => setIsLiveChatOpen(false)}
+      />
+    </>
   );
 }

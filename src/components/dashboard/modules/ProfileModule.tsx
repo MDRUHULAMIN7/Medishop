@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { Camera, Loader2, Edit2, ShieldCheck, CheckCircle2, Phone, Mail, Lock } from 'lucide-react';
+import { Camera, Loader2, Edit2, ShieldCheck, CheckCircle2, Phone, Mail, Lock, PlusCircle } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { RBAC_ROLES_CONFIG } from '@/config/rbac.config';
 
@@ -13,12 +13,17 @@ interface ProfileModuleProps {
 export function ProfileModule({ isBn = true }: ProfileModuleProps) {
   const { user, isSaving, updateProfile, uploadAvatar, fieldErrors } = useUserProfile();
 
+  const [mounted, setMounted] = useState(false);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -28,7 +33,24 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
     }
   }, [user]);
 
+  if (!mounted) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="rounded-3xl border border-border bg-background p-6 shadow-xs flex flex-col sm:flex-row items-center gap-6">
+          <div className="h-24 w-24 rounded-full bg-muted shrink-0" />
+          <div className="space-y-2 w-full max-w-sm">
+            <div className="h-6 w-48 rounded-lg bg-muted" />
+            <div className="h-4 w-32 rounded-lg bg-muted" />
+          </div>
+        </div>
+        <div className="rounded-3xl border border-border bg-background p-6 shadow-xs h-64" />
+      </div>
+    );
+  }
+
   const roleConfig = user?.role ? RBAC_ROLES_CONFIG[user.role] : RBAC_ROLES_CONFIG.customer;
+  const hasLockedPhone = Boolean(user?.phone);
+  const hasLockedEmail = Boolean(user?.email);
 
   const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -48,10 +70,21 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
   const handleProfileSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Send only name (Email and Phone are immutable identity fields)
-    await updateProfile({
+    const payload: { name: string; email?: string; phone?: string } = {
       name: name.trim(),
-    });
+    };
+
+    // If user didn't have email previously and typed a new one, include it
+    if (!hasLockedEmail && email.trim()) {
+      payload.email = email.trim().toLowerCase();
+    }
+
+    // If user didn't have phone previously and typed a new one, include it
+    if (!hasLockedPhone && phone.trim()) {
+      payload.phone = phone.trim();
+    }
+
+    await updateProfile(payload);
   };
 
   return (
@@ -146,16 +179,16 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
         </div>
       </div>
 
-      {/* Profile Details Form (Identity Email & Phone Locked) */}
+      {/* Profile Details Form */}
       <div className="rounded-3xl border border-border bg-background p-6 shadow-xs space-y-6">
         <div className="pb-4 border-b border-border">
           <h3 className="text-base font-bold text-foreground font-serif-title">
-            {isBn ? 'প্রোফাইল তথ্য ও ছবি পরিবর্তন' : 'Update Name & Profile Avatar'}
+            {isBn ? 'প্রোফাইল তথ্য ও কন্টাক্ট সেটিংস' : 'Profile Information & Contact Settings'}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             {isBn
-              ? 'আপনার নাম ও প্রোফাইল ছবি আপডেট করতে পারেন (সিকিউরিটির কারণে ইমেইল ও মোবাইল অপরিবর্তনযোগ্য)'
-              : 'Update your display name and avatar (Email and Phone are locked for account security)'}
+              ? 'ইমেইল বা মোবাইল নম্বর একবার যুক্ত করার পর তা স্থায়ীভাবে লক হয়ে যাবে এবং উভয়ের যেকোনো একটি দিয়ে লগইন করা যাবে।'
+              : 'Once added, email and phone number are permanently locked and can be used interchangeably for login.'}
           </p>
         </div>
 
@@ -164,10 +197,11 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
             {/* Editable Name */}
             <div>
               <label className="block text-xs font-bold text-foreground mb-1">
-                {isBn ? 'পূর্ণ নাম (Name)' : 'Full Name'}
+                {isBn ? 'পূর্ণ নাম (Name) *' : 'Full Name *'}
               </label>
               <input
                 type="text"
+                required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ex: Nurul Islam"
@@ -176,59 +210,91 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
                 }`}
               />
               {fieldErrors.name && (
-                <span className="text-[11px] font-bold text-rose-500">{fieldErrors.name}</span>
+                <span className="text-[11px] font-bold text-rose-500 mt-1 block">{fieldErrors.name}</span>
               )}
             </div>
 
-            {/* Read-only Phone (Locked) */}
+            {/* Mobile Phone Field (Locked if set, Editable once if missing) */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-bold text-foreground">
-                  {isBn ? 'মোবাইল নম্বর (Phone)' : 'Phone Number'}
+                  {isBn ? 'মোবাইল নম্বর (Phone)' : 'Mobile Phone Number'}
                 </label>
-                <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600">
-                  <Lock className="h-3 w-3" />
-                  {isBn ? 'লক করা' : 'Locked'}
-                </span>
+                {hasLockedPhone ? (
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                    <Lock className="h-3 w-3" />
+                    <span>{isBn ? 'স্থায়ী / লকড' : 'Permanent / Locked'}</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20">
+                    <PlusCircle className="h-3 w-3" />
+                    <span>{isBn ? 'একবার যোগ করা যাবে' : 'Add Once (Permanent)'}</span>
+                  </span>
+                )}
               </div>
               <input
                 type="tel"
-                value={phone || (isBn ? 'যুক্ত করা হয়নি' : 'Not Provided')}
-                disabled
-                readOnly
-                className="w-full rounded-xl border border-border bg-muted/60 px-3.5 py-2.5 text-xs font-bold text-muted-foreground cursor-not-allowed select-none"
+                value={phone}
+                onChange={(e) => !hasLockedPhone && setPhone(e.target.value)}
+                disabled={hasLockedPhone}
+                readOnly={hasLockedPhone}
+                placeholder={isBn ? 'যেমন: 01712345678' : 'e.g. 01712345678'}
+                className={`w-full rounded-xl border px-3.5 py-2.5 text-xs font-bold ${
+                  hasLockedPhone
+                    ? 'border-border bg-muted/60 text-muted-foreground cursor-not-allowed select-none'
+                    : 'border-border bg-background text-foreground focus:border-primary focus:outline-hidden focus:ring-2 focus:ring-primary/20'
+                } ${fieldErrors.phone ? 'border-rose-400 bg-rose-50' : ''}`}
               />
+              {fieldErrors.phone && (
+                <span className="text-[11px] font-bold text-rose-500 mt-1 block">{fieldErrors.phone}</span>
+              )}
               <span className="text-[10px] text-muted-foreground mt-0.5 block">
-                {isBn
-                  ? 'অ্যাকাউন্ট সিকিউরিটির জন্য মোবাইল নম্বর পরিবর্তন করা যাবে না'
-                  : 'Phone number cannot be changed for account security'}
+                {hasLockedPhone
+                  ? (isBn ? 'সিকিউরিটির জন্য মোবাইল নম্বর অপরিবর্তনযোগ্য।' : 'Phone number cannot be modified for security.')
+                  : (isBn ? 'মোবাইল নম্বর যোগ করলে তা দিয়েও পাসওয়ার্ড ব্যবহার করে লগইন করতে পারবেন।' : 'Adding a phone number allows logging in using either email or phone.')}
               </span>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Read-only Email (Locked) */}
+            {/* Email Field (Locked if set, Editable once if missing) */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-bold text-foreground">
                   {isBn ? 'ইমেইল অ্যাড্রেস (Email)' : 'Email Address'}
                 </label>
-                <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600">
-                  <Lock className="h-3 w-3" />
-                  {isBn ? 'লক করা' : 'Locked'}
-                </span>
+                {hasLockedEmail ? (
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                    <Lock className="h-3 w-3" />
+                    <span>{isBn ? 'স্থায়ী / লকড' : 'Permanent / Locked'}</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20">
+                    <PlusCircle className="h-3 w-3" />
+                    <span>{isBn ? 'একবার যোগ করা যাবে' : 'Add Once (Permanent)'}</span>
+                  </span>
+                )}
               </div>
               <input
                 type="email"
-                value={email || (isBn ? 'যুক্ত করা হয়নি' : 'Not Provided')}
-                disabled
-                readOnly
-                className="w-full rounded-xl border border-border bg-muted/60 px-3.5 py-2.5 text-xs font-bold text-muted-foreground cursor-not-allowed select-none"
+                value={email}
+                onChange={(e) => !hasLockedEmail && setEmail(e.target.value)}
+                disabled={hasLockedEmail}
+                readOnly={hasLockedEmail}
+                placeholder={isBn ? 'যেমন: user@example.com' : 'e.g. user@example.com'}
+                className={`w-full rounded-xl border px-3.5 py-2.5 text-xs font-bold ${
+                  hasLockedEmail
+                    ? 'border-border bg-muted/60 text-muted-foreground cursor-not-allowed select-none'
+                    : 'border-border bg-background text-foreground focus:border-primary focus:outline-hidden focus:ring-2 focus:ring-primary/20'
+                } ${fieldErrors.email ? 'border-rose-400 bg-rose-50' : ''}`}
               />
+              {fieldErrors.email && (
+                <span className="text-[11px] font-bold text-rose-500 mt-1 block">{fieldErrors.email}</span>
+              )}
               <span className="text-[10px] text-muted-foreground mt-0.5 block">
-                {isBn
-                  ? 'অ্যাকাউন্ট সিকিউরিটির জন্য ইমেইল পরিবর্তন করা যাবে না'
-                  : 'Email address cannot be changed for account security'}
+                {hasLockedEmail
+                  ? (isBn ? 'সিকিউরিটির জন্য ইমেইল অপরিবর্তনযোগ্য।' : 'Email address cannot be modified for security.')
+                  : (isBn ? 'ইমেইল যোগ করলে তা দিয়েও পাসওয়ার্ড ব্যবহার করে লগইন করতে পারবেন।' : 'Adding an email allows logging in using either email or phone.')}
               </span>
             </div>
 
@@ -261,7 +327,7 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
               ) : (
                 <>
                   <Edit2 className="h-4 w-4" />
-                  <span>{isBn ? 'নাম পরিবর্তন সংরক্ষণ করুন' : 'Save Name Changes'}</span>
+                  <span>{isBn ? 'প্রোফাইল পরিবর্তন সংরক্ষণ করুন' : 'Save Profile Changes'}</span>
                 </>
               )}
             </button>

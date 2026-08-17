@@ -1,8 +1,11 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Language } from '@/types';
 
+export type MobileMenuMode = 'categories' | 'account';
+
 interface UiState {
   isMobileMenuOpen: boolean;
+  mobileMenuMode: MobileMenuMode;
   isMobileSearchOpen: boolean;
   isQuickContactOpen: boolean;
   isPrescriptionModalOpen: boolean;
@@ -12,6 +15,7 @@ interface UiState {
 
 const initialState: UiState = {
   isMobileMenuOpen: false,
+  mobileMenuMode: 'categories',
   isMobileSearchOpen: false,
   isQuickContactOpen: false,
   isPrescriptionModalOpen: false,
@@ -28,6 +32,9 @@ export const uiSlice = createSlice({
     },
     setMobileMenu: (state, action: PayloadAction<boolean>) => {
       state.isMobileMenuOpen = action.payload;
+    },
+    setMobileMenuMode: (state, action: PayloadAction<MobileMenuMode>) => {
+      state.mobileMenuMode = action.payload;
     },
     toggleMobileSearch: (state) => {
       state.isMobileSearchOpen = !state.isMobileSearchOpen;
@@ -62,6 +69,7 @@ export const uiSlice = createSlice({
 export const {
   toggleMobileMenu,
   setMobileMenu,
+  setMobileMenuMode,
   toggleMobileSearch,
   setMobileSearch,
   toggleQuickContact,

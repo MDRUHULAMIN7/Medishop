@@ -13,10 +13,19 @@ export type OrderStatus =
   | 'delivered'
   | 'cancelled';
 
-export type PaymentStatus = 'pending' | 'paid' | 'failed';
+export type PreOrderStatus =
+  | 'pending'
+  | 'sourcing'
+  | 'ready_to_ship'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled';
+
+export type PaymentStatus = 'pending' | 'partially_paid' | 'paid' | 'failed' | 'refunded';
 
 export interface TimelineStep {
-  status: OrderStatus;
+  status: OrderStatus | PreOrderStatus;
   titleEn: string;
   titleBn: string;
   descriptionEn: string;
@@ -37,7 +46,22 @@ export interface Order {
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
   orderStatus: OrderStatus;
+  shipment1Status?: OrderStatus;
+  shipment2Status?: PreOrderStatus;
+  shipment1PaymentStatus?: 'pending' | 'paid' | 'failed';
+  shipment2PaymentStatus?: 'pending' | 'paid' | 'failed';
+  shipment1Total?: number;
+  shipment2Total?: number;
+  shipment1DeliveryCharge?: number;
+  shipment2DeliveryCharge?: number;
+  paidAmount?: number;
   summary: CartSummary;
+  isPreOrder?: boolean;
+  isSplitDelivery?: boolean;
+  shipment1DeliveryMethod?: string;
+  shipment2DeliveryMethod?: string;
+  shipment1DeliveryMethodDetails?: DeliveryMethod | null;
+  shipment2DeliveryMethodDetails?: DeliveryMethod | null;
   createdAt: string;
   estimatedDeliveryDate: string;
   notes?: string;

@@ -1,43 +1,89 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ShoppingBag,
   Search,
-  Truck,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  XCircle,
-  FileText,
-  Copy,
-  MapPin,
-  Eye,
   RefreshCw,
+  Eye,
   X,
-  CreditCard,
+  FileText,
+  Clock,
   User,
   Phone,
-  Calendar,
   Mail,
+  MapPin,
   ShieldCheck,
+  ChevronDown,
+  PackageCheck,
+  Sparkles,
+  CreditCard,
 } from 'lucide-react';
 import { useAppSelector } from '@/store';
 import { formatBDT } from '@/lib/utils';
-import { toast } from 'sonner';
 import { orderService } from '@/services/order.service';
-import { CustomStatusSelect, StatusOption } from './CustomStatusSelect';
+import { toast } from 'sonner';
+
+interface StatusOption {
+  value: string;
+  label: string;
+  badgeClass: string;
+}
+
+function CustomStatusSelect({
+  options,
+  value,
+  onChange,
+  disabled = false,
+}: {
+  options: StatusOption[];
+  value: string;
+  onChange: (val: string) => void;
+  disabled?: boolean;
+}) {
+  const current = options.find((o) => o.value.toLowerCase() === (value || '').toLowerCase()) || options[0];
+
+  return (
+    <div className="relative inline-block w-full">
+      <select
+        disabled={disabled}
+        value={current.value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full appearance-none rounded-xl border px-3 py-1.5 pr-8 text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 ${current.badgeClass}`}
+      >
+        {options.map((opt) => (
+          <option
+            key={opt.value}
+            value={opt.value}
+            className="bg-background text-foreground font-semibold py-1"
+          >
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-foreground/60">
+        <ChevronDown className="h-3.5 w-3.5" />
+      </div>
+    </div>
+  );
+}
 
 interface OrderItem {
   productId: string;
   name: string;
+  slug: string;
   dosageForm: string;
   unitType: string;
+  unit?: string;
+  unitMultiplier?: number;
   image: string;
   unitPrice: number;
+  discountPrice?: number;
   effectiveUnitPrice: number;
   quantity: number;
+  availableQuantity?: number;
+  preOrderQuantity?: number;
+  fulfillmentType?: string;
   totalPrice: number;
   requiresPrescription: boolean;
 }
@@ -57,22 +103,66 @@ interface OrderRecord {
   items: OrderItem[];
   shippingAddress: {
     recipientName: string;
+    fullName?: string;
     phone: string;
     division?: string;
     district: string;
     thana: string;
     addressLine: string;
+    streetAddress?: string;
+    area?: string;
     postalCode?: string;
   };
   paymentMethod: string;
-  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
+  paymentStatus: 'pending' | 'partially_paid' | 'paid' | 'failed' | 'refunded';
   orderStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  shipment1Status?: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  shipment2Status?: 'pending' | 'sourcing' | 'ready_to_ship' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  shipment1PaymentStatus?: 'pending' | 'paid' | 'failed';
+  shipment2PaymentStatus?: 'pending' | 'paid' | 'failed';
+  shipment1Total?: number;
+  shipment2Total?: number;
+  shipment1DeliveryCharge?: number;
+  shipment2DeliveryCharge?: number;
+  paidAmount?: number;
   subtotal: number;
   discountTotal: number;
   couponCode?: string;
   couponDiscount: number;
   deliveryCharge: number;
   grandTotal: number;
+  isPreOrder?: boolean;
+  isSplitDelivery?: boolean;
+  shipment1DeliveryMethod?: string;
+  shipment2DeliveryMethod?: string;
+  shipment1DeliveryMethodDetails?: {
+    id?: string;
+    code?: string;
+    nameBn?: string;
+    nameEn?: string;
+    charge?: number;
+    estimatedDeliveryBn?: string;
+    estimatedDeliveryEn?: string;
+  } | null;
+  shipment2DeliveryMethodDetails?: {
+    id?: string;
+    code?: string;
+    nameBn?: string;
+    nameEn?: string;
+    charge?: number;
+    estimatedDeliveryBn?: string;
+    estimatedDeliveryEn?: string;
+  } | null;
+  deliveryMethod?: {
+    id?: string;
+    code?: string;
+    nameBn?: string;
+    nameEn?: string;
+    charge?: number;
+    estimatedDeliveryBn?: string;
+    estimatedDeliveryEn?: string;
+  } | null;
+  estimatedDeliveryDate?: string;
   prescriptionId?: string | null;
   note?: string;
   createdAt?: string;
@@ -81,6 +171,7 @@ interface OrderRecord {
 
 const PAYMENT_STATUS_OPTIONS: StatusOption[] = [
   { value: 'pending', label: 'PENDING', badgeClass: 'bg-amber-100 text-amber-800 border-amber-300' },
+  { value: 'partially_paid', label: 'PARTIAL PAID', badgeClass: 'bg-blue-100 text-blue-800 border-blue-300' },
   { value: 'paid', label: 'PAID', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
   { value: 'failed', label: 'FAILED', badgeClass: 'bg-rose-100 text-rose-800 border-rose-300' },
   { value: 'refunded', label: 'REFUNDED', badgeClass: 'bg-purple-100 text-purple-800 border-purple-300' },
@@ -88,6 +179,16 @@ const PAYMENT_STATUS_OPTIONS: StatusOption[] = [
 
 const ORDER_STATUS_OPTIONS: StatusOption[] = [
   { value: 'pending', label: 'PENDING', badgeClass: 'bg-amber-50 text-amber-800 border-amber-300' },
+  { value: 'processing', label: 'PROCESSING', badgeClass: 'bg-blue-50 text-blue-800 border-blue-300' },
+  { value: 'shipped', label: 'SHIPPED', badgeClass: 'bg-sky-50 text-sky-800 border-sky-300' },
+  { value: 'delivered', label: 'DELIVERED', badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-300' },
+  { value: 'cancelled', label: 'CANCELLED', badgeClass: 'bg-rose-50 text-rose-800 border-rose-300' },
+];
+
+const PREORDER_STATUS_OPTIONS: StatusOption[] = [
+  { value: 'pending', label: 'PENDING', badgeClass: 'bg-amber-50 text-amber-800 border-amber-300' },
+  { value: 'sourcing', label: 'SOURCING', badgeClass: 'bg-purple-50 text-purple-800 border-purple-300' },
+  { value: 'ready_to_ship', label: 'READY TO SHIP', badgeClass: 'bg-indigo-50 text-indigo-800 border-indigo-300' },
   { value: 'processing', label: 'PROCESSING', badgeClass: 'bg-blue-50 text-blue-800 border-blue-300' },
   { value: 'shipped', label: 'SHIPPED', badgeClass: 'bg-sky-50 text-sky-800 border-sky-300' },
   { value: 'delivered', label: 'DELIVERED', badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-300' },
@@ -190,6 +291,114 @@ export function OrderManager() {
     }
   };
 
+  // Independent Shipment Status Updates
+  const handleUpdateShipmentStatus = async (
+    id: string,
+    shipment: 'shipment1' | 'shipment2',
+    newStatus: string
+  ) => {
+    setUpdatingId(id);
+    try {
+      const payload =
+        shipment === 'shipment1'
+          ? { shipment1Status: newStatus as any }
+          : { shipment2Status: newStatus as any };
+
+      const updated = await orderService.updateOrderStatus(id, payload);
+
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === id
+            ? {
+                ...o,
+                ...(shipment === 'shipment1'
+                  ? { shipment1Status: newStatus as any }
+                  : { shipment2Status: newStatus as any }),
+              }
+            : o
+        )
+      );
+
+      if (selectedOrder && selectedOrder.id === id) {
+        setSelectedOrder((prev) =>
+          prev
+            ? {
+                ...prev,
+                ...(shipment === 'shipment1'
+                  ? { shipment1Status: newStatus as any }
+                  : { shipment2Status: newStatus as any }),
+              }
+            : null
+        );
+      }
+
+      toast.success(
+        isBn
+          ? `${shipment === 'shipment1' ? '১ম চালান' : '২য় চালান'} এর স্ট্যাটাস '${newStatus}' করা হয়েছে`
+          : `${shipment === 'shipment1' ? 'Shipment 1' : 'Shipment 2'} status updated to '${newStatus}'`
+      );
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update shipment status');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  // Independent Shipment Payment Status Updates
+  const handleUpdateShipmentPaymentStatus = async (
+    id: string,
+    shipment: 'shipment1' | 'shipment2',
+    newPaymentStatus: string
+  ) => {
+    setUpdatingId(id);
+    try {
+      const payload =
+        shipment === 'shipment1'
+          ? { shipment1PaymentStatus: newPaymentStatus as any }
+          : { shipment2PaymentStatus: newPaymentStatus as any };
+
+      const updated = await orderService.updateOrderStatus(id, payload);
+
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === id
+            ? {
+                ...o,
+                ...(shipment === 'shipment1'
+                  ? { shipment1PaymentStatus: newPaymentStatus as any }
+                  : { shipment2PaymentStatus: newPaymentStatus as any }),
+                paymentStatus: updated?.paymentStatus || o.paymentStatus,
+              }
+            : o
+        )
+      );
+
+      if (selectedOrder && selectedOrder.id === id) {
+        setSelectedOrder((prev) =>
+          prev
+            ? {
+                ...prev,
+                ...(shipment === 'shipment1'
+                  ? { shipment1PaymentStatus: newPaymentStatus as any }
+                  : { shipment2PaymentStatus: newPaymentStatus as any }),
+                paymentStatus: updated?.paymentStatus || prev.paymentStatus,
+              }
+            : null
+        );
+      }
+
+      toast.success(
+        isBn
+          ? `${shipment === 'shipment1' ? '১ম চালান' : '২য় চালান'} এর পেমেন্ট '${newPaymentStatus}' করা হয়েছে`
+          : `${shipment === 'shipment1' ? 'Shipment 1' : 'Shipment 2'} payment updated to '${newPaymentStatus}'`
+      );
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update shipment payment status');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const filteredOrders = orders.filter((o) => {
     const q = search.toLowerCase().trim();
     if (!q) return true;
@@ -222,19 +431,19 @@ export function OrderManager() {
           type="button"
           onClick={fetchOrders}
           disabled={loading}
-          className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-3.5 py-2 text-xs font-bold text-foreground shadow-2xs hover:bg-muted transition-colors cursor-pointer disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3.5 py-2 text-xs font-bold text-foreground shadow-2xs hover:bg-muted transition-colors cursor-pointer disabled:opacity-50"
         >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          <span>{isBn ? 'রিফ্রেশ করুন' : 'Refresh Feed'}</span>
+          <RefreshCw className={`h-3.5 w-3.5 text-primary ${loading ? 'animate-spin' : ''}`} />
+          <span>{isBn ? 'রিফ্রেশ' : 'Refresh Orders'}</span>
         </button>
       </div>
 
-      {/* Filter & Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center gap-3">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+      {/* Filter and Search Bar */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
-            type="search"
+            type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={
@@ -266,6 +475,7 @@ export function OrderManager() {
         >
           <option value="ALL">{isBn ? 'সকল পেমেন্ট স্ট্যাটাস' : 'All Payment Statuses'}</option>
           <option value="pending">PENDING</option>
+          <option value="partially_paid">PARTIALLY PAID</option>
           <option value="paid">PAID</option>
           <option value="failed">FAILED</option>
           <option value="refunded">REFUNDED</option>
@@ -281,7 +491,7 @@ export function OrderManager() {
                 <th className="py-3.5 px-4">Order Number & Date</th>
                 <th className="py-3.5 px-4">Customer</th>
                 <th className="py-3.5 px-4">Amount & Payment</th>
-                <th className="py-3.5 px-4">Order Lifecycle</th>
+                <th className="py-3.5 px-4">Order Lifecycles</th>
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -309,25 +519,24 @@ export function OrderManager() {
                         <span className="font-extrabold text-primary sm:text-sm">
                           #{order.orderNumber}
                         </span>
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1 font-medium">
-                          <Calendar className="h-3 w-3" />
-                          <span>
-                            {order.createdAt
-                              ? new Date(order.createdAt).toLocaleString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })
-                              : 'N/A'}
-                          </span>
-                        </span>
-                        {order.prescriptionId && (
-                          <span className="mt-1 inline-flex items-center gap-1 w-fit rounded bg-purple-100 px-1.5 py-0.5 text-[9px] font-extrabold text-purple-800">
-                            <FileText className="h-2.5 w-2.5" />
-                            <span>Prescription Attached</span>
-                          </span>
-                        )}
+                        <div className="flex flex-wrap items-center gap-1 mt-1">
+                          {order.isPreOrder && (
+                            <span className="inline-flex items-center gap-1 rounded bg-primary/10 border border-primary/20 px-1.5 py-0.5 text-[9px] font-black text-primary">
+                              Pre-Order
+                            </span>
+                          )}
+                          {order.isSplitDelivery && (
+                            <span className="inline-flex items-center gap-1 rounded bg-blue-50 border border-blue-200 px-1.5 py-0.5 text-[9px] font-bold text-blue-700">
+                              Split (২ চালান)
+                            </span>
+                          )}
+                          {order.prescriptionId && (
+                            <span className="inline-flex items-center gap-1 rounded bg-purple-100 px-1.5 py-0.5 text-[9px] font-extrabold text-purple-800">
+                              <FileText className="h-2.5 w-2.5" />
+                              <span>Prescription</span>
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
 
@@ -343,40 +552,68 @@ export function OrderManager() {
                       </div>
                     </td>
 
-                    {/* Amount & Payment (Harmonized h-8 height, rounded-xl, Custom Popover Dropdown) */}
+                    {/* Amount & Payment */}
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-black text-foreground text-sm flex h-8 items-center">
                           {formatBDT(order.grandTotal)}
                         </span>
-                        <span className="flex h-8 items-center rounded-xl bg-muted border border-border/80 px-3 text-xs font-black uppercase text-muted-foreground shadow-2xs">
-                          {order.paymentMethod}
-                        </span>
-                        <CustomStatusSelect
-                          value={order.paymentStatus}
-                          options={PAYMENT_STATUS_OPTIONS}
-                          onChange={(val) => handleUpdatePaymentStatus(order.id, val)}
-                          disabled={updatingId === order.id}
-                        />
+                        <div className="w-[130px]">
+                          <CustomStatusSelect
+                            options={PAYMENT_STATUS_OPTIONS}
+                            value={order.paymentStatus}
+                            onChange={(val) => handleUpdatePaymentStatus(order.id, val)}
+                            disabled={updatingId === order.id}
+                          />
+                        </div>
                       </div>
                     </td>
 
-                    {/* Order Lifecycle (Harmonized h-8 height, rounded-xl, Custom Popover Dropdown) */}
+                    {/* Order Lifecycles */}
                     <td className="py-3.5 px-4">
-                      <CustomStatusSelect
-                        value={order.orderStatus}
-                        options={ORDER_STATUS_OPTIONS}
-                        onChange={(val) => handleUpdateOrderStatus(order.id, val)}
-                        disabled={updatingId === order.id}
-                      />
+                      {order.isSplitDelivery ? (
+                        <div className="flex flex-col gap-1.5 w-[150px]">
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] font-extrabold text-emerald-700 shrink-0">১ম:</span>
+                            <div className="flex-1">
+                              <CustomStatusSelect
+                                options={ORDER_STATUS_OPTIONS}
+                                value={order.shipment1Status || order.orderStatus}
+                                onChange={(val) => handleUpdateShipmentStatus(order.id, 'shipment1', val)}
+                                disabled={updatingId === order.id}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] font-extrabold text-primary shrink-0">২য়:</span>
+                            <div className="flex-1">
+                              <CustomStatusSelect
+                                options={PREORDER_STATUS_OPTIONS}
+                                value={order.shipment2Status || 'pending'}
+                                onChange={(val) => handleUpdateShipmentStatus(order.id, 'shipment2', val)}
+                                disabled={updatingId === order.id}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-[140px]">
+                          <CustomStatusSelect
+                            options={order.isPreOrder ? PREORDER_STATUS_OPTIONS : ORDER_STATUS_OPTIONS}
+                            value={order.orderStatus}
+                            onChange={(val) => handleUpdateOrderStatus(order.id, val)}
+                            disabled={updatingId === order.id}
+                          />
+                        </div>
+                      )}
                     </td>
 
-                    {/* Actions button (Harmonized h-8 height, rounded-xl) */}
+                    {/* Actions button */}
                     <td className="py-3.5 px-4 text-right">
                       <button
                         type="button"
                         onClick={() => setSelectedOrder(order)}
-                        className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-border bg-background px-3 text-xs font-bold text-foreground hover:bg-muted transition-colors shadow-2xs cursor-pointer"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-bold text-foreground shadow-2xs hover:bg-muted transition-colors cursor-pointer"
                       >
                         <Eye className="h-3.5 w-3.5 text-primary" />
                         <span>{isBn ? 'ডিটেইলস' : 'View Details'}</span>
@@ -409,14 +646,25 @@ export function OrderManager() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.92, y: 15 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border border-border bg-background p-6 shadow-2xl space-y-6"
+              className="relative z-10 flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-2xl"
             >
-              {/* Modal Header */}
-              <div className="flex items-center justify-between border-b border-border pb-4">
+              <div className="flex items-center justify-between border-b border-border p-6 pb-4">
                 <div>
-                  <span className="text-xs font-bold text-primary uppercase tracking-wider">
-                    Order Details
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-primary uppercase tracking-wider">
+                      Order Management
+                    </span>
+                    {selectedOrder.isPreOrder && (
+                      <span className="rounded bg-primary/10 border border-primary/20 px-1.5 py-0.2 text-[9px] font-black text-primary">
+                        Pre-Order
+                      </span>
+                    )}
+                    {selectedOrder.isSplitDelivery && (
+                      <span className="rounded bg-blue-50 border border-blue-200 px-1.5 py-0.2 text-[9px] font-bold text-blue-700">
+                        ২ চালানে স্প্লিট ডেলিভারি
+                      </span>
+                    )}
+                  </div>
                   <h3 className="text-lg sm:text-xl font-extrabold text-foreground">
                     #{selectedOrder.orderNumber}
                   </h3>
@@ -431,108 +679,239 @@ export function OrderManager() {
                 </button>
               </div>
 
-              {/* Customer Registration & Shipping Address Info */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-2xl border border-border bg-muted/20 p-4 text-xs">
-                {/* Customer Account Info */}
-                <div className="space-y-1.5">
-                  <span className="font-extrabold text-foreground flex items-center gap-1.5 text-xs">
-                    <User className="h-4 w-4 text-primary" />
-                    Customer Registration Info
-                  </span>
-                  <p className="font-bold text-foreground">
-                    {selectedOrder.shippingAddress?.recipientName || selectedOrder.user?.name || 'Customer'}
-                  </p>
-                  <p className="text-muted-foreground flex items-center gap-1.5">
-                    <Phone className="h-3.5 w-3.5 text-sky-600 shrink-0" />
-                    <span>{selectedOrder.shippingAddress?.phone || selectedOrder.user?.phone || 'N/A'}</span>
-                  </p>
-                  {selectedOrder.user?.email && (
-                    <p className="text-muted-foreground flex items-center gap-1.5 truncate">
-                      <Mail className="h-3.5 w-3.5 text-amber-600 shrink-0" />
-                      <span className="truncate">{selectedOrder.user.email}</span>
-                    </p>
-                  )}
-                  {selectedOrder.user?.id && (
-                    <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                      <ShieldCheck className="h-3 w-3 text-emerald-600 shrink-0" />
-                      <span>Reg ID: {selectedOrder.user.id}</span>
-                    </p>
-                  )}
-                </div>
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 pt-4 space-y-6">
+                {/* Independent Dual Shipment Controls for Split Orders */}
+                {selectedOrder.isSplitDelivery ? (
+                  <div className="space-y-4">
+                    <span className="text-xs font-extrabold text-foreground uppercase tracking-wider block">
+                      চালানভিত্তিক স্বাধীন নিয়ন্ত্রণ (Independent Shipment Controls)
+                    </span>
 
-                {/* Shipping Address Info */}
-                <div className="space-y-1.5">
-                  <span className="font-extrabold text-foreground flex items-center gap-1.5 text-xs">
-                    <MapPin className="h-4 w-4 text-rose-600" />
-                    Shipping Address
-                  </span>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {selectedOrder.shippingAddress?.addressLine}, {selectedOrder.shippingAddress?.thana},{' '}
-                    {selectedOrder.shippingAddress?.district},{' '}
-                    {selectedOrder.shippingAddress?.division}
-                  </p>
-                </div>
-              </div>
+                    {/* Shipment 1 (In-Stock) Control Panel */}
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-3 dark:bg-emerald-950/20">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <PackageCheck className="h-4 w-4 text-emerald-700" />
+                          <span className="font-bold text-xs text-emerald-900 dark:text-emerald-200">
+                            📦 ১ম চালান (ইন-স্টক পণ্য) - ৳{selectedOrder.shipment1Total || Math.round(selectedOrder.grandTotal / 2)}
+                          </span>
+                        </div>
+                        <span className="text-[11px] font-medium text-emerald-700">
+                          {selectedOrder.shipment1DeliveryMethod || '২৪ ঘণ্টায় এক্সপ্রেস ডেলিভারি'}
+                        </span>
+                      </div>
 
-              {/* Items List */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-extrabold text-foreground uppercase tracking-wider">
-                  Order Items ({selectedOrder.items?.length || 0})
-                </h4>
-                <div className="divide-y divide-border border border-border rounded-2xl overflow-hidden bg-background">
-                  {selectedOrder.items?.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 text-xs">
-                      <div className="flex items-center gap-3">
-                        {item.image ? (
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="h-10 w-10 object-cover rounded-lg border border-border"
-                          />
-                        ) : (
-                          <div className="h-10 w-10 rounded-lg border border-border bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground">
-                            MED
-                          </div>
-                        )}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                         <div>
-                          <p className="font-bold text-foreground">{item.name}</p>
-                          <p className="text-[11px] text-muted-foreground">
-                            {item.dosageForm} • Qty: {item.quantity} × {formatBDT(item.effectiveUnitPrice)}
-                          </p>
+                          <label className="text-[11px] font-bold text-foreground block mb-1">
+                            ১ম চালানের ডেলিভারি স্ট্যাটাস:
+                          </label>
+                          <CustomStatusSelect
+                            options={ORDER_STATUS_OPTIONS}
+                            value={selectedOrder.shipment1Status || selectedOrder.orderStatus}
+                            onChange={(val) => handleUpdateShipmentStatus(selectedOrder.id, 'shipment1', val)}
+                            disabled={updatingId === selectedOrder.id}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-bold text-foreground block mb-1">
+                            ১ম চালানের পেমেন্ট স্ট্যাটাস:
+                          </label>
+                          <CustomStatusSelect
+                            options={PAYMENT_STATUS_OPTIONS.filter((o) => o.value !== 'partially_paid')}
+                            value={selectedOrder.shipment1PaymentStatus || selectedOrder.paymentStatus}
+                            onChange={(val) => handleUpdateShipmentPaymentStatus(selectedOrder.id, 'shipment1', val)}
+                            disabled={updatingId === selectedOrder.id}
+                          />
                         </div>
                       </div>
-                      <span className="font-black text-foreground">
-                        {formatBDT(item.totalPrice)}
-                      </span>
                     </div>
-                  ))}
-                </div>
-              </div>
 
-              {/* Summary Breakdown */}
-              <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2 text-xs">
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Subtotal</span>
-                  <span className="font-bold text-foreground">{formatBDT(selectedOrder.subtotal)}</span>
-                </div>
+                    {/* Shipment 2 (Pre-Order) Control Panel */}
+                    <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 space-y-3">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-primary" />
+                          <span className="font-bold text-xs text-foreground">
+                            ⚡ ২য় চালান (প্রি-অর্ডার পণ্য) - ৳{selectedOrder.shipment2Total || Math.round(selectedOrder.grandTotal / 2)}
+                          </span>
+                        </div>
+                        <span className="text-[11px] font-medium text-primary">
+                          {selectedOrder.shipment2DeliveryMethod || '৩-৫ দিনে ডেলিভারি'}
+                        </span>
+                      </div>
 
-                {selectedOrder.couponDiscount > 0 && (
-                  <div className="flex justify-between text-emerald-600 font-bold">
-                    <span>Coupon Discount ({selectedOrder.couponCode})</span>
-                    <span>-{formatBDT(selectedOrder.couponDiscount)}</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <div>
+                          <label className="text-[11px] font-bold text-foreground block mb-1">
+                            ২য় চালানের প্রি-অর্ডার লাইফসাইকেল:
+                          </label>
+                          <CustomStatusSelect
+                            options={PREORDER_STATUS_OPTIONS}
+                            value={selectedOrder.shipment2Status || 'pending'}
+                            onChange={(val) => handleUpdateShipmentStatus(selectedOrder.id, 'shipment2', val)}
+                            disabled={updatingId === selectedOrder.id}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-bold text-foreground block mb-1">
+                            ২য় চালানের পেমেন্ট স্ট্যাটাস:
+                          </label>
+                          <CustomStatusSelect
+                            options={PAYMENT_STATUS_OPTIONS.filter((o) => o.value !== 'partially_paid')}
+                            value={selectedOrder.shipment2PaymentStatus || selectedOrder.paymentStatus}
+                            onChange={(val) => handleUpdateShipmentPaymentStatus(selectedOrder.id, 'shipment2', val)}
+                            disabled={updatingId === selectedOrder.id}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* Single Order Status Control */
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-2xl border border-border bg-muted/20 p-4">
+                    <div>
+                      <label className="text-xs font-bold text-foreground block mb-1.5">
+                        অর্ডার স্ট্যাটাস (Order Status):
+                      </label>
+                      <CustomStatusSelect
+                        options={selectedOrder.isPreOrder ? PREORDER_STATUS_OPTIONS : ORDER_STATUS_OPTIONS}
+                        value={selectedOrder.orderStatus}
+                        onChange={(val) => handleUpdateOrderStatus(selectedOrder.id, val)}
+                        disabled={updatingId === selectedOrder.id}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-foreground block mb-1.5">
+                        পেমেন্ট স্ট্যাটাস (Payment Status):
+                      </label>
+                      <CustomStatusSelect
+                        options={PAYMENT_STATUS_OPTIONS}
+                        value={selectedOrder.paymentStatus}
+                        onChange={(val) => handleUpdatePaymentStatus(selectedOrder.id, val)}
+                        disabled={updatingId === selectedOrder.id}
+                      />
+                    </div>
                   </div>
                 )}
 
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Delivery Fee</span>
-                  <span className="font-bold text-foreground">{formatBDT(selectedOrder.deliveryCharge)}</span>
+                {/* Customer Registration & Shipping Address Info */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-2xl border border-border bg-muted/20 p-4 text-xs">
+                  {/* Customer Account Info */}
+                  <div className="space-y-1.5">
+                    <span className="font-extrabold text-foreground flex items-center gap-1.5 text-xs">
+                      <User className="h-4 w-4 text-primary" />
+                      Customer Registration Info
+                    </span>
+                    <p className="font-bold text-foreground">
+                      {selectedOrder.shippingAddress?.recipientName || selectedOrder.user?.name || 'Customer'}
+                    </p>
+                    <p className="text-muted-foreground flex items-center gap-1.5">
+                      <Phone className="h-3.5 w-3.5 text-sky-600 shrink-0" />
+                      <span>{selectedOrder.shippingAddress?.phone || selectedOrder.user?.phone || 'N/A'}</span>
+                    </p>
+                    {selectedOrder.user?.email && (
+                      <p className="text-muted-foreground flex items-center gap-1.5 truncate">
+                        <Mail className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                        <span className="truncate">{selectedOrder.user.email}</span>
+                      </p>
+                    )}
+                    {selectedOrder.user?.id && (
+                      <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <ShieldCheck className="h-3 w-3 text-emerald-600 shrink-0" />
+                        <span>Reg ID: {selectedOrder.user.id}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Shipping Address Info */}
+                  <div className="space-y-1.5">
+                    <span className="font-extrabold text-foreground flex items-center gap-1.5 text-xs">
+                      <MapPin className="h-4 w-4 text-rose-600" />
+                      Shipping Address
+                    </span>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {selectedOrder.shippingAddress?.addressLine}, {selectedOrder.shippingAddress?.thana},{' '}
+                      {selectedOrder.shippingAddress?.district},{' '}
+                      {selectedOrder.shippingAddress?.division}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="pt-2 border-t border-border flex justify-between items-baseline text-sm">
-                  <span className="font-extrabold text-foreground">Grand Total</span>
-                  <span className="font-black text-primary text-base">
-                    {formatBDT(selectedOrder.grandTotal)}
-                  </span>
+                {/* Items List */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-extrabold text-foreground uppercase tracking-wider">
+                    Order Items ({selectedOrder.items?.length || 0})
+                  </h4>
+                  <div className="divide-y divide-border border border-border rounded-2xl overflow-hidden bg-background">
+                    {selectedOrder.items?.map((item, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-3 text-xs">
+                        <div className="flex items-center gap-3">
+                          {item.image ? (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="h-10 w-10 object-cover rounded-lg border border-border"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 rounded-lg border border-border bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground">
+                              MED
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-bold text-foreground">{item.name}</p>
+                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                              {item.unit || item.unitType || item.dosageForm} • {item.quantity} {item.unit || item.unitType || ''} × {formatBDT(item.effectiveUnitPrice)}
+                            </p>
+                            {Boolean(item.preOrderQuantity && item.preOrderQuantity > 0) && (
+                              <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                {item.availableQuantity !== undefined && item.availableQuantity > 0 && (
+                                  <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700 border border-emerald-200">
+                                    স্টকে: {item.availableQuantity} {item.unit || ''}
+                                  </span>
+                                )}
+                                <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold text-primary border border-primary/20">
+                                  Pre-Order: +{item.preOrderQuantity} {item.unit || ''}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <span className="font-black text-foreground">
+                          {formatBDT(item.totalPrice)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Summary Breakdown */}
+                <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-2 text-xs">
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Subtotal</span>
+                    <span className="font-bold text-foreground">{formatBDT(selectedOrder.subtotal)}</span>
+                  </div>
+
+                  {selectedOrder.couponDiscount > 0 && (
+                    <div className="flex justify-between text-emerald-600 font-bold">
+                      <span>Coupon Discount ({selectedOrder.couponCode})</span>
+                      <span>-{formatBDT(selectedOrder.couponDiscount)}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Delivery Fee</span>
+                    <span className="font-bold text-foreground">{formatBDT(selectedOrder.deliveryCharge)}</span>
+                  </div>
+
+                  <div className="pt-2 border-t border-border flex justify-between items-baseline text-sm">
+                    <span className="font-extrabold text-foreground">Grand Total</span>
+                    <span className="font-black text-primary text-base">
+                      {formatBDT(selectedOrder.grandTotal)}
+                    </span>
+                  </div>
                 </div>
               </div>
             </motion.div>

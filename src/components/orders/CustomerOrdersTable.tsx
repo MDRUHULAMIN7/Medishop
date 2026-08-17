@@ -46,11 +46,13 @@ export function CustomerOrdersTable({
                 minute: '2-digit',
               });
 
-              const totalAmount = Number(order.summary?.grandTotal || order.grandTotal || 0);
+              const totalAmount = Number(order.summary?.grandTotal || (order as any).grandTotal || 0);
               const itemsCount = order.items?.length || 0;
               const firstItemName = order.items?.[0] ? (isBn ? order.items[0].nameBn : order.items[0].nameEn) : 'Medicine';
+              const firstItemUnit = order.items?.[0]?.unit || order.items?.[0]?.unitType || '';
+              const hasPreOrder = Boolean(order.isPreOrder || order.items?.some((item: any) => Number(item.preOrderQuantity || 0) > 0 || item.fulfillmentType === 'mixed'));
 
-              const isPendingPayment = order.paymentStatus === 'pending' && order.orderStatus !== 'cancelled';
+              const isPendingPayment = (order.paymentStatus === 'pending' || order.paymentStatus === 'partially_paid') && order.orderStatus !== 'cancelled';
 
               return (
                 <tr key={order.id} className="hover:bg-muted/30 transition-colors">
@@ -73,6 +75,11 @@ export function CustomerOrdersTable({
                       <span className="font-bold text-foreground truncate">
                         {firstItemName}
                       </span>
+                      {firstItemUnit && (
+                        <span className="text-[11px] text-muted-foreground font-medium">
+                          {isBn ? `একক: ${firstItemUnit}` : `Unit: ${firstItemUnit}`}
+                        </span>
+                      )}
                       <span className="text-[11px] text-muted-foreground font-medium">
                         {itemsCount > 1
                           ? isBn
@@ -82,6 +89,18 @@ export function CustomerOrdersTable({
                           ? '১ টি ওষুধ'
                           : '1 item'}
                       </span>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        {hasPreOrder && (
+                          <span className="inline-flex items-center rounded bg-primary/10 border border-primary/20 px-1.5 py-0.5 text-[9px] font-bold text-primary">
+                            {isBn ? 'প্রি-অর্ডার' : 'Pre-Order'}
+                          </span>
+                        )}
+                        {order.isSplitDelivery && (
+                          <span className="inline-flex items-center rounded bg-blue-50 border border-blue-200 px-1.5 py-0.5 text-[9px] font-bold text-blue-700">
+                            {isBn ? '২ চালান' : 'Split Delivery'}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </td>
 
@@ -103,10 +122,14 @@ export function CustomerOrdersTable({
                         className={`rounded-lg px-2 py-0.5 text-[10px] font-black uppercase ${
                           order.paymentStatus === 'paid'
                             ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                            : order.paymentStatus === 'partially_paid'
+                            ? 'bg-blue-100 text-blue-800 border border-blue-300'
                             : 'bg-amber-100 text-amber-800 border border-amber-300'
                         }`}
                       >
-                        {order.paymentStatus || 'PENDING'}
+                        {order.paymentStatus === 'partially_paid'
+                          ? (isBn ? 'আংশিক পরিশোধিত' : 'PARTIAL')
+                          : order.paymentStatus || 'PENDING'}
                       </span>
 
                       {isPendingPayment && (
@@ -151,8 +174,14 @@ export function CustomerOrdersTable({
           onClose={() => setSelectedPayOrder(null)}
           orderId={selectedPayOrder.id}
           orderNumber={selectedPayOrder.orderNumber}
-          amount={Number(selectedPayOrder.summary?.grandTotal || selectedPayOrder.grandTotal || 0)}
+          amount={Number(selectedPayOrder.summary?.grandTotal || (selectedPayOrder as any).grandTotal || 0)}
+          shipment1Total={(selectedPayOrder as any).shipment1Total}
+          shipment2Total={(selectedPayOrder as any).shipment2Total}
+          shipment1PaymentStatus={(selectedPayOrder as any).shipment1PaymentStatus}
+          shipment2PaymentStatus={(selectedPayOrder as any).shipment2PaymentStatus}
+          isSplitDelivery={Boolean(selectedPayOrder.isSplitDelivery)}
           isBn={isBn}
+          isPreOrder={Boolean(selectedPayOrder.isPreOrder || selectedPayOrder.items?.some((item: any) => Number(item.preOrderQuantity || 0) > 0 || item.fulfillmentType === 'mixed'))}
           onSuccess={() => {
             if (onRefresh) onRefresh();
           }}

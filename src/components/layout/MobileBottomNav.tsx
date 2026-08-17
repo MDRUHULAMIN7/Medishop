@@ -7,17 +7,15 @@ import {
   Stethoscope,
   Home,
   FileText,
-  User as UserIcon,
+  Menu,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { usePathname } from 'next/navigation';
-import { toggleMobileMenu } from '@/store/slices/uiSlice';
-import { openAuthModal } from '@/store/slices/authSlice';
+import { setMobileMenu, setMobileMenuMode } from '@/store/slices/uiSlice';
 
 export function MobileBottomNav() {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
   const language = useAppSelector((state) => state.ui.language);
 
   const isBn = language === 'bn';
@@ -34,9 +32,12 @@ export function MobileBottomNav() {
       <div className="flex h-16 items-center justify-around px-2">
         {/* 1. Categories */}
         <button
-          onClick={() => dispatch(toggleMobileMenu())}
+          onClick={() => {
+            dispatch(setMobileMenuMode('categories'));
+            dispatch(setMobileMenu(true));
+          }}
           aria-label={isBn ? 'ক্যাটাগরি' : 'Categories'}
-          className="flex flex-col items-center justify-center gap-1 text-muted-foreground transition-colors hover:text-primary active:scale-95"
+          className="flex flex-col items-center justify-center gap-1 text-muted-foreground transition-colors hover:text-primary active:scale-95 cursor-pointer"
         >
           <LayoutGrid className="h-5 w-5" />
           <span className="text-[10px] font-semibold">
@@ -77,17 +78,21 @@ export function MobileBottomNav() {
           </span>
         </Link>
 
-        {/* 5. Account / Profile */}
-        <Link
-          href="/profile"
-          aria-label={isBn ? 'প্রোফাইল' : 'Profile'}
-          className="flex flex-col items-center justify-center gap-1 text-muted-foreground transition-colors hover:text-primary active:scale-95"
+        {/* 5. Hamburger Menu / Account Sidebar */}
+        <button
+          type="button"
+          onClick={() => {
+            dispatch(setMobileMenuMode('account'));
+            dispatch(setMobileMenu(true));
+          }}
+          aria-label={isBn ? 'মেনু' : 'Menu'}
+          className="flex flex-col items-center justify-center gap-1 text-muted-foreground transition-colors hover:text-primary active:scale-95 cursor-pointer"
         >
-          <UserIcon className="h-5 w-5" />
+          <Menu className="h-5 w-5" />
           <span className="text-[10px] font-semibold">
-            {isBn ? 'প্রোফাইল' : 'Profile'}
+            {isBn ? 'মেনু' : 'Menu'}
           </span>
-        </Link>
+        </button>
       </div>
     </nav>
   );
