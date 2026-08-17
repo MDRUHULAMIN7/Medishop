@@ -277,7 +277,7 @@ export function MobileMenuDrawer() {
                         {/* 4. Staff Dashboard (Only for Admin / Staff, NEVER for Customer) */}
                         {isStaffOrAdmin && (
                           <Link
-                            href="/dashboard"
+                            href={(user?.role ? RBAC_ROLES_CONFIG[user.role]?.route : null) || '/dashboard/admin'}
                             onClick={closeDrawer}
                             className="flex w-full items-center justify-between rounded-2xl border border-primary/30 bg-primary/10 p-3 text-left shadow-2xs hover:bg-primary hover:text-white transition-all group"
                           >

@@ -356,7 +356,7 @@ export function Navbar() {
                         {/* If Staff/Admin, show dynamic Dashboard link */}
                         {isStaffOrAdmin && (
                           <Link
-                            href="/dashboard"
+                            href={(user?.role ? RBAC_ROLES_CONFIG[user.role]?.route : null) || '/dashboard/admin'}
                             onClick={() => setIsAccountDropdownOpen(false)}
                             className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-extrabold text-primary bg-primary/10 hover:bg-primary hover:text-white transition-all shadow-xs"
                           >

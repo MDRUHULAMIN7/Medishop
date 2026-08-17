@@ -27,8 +27,29 @@ import { Loader2 } from 'lucide-react';
 function AdminContent() {
   const searchParams = useSearchParams();
   const tab = searchParams.get('tab') || 'overview';
+  const reduxUser = useAppSelector((state) => state.auth.user);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const isInitialized = useAppSelector((state) => state.auth.isInitialized);
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
+  const userRole = reduxUser?.role || 'customer';
+
+  // Strict page-level guard preventing unauthorized component mounts
+  if (!isInitialized || !isAuthenticated || userRole === 'customer') {
+    return (
+      <div className="flex h-48 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (['sales_staff', 'pharmacist', 'pharmacist_verifier', 'inventory_manager'].includes(userRole)) {
+    return (
+      <div className="flex h-48 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (tab === 'chat' || tab === 'livechat') {
     return <AdminChatManager />;

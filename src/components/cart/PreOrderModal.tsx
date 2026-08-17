@@ -789,7 +789,7 @@ function ConfigStep({
                 </div>
 
                 <div className="flex h-full w-full items-center justify-center pt-1">
-                  <PaymentBrandIcon code={code} isBn={isBn} />
+                  <PaymentBrandIcon code={code} logo={method.logo} isBn={isBn} />
                 </div>
               </button>
             );

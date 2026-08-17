@@ -61,7 +61,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const userRole = reduxUser?.role || 'customer';
-  const isStaff = isAuthenticated && userRole !== 'customer';
 
   // Sync role & active tab with current URL sub-route & search params
   useEffect(() => {
@@ -83,7 +82,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // 2. Strict Customer Role Block - Customers have no dashboard
+    // 2. Strict Customer Role Block - Customers have NO dashboard
     if (userRole === 'customer') {
       toast.error(
         isBn
@@ -94,16 +93,39 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // 3. Tab permission verification for staff roles
-    const allowedTabs = ROLE_ALLOWED_TABS[userRole] || [];
-    if (!['admin', 'super_admin'].includes(userRole) && !allowedTabs.includes(urlTab)) {
-      const fallbackTab = allowedTabs[0] || 'overview';
-      toast.info(
-        isBn
-          ? 'এই সেকশনের অনুমতি নেই। আপনার অনুমোদিত সেকশনে নেওয়া হচ্ছে।'
-          : 'Redirecting to your authorized section.'
-      );
-      router.replace(`/dashboard/admin?tab=${fallbackTab}`);
+    // 3. Strict sub-route routing per staff role
+    if (userRole === 'sales_staff' && !pathname?.startsWith('/dashboard/sales')) {
+      router.replace('/dashboard/sales');
+      return;
+    }
+
+    if (
+      (userRole === 'pharmacist' || userRole === 'pharmacist_verifier') &&
+      !pathname?.startsWith('/dashboard/pharmacist')
+    ) {
+      router.replace('/dashboard/pharmacist');
+      return;
+    }
+
+    if (userRole === 'inventory_manager' && !pathname?.startsWith('/dashboard/inventory')) {
+      router.replace('/dashboard/inventory');
+      return;
+    }
+
+    // 4. Admin subroute protection for order_manager / marketing_editor tabs
+    if (pathname?.startsWith('/dashboard/admin')) {
+      if (!['admin', 'super_admin', 'order_manager', 'marketing_editor'].includes(userRole)) {
+        const safeRoute = RBAC_ROLES_CONFIG[userRole]?.route || '/profile';
+        router.replace(safeRoute);
+        return;
+      }
+
+      // Check tab permissions for order_manager and marketing_editor
+      const allowedTabs = ROLE_ALLOWED_TABS[userRole] || [];
+      if (!['admin', 'super_admin'].includes(userRole) && !allowedTabs.includes(urlTab)) {
+        const fallbackTab = allowedTabs[0] || 'overview';
+        router.replace(`/dashboard/admin?tab=${fallbackTab}`);
+      }
     }
   }, [pathname, urlTab, userRole, reduxUser, isAuthenticated, isInitialized, isBn, router, dispatch]);
 
@@ -167,6 +189,45 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
               : 'Customer accounts cannot access the staff management portal. Redirecting...'}
           </p>
         </div>
+      </div>
+    );
+  }
+
+  // Check subroute authorization
+  if (userRole === 'sales_staff' && !pathname?.startsWith('/dashboard/sales')) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (
+    (userRole === 'pharmacist' || userRole === 'pharmacist_verifier') &&
+    !pathname?.startsWith('/dashboard/pharmacist')
+  ) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (userRole === 'inventory_manager' && !pathname?.startsWith('/dashboard/inventory')) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (
+    pathname?.startsWith('/dashboard/admin') &&
+    !['admin', 'super_admin', 'order_manager', 'marketing_editor'].includes(userRole)
+  ) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }

@@ -73,7 +73,7 @@ export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
   },
   pharmacist: {
     role: 'pharmacist',
-    route: '/dashboard/admin',
+    route: '/dashboard/pharmacist',
     titleEn: 'Pharmacist',
     titleBn: 'ফার্মাসিস্ট',
     descriptionEn: 'Verify categories & prescription orders',
@@ -85,7 +85,7 @@ export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
   },
   pharmacist_verifier: {
     role: 'pharmacist_verifier',
-    route: '/dashboard/admin',
+    route: '/dashboard/pharmacist',
     titleEn: 'Pharmacist Verifier',
     titleBn: 'প্রেসক্রিপশন ভেরিফায়ার',
     descriptionEn: 'Verify prescriptions & patient orders',
@@ -97,7 +97,7 @@ export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
   },
   sales_staff: {
     role: 'sales_staff',
-    route: '/dashboard/admin',
+    route: '/dashboard/sales',
     titleEn: 'Sales Staff',
     titleBn: 'সেলস স্টাফ',
     descriptionEn: 'Counter POS & customer order processing',
@@ -109,7 +109,7 @@ export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
   },
   order_manager: {
     role: 'order_manager',
-    route: '/dashboard/admin',
+    route: '/dashboard/admin?tab=orders',
     titleEn: 'Order Manager',
     titleBn: 'অর্ডার ম্যানেজার',
     descriptionEn: 'Manage orders, fulfillment & delivery dispatch',
@@ -121,7 +121,7 @@ export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
   },
   inventory_manager: {
     role: 'inventory_manager',
-    route: '/dashboard/admin',
+    route: '/dashboard/inventory',
     titleEn: 'Inventory Manager',
     titleBn: 'ইনভেন্টরি ম্যানেজার',
     descriptionEn: 'Manage medicine categories, manufacturers & brands',
@@ -133,7 +133,7 @@ export const RBAC_ROLES_CONFIG: Record<UserRole, RbacRoleInfo> = {
   },
   marketing_editor: {
     role: 'marketing_editor',
-    route: '/dashboard/admin',
+    route: '/dashboard/admin?tab=banners',
     titleEn: 'Marketing Editor',
     titleBn: 'মার্কেটিং এডিটর',
     descriptionEn: 'Manage coupons, sliders & customer reviews',
