@@ -76,9 +76,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
     // 1. Authentication check
     if (!isAuthenticated || !reduxUser) {
-      toast.error(isBn ? 'ড্যাশবোর্ডে প্রবেশ করতে লগইন করুন।' : 'Please log in to access dashboard.');
-      dispatch(openAuthModal('signin'));
-      router.replace('/');
+      router.replace('/login');
       return;
     }
 

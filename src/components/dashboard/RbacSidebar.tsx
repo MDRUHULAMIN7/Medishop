@@ -109,7 +109,16 @@ export function RbacSidebar({
   const handleSubItemClick = (tab: string) => {
     setActiveTab(tab as RbacTabId);
     onCloseMobile();
-    router.push(`/dashboard/admin?tab=${tab}`);
+
+    if (currentRole === 'sales_staff') {
+      router.push(`/dashboard/sales?tab=${tab}`);
+    } else if (currentRole === 'inventory_manager') {
+      router.push(`/dashboard/inventory?tab=${tab}`);
+    } else if (currentRole === 'pharmacist' || currentRole === 'pharmacist_verifier') {
+      router.push(`/dashboard/pharmacist?tab=${tab}`);
+    } else {
+      router.push(`/dashboard/admin?tab=${tab}`);
+    }
   };
 
   const CATEGORIES = [

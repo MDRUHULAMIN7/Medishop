@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useAppSelector } from '@/store';
 import { OrderManager } from '@/components/dashboard/OrderManager';
+import { CustomerStaffInvitationBanner } from '@/components/dashboard/CustomerStaffInvitationBanner';
 import { usePrescriptions } from '@/hooks/usePrescriptions';
 import { PackageCheck, FileText, Trash2, FileUp } from 'lucide-react';
 
@@ -15,6 +16,9 @@ export default function CustomerDashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* Staff Promotion Invitation Banner */}
+      <CustomerStaffInvitationBanner isBn={isBn} />
+
       {/* Tab bar */}
       <div className="flex items-center gap-2 border-b border-border pb-1">
         <button

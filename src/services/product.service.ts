@@ -117,6 +117,10 @@ export interface ProductListResponse {
     limit: number;
     totalPages: number;
   };
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
   totalCount: number;
   availableBrands: any[];
   availableCategories: any[];
@@ -312,6 +316,10 @@ export const ProductService = {
         limit,
         totalPages,
       },
+      total,
+      page,
+      limit,
+      totalPages,
       totalCount: total,
       availableBrands: [],
       availableCategories: [],

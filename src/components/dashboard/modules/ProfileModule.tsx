@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Camera, Loader2, Edit2, ShieldCheck, CheckCircle2, Phone, Mail, Lock, PlusCircle } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { RBAC_ROLES_CONFIG } from '@/config/rbac.config';
+import { CustomerStaffInvitationBanner } from '@/components/dashboard/CustomerStaffInvitationBanner';
 
 interface ProfileModuleProps {
   isBn?: boolean;

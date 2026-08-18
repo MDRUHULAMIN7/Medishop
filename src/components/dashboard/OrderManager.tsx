@@ -458,7 +458,7 @@ export function OrderManager() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-10 rounded-xl border border-border bg-background px-3 text-xs font-extrabold text-foreground focus:border-primary focus:outline-none cursor-pointer"
+          className="h-10 rounded-2xl border border-border bg-background px-4 text-xs font-bold text-foreground shadow-2xs hover:border-primary/50 focus:border-primary focus:outline-none cursor-pointer transition-all"
         >
           <option value="ALL">{isBn ? 'সকল অর্ডার স্ট্যাটাস' : 'All Order Statuses'}</option>
           <option value="pending">PENDING</option>
@@ -471,7 +471,7 @@ export function OrderManager() {
         <select
           value={paymentFilter}
           onChange={(e) => setPaymentFilter(e.target.value)}
-          className="h-10 rounded-xl border border-border bg-background px-3 text-xs font-extrabold text-foreground focus:border-primary focus:outline-none cursor-pointer"
+          className="h-10 rounded-2xl border border-border bg-background px-4 text-xs font-bold text-foreground shadow-2xs hover:border-primary/50 focus:border-primary focus:outline-none cursor-pointer transition-all"
         >
           <option value="ALL">{isBn ? 'সকল পেমেন্ট স্ট্যাটাস' : 'All Payment Statuses'}</option>
           <option value="pending">PENDING</option>

@@ -961,7 +961,7 @@ export function ProductManager() {
                 <select
                   value={itemsPerPage}
                   onChange={(e) => handleLimitChange(Number(e.target.value))}
-                  className="h-8 rounded-xl border border-border bg-background px-2 text-xs font-bold text-foreground"
+                  className="h-9 rounded-2xl border border-border bg-background px-3 text-xs font-bold text-foreground shadow-2xs hover:border-primary/50 focus:border-primary focus:outline-none cursor-pointer transition-all"
                 >
                   <option value={10}>{formatNumber(10, isBn ? 'bn' : 'en')}</option>
                   <option value={20}>{formatNumber(20, isBn ? 'bn' : 'en')}</option>
@@ -1093,7 +1093,7 @@ export function ProductManager() {
                         required
                         value={formData.category}
                         onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                        className="h-10 w-full rounded-xl border border-border bg-background px-3 text-xs font-bold text-foreground focus:border-primary focus:ring-0 focus:outline-none transition-colors"
+                        className="h-11 w-full rounded-2xl border border-border bg-background px-4 text-xs font-bold text-foreground shadow-2xs hover:border-primary/50 focus:border-primary focus:outline-none cursor-pointer transition-all"
                       >
                         {categories.map((c) => (
                           <option key={c.id} value={c.id}>
@@ -1110,7 +1110,7 @@ export function ProductManager() {
                         required
                         value={formData.brand}
                         onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                        className="h-10 w-full rounded-xl border border-border bg-background px-3 text-xs font-bold text-foreground focus:border-primary focus:ring-0 focus:outline-none transition-colors"
+                        className="h-11 w-full rounded-2xl border border-border bg-background px-4 text-xs font-bold text-foreground shadow-2xs hover:border-primary/50 focus:border-primary focus:outline-none cursor-pointer transition-all"
                       >
                         {brands.map((b) => (
                           <option key={b.id} value={b.id}>
@@ -1128,7 +1128,7 @@ export function ProductManager() {
                       <select
                         value={formData.baseUnit}
                         onChange={(e) => setFormData({ ...formData, baseUnit: e.target.value })}
-                        className="h-10 w-full rounded-xl border border-primary/50 bg-primary/10 px-3 text-xs font-bold text-primary focus:border-primary focus:ring-0 focus:outline-none transition-colors"
+                        className="h-11 w-full rounded-2xl border border-primary/50 bg-primary/10 px-4 text-xs font-bold text-primary shadow-2xs focus:border-primary focus:outline-none cursor-pointer transition-all"
                       >
                         <option value="pcs">Pcs / Piece (পিস)</option>
                         <option value="ml">Ml (মিলি)</option>
@@ -1144,7 +1144,7 @@ export function ProductManager() {
                       <select
                         value={formData.dosageForm}
                         onChange={(e) => setFormData({ ...formData, dosageForm: e.target.value })}
-                        className="h-10 w-full rounded-xl border border-border bg-background px-3 text-xs font-bold text-foreground focus:border-primary focus:ring-0 focus:outline-none transition-colors"
+                        className="h-11 w-full rounded-2xl border border-border bg-background px-4 text-xs font-bold text-foreground shadow-2xs hover:border-primary/50 focus:border-primary focus:outline-none cursor-pointer transition-all"
                       >
                         {DOSAGE_FORMS.map((d) => (
                           <option key={d.value} value={d.value}>

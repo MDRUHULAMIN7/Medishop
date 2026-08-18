@@ -10,6 +10,9 @@ export interface ProcessPosSalePayload {
   storeId?: string;
   customerName?: string;
   customerPhone?: string;
+  customerEmail?: string;
+  customerAddress?: string;
+  customerUser?: string;
   items: PosItemInput[];
   paidAmount: number;
   paymentMethod?: 'cash' | 'card' | 'bkash' | 'nagad';
@@ -51,7 +54,8 @@ export interface PosSaleItem {
 }
 
 export interface PosSaleRecord {
-  id: string;
+  id?: string;
+  _id?: string;
   invoiceNumber: string;
   store?: any;
   storeName?: string;
@@ -59,6 +63,9 @@ export interface PosSaleRecord {
   sellerName?: string;
   customerName?: string;
   customerPhone?: string;
+  customerEmail?: string;
+  customerAddress?: string;
+  customerUser?: any;
   items: PosSaleItem[];
   subtotal: number;
   discountAmount: number;
@@ -72,9 +79,29 @@ export interface PosSaleRecord {
   createdAt: string;
 }
 
+export interface PosTodayStats {
+  todayTotalRevenue: number;
+  todayInvoiceCount: number;
+  totalItemsSold: number;
+  avgBillValue: number;
+  paymentBreakdown: {
+    cash: number;
+    bkash: number;
+    nagad: number;
+    card: number;
+  };
+  myTodaySales: number;
+  myInvoiceCount: number;
+  recentSales: PosSaleRecord[];
+}
+
 export const PosService = {
   async getInventory(): Promise<any[]> {
     return apiClient<any[]>('/pos/inventory', { method: 'GET' });
+  },
+
+  async getTodayStats(): Promise<PosTodayStats> {
+    return apiClient<PosTodayStats>('/pos/stats/today', { method: 'GET' });
   },
 
   async adjustStock(payload: AdjustStockPayload): Promise<any> {
@@ -107,6 +134,11 @@ export const PosService = {
   async voidPosSale(invoiceNumber: string): Promise<PosSaleRecord> {
     return apiClient<PosSaleRecord>(`/pos/sales/invoice/${invoiceNumber}/void`, { method: 'POST' });
   },
+
+  async getMyPurchases(): Promise<PosSaleRecord[]> {
+    return apiClient<PosSaleRecord[]>('/pos/my-purchases', { method: 'GET' });
+  },
 };
 
 export const posService = PosService;
+

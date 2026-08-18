@@ -25,6 +25,7 @@ import {
   Tag,
   BarChart3,
   ShieldCheck,
+  History,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppSelector } from '@/store';
@@ -86,9 +87,15 @@ export function AdminSidebar({
     },
     {
       id: 'inventory' as DashboardTab,
-      labelBn: 'শেয়ার্ড ইনভেন্টরি ও লেজার',
-      labelEn: 'Inventory & Stock Ledger',
+      labelBn: 'ইনভেন্টরি ও ব্যাচ ট্র্যাকিং',
+      labelEn: 'Inventory & Batches',
       icon: Boxes,
+    },
+    {
+      id: 'ledger' as DashboardTab,
+      labelBn: 'স্টক মুভমেন্ট অডিট লেজার',
+      labelEn: 'Stock Audit Ledger',
+      icon: History,
     },
     {
       id: 'products' as DashboardTab,

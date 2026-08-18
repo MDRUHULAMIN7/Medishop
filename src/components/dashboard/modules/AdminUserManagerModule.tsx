@@ -186,7 +186,7 @@ export function AdminUserManagerModule({ isBn = true }: AdminUserManagerModulePr
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="rounded-xl border border-border bg-muted/20 px-3 py-2 text-xs font-bold text-foreground focus:border-primary focus:outline-hidden"
+            className="rounded-2xl border border-border bg-background px-4 py-2 text-xs font-bold text-foreground shadow-2xs hover:border-primary/50 focus:border-primary focus:outline-none cursor-pointer transition-all"
           >
             <option value="all">{isBn ? 'সকল রোল (All Roles)' : 'All Roles'}</option>
             <option value="customer">Customer</option>
@@ -199,7 +199,7 @@ export function AdminUserManagerModule({ isBn = true }: AdminUserManagerModulePr
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-xl border border-border bg-muted/20 px-3 py-2 text-xs font-bold text-foreground focus:border-primary focus:outline-hidden"
+            className="rounded-2xl border border-border bg-background px-4 py-2 text-xs font-bold text-foreground shadow-2xs hover:border-primary/50 focus:border-primary focus:outline-none cursor-pointer transition-all"
           >
             <option value="all">{isBn ? 'সকল স্ট্যাটাস' : 'All Status'}</option>
             <option value="active">Active Only</option>

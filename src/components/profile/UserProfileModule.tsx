@@ -10,6 +10,8 @@ import { MyOrdersSection } from './MyOrdersSection';
 import { useAppSelector } from '@/store';
 import { RBAC_ROLES_CONFIG } from '@/config/rbac.config';
 
+import { CustomerStaffInvitationBanner } from '@/components/dashboard/CustomerStaffInvitationBanner';
+
 interface UserProfileModuleProps {
   isBn?: boolean;
 }
@@ -144,7 +146,8 @@ export function UserProfileModule({ isBn = true }: UserProfileModuleProps) {
         </aside>
 
         {/* Right Column: Active Tab Content (Full width on mobile) */}
-        <main className="flex-1 min-w-0 w-full">
+        <main className="flex-1 min-w-0 w-full space-y-6">
+          <CustomerStaffInvitationBanner isBn={isBn} />
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}

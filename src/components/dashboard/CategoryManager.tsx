@@ -313,7 +313,7 @@ export function CategoryManager() {
                 <select
                   value={itemsPerPage}
                   onChange={(e) => handleLimitChange(Number(e.target.value))}
-                  className="rounded-xl border border-border bg-background px-2 py-1 text-xs font-bold text-foreground focus:border-primary focus:outline-none"
+                  className="rounded-2xl border border-border bg-background px-3 py-1.5 text-xs font-bold text-foreground shadow-2xs hover:border-primary/50 focus:border-primary focus:outline-none cursor-pointer transition-all"
                 >
                   <option value={5}>{formatNumber(5, isBn ? 'bn' : 'en')}</option>
                   <option value={10}>{formatNumber(10, isBn ? 'bn' : 'en')}</option>
