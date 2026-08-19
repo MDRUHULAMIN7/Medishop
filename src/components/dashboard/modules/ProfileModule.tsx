@@ -91,16 +91,16 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
   return (
     <div className="space-y-6">
       {/* User Hero Banner with Real Backend Data */}
-      <div className="rounded-3xl border border-border bg-background p-6 shadow-xs flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
+      <div className="rounded-3xl border border-border bg-background p-5 sm:p-6 shadow-xs flex flex-col md:flex-row items-center md:items-start justify-between gap-5">
         <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
           {/* Avatar Circle with Upload Trigger */}
-          <div className="relative group flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-primary to-sky-400 text-3xl font-black text-white shadow-md ring-4 ring-primary/10 overflow-hidden">
+          <div className="relative group flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-sky-400 text-2xl font-black text-white shadow-md ring-4 ring-primary/10 overflow-hidden">
             {user?.avatar ? (
               <Image
                 src={user.avatar}
                 alt={name || 'User Avatar'}
-                width={96}
-                height={96}
+                width={80}
+                height={80}
                 className="h-full w-full object-cover"
               />
             ) : (
@@ -171,9 +171,8 @@ export function ProfileModule({ isBn = true }: ProfileModuleProps) {
                   {email}
                 </span>
               )}
-              <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                {isBn ? 'অ্যাকাউন্ট স্ট্যাটাস: এক্টিভ' : 'Account Status: Active'}
+              <span className="text-[11px] font-semibold text-muted-foreground">
+                {isBn ? (roleConfig.titleBn || 'অ্যাকাউন্ট') : (roleConfig.titleEn || 'Account')}
               </span>
             </div>
           </div>

@@ -106,6 +106,8 @@ export interface ProductQueryParams {
   page?: number;
   limit?: number;
   includeInactive?: boolean;
+  inStockOnly?: boolean;
+  prescriptionReq?: 'all' | 'required' | 'otc';
   isAdmin?: boolean;
 }
 
@@ -264,17 +266,18 @@ export const ProductService = {
     if (params.unitType) query.append('unitType', params.unitType);
     if (params.minPrice) query.append('minPrice', params.minPrice.toString());
     if (params.maxPrice) query.append('maxPrice', params.maxPrice.toString());
+    if (params.inStockOnly === true) query.append('inStock', 'true');
+    if (params.prescriptionReq === 'required') query.append('requiresPrescription', 'true');
+    if (params.prescriptionReq === 'otc') query.append('requiresPrescription', 'false');
     if (params.page) query.append('page', params.page.toString());
     if (params.limit) query.append('limit', params.limit.toString());
 
     if (params.includeInactive === true) {
       query.append('includeInactive', 'true');
     }
-    if (params.isAdmin === true) {
-      query.append('isAdmin', 'true');
-    }
+    const endpoint = params.isAdmin === true ? `/products/admin?${query.toString()}` : `/products?${query.toString()}`;
 
-    const response = await apiClient<any>(`/products?${query.toString()}`, {
+    const response = await apiClient<any>(endpoint, {
       method: 'GET',
     });
 
@@ -350,7 +353,7 @@ export const ProductService = {
    * Get single product by ID or Slug.
    */
   async getProductByIdOrSlug(idOrSlug: string, isAdmin?: boolean): Promise<Product> {
-    const endpoint = isAdmin ? `/products/${idOrSlug}?isAdmin=true` : `/products/${idOrSlug}`;
+    const endpoint = isAdmin ? `/products/admin/${idOrSlug}` : `/products/${idOrSlug}`;
     const p = await apiClient<any>(endpoint, {
       method: 'GET',
     });

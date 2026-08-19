@@ -62,7 +62,7 @@ const ROLE_ALLOWED_TABS: Record<UserRole, RbacTabId[]> = {
     'overview', 'prescriptions', 'orders', 'chat'
   ],
   sales_staff: [
-    'overview', 'pos_sales', 'orders', 'chat', 'products'
+    'overview', 'pos_sales', 'orders', 'chat', 'products', 'users'
   ],
   order_manager: [
     'overview', 'orders', 'chat', 'users', 'prescriptions', 'pos_sales'
@@ -124,42 +124,42 @@ export function RbacSidebar({
   const CATEGORIES = [
     {
       key: 'catalog',
-      titleBn: 'ওষুধ ক্যাটালগ ও ইনভেন্টরি',
-      titleEn: 'Pharma Catalog & Stock',
+      titleBn: 'ক্যাটালগ ও স্টক',
+      titleEn: 'Catalog & Stock',
       icon: Package,
       items: [
-        { id: 'products', labelBn: 'সকল ওষুধ ও প্রোডাক্টস', labelEn: 'Medicine & Product Catalog', icon: Pill },
-        { id: 'categories', labelBn: 'চিকিৎসা ও ওষুধ ক্যাটাগরি', labelEn: 'Pharmacy Categories', icon: FolderTree },
-        { id: 'brands', labelBn: 'ডিজিডিএ নিবন্ধিত ব্রান্ডস', labelEn: 'DGDA Pharma Brands', icon: Building2 },
-        { id: 'inventory', labelBn: 'ইনভেন্টরি ও ব্যাচ ট্র্যাকিং', labelEn: 'Inventory & Batches', icon: Boxes },
-        { id: 'ledger', labelBn: 'স্টক মুভমেন্ট অডিট লেজার', labelEn: 'Stock Audit Ledger', icon: History },
+        { id: 'products', labelBn: 'প্রোডাক্টস', labelEn: 'Products', icon: Pill },
+        { id: 'categories', labelBn: 'ক্যাটাগরি', labelEn: 'Categories', icon: FolderTree },
+        { id: 'brands', labelBn: 'ব্র্যান্ডস', labelEn: 'Brands', icon: Building2 },
+        { id: 'inventory', labelBn: 'ইনভেন্টরি', labelEn: 'Inventory', icon: Boxes },
+        { id: 'ledger', labelBn: 'স্টক লেজার', labelEn: 'Stock Ledger', icon: History },
       ],
     },
     {
       key: 'clinical',
-      titleBn: 'ক্লিনিক্যাল সার্ভিসেস ও পিওএস',
-      titleEn: 'Clinical Services & POS',
+      titleBn: 'ক্লিনিক্যাল ও পিওএস',
+      titleEn: 'Clinical & POS',
       icon: Stethoscope,
       items: [
-        { id: 'pos_sales', labelBn: 'ইন-স্টোর পিওএস কাউন্টার', labelEn: 'In-Store POS Terminal', icon: Store, color: 'bg-emerald-600' },
-        { id: 'prescriptions', labelBn: 'প্রেসক্রিপশন ভেরিফিকেশন কিউ', labelEn: 'Pharmacist Rx Verification', icon: FileCheck2, color: 'bg-amber-600' },
+        { id: 'pos_sales', labelBn: 'পিওএস সেলস', labelEn: 'POS Sales', icon: Store, color: 'bg-emerald-600' },
+        { id: 'prescriptions', labelBn: 'প্রেসক্রিপশন', labelEn: 'Prescriptions', icon: FileCheck2, color: 'bg-amber-600' },
       ],
     },
     {
       key: 'sales',
-      titleBn: 'কাস্টমার অর্ডার ও একাউন্টস',
-      titleEn: 'Orders & Customer Directory',
+      titleBn: 'অর্ডার ও কাস্টমার',
+      titleEn: 'Orders & Customers',
       icon: ShoppingBag,
       items: [
-        { id: 'orders', labelBn: 'অনলাইন কাস্টমার অর্ডারসমূহ', labelEn: 'Customer Orders', icon: ShoppingBag },
-        { id: 'chat', labelBn: 'লাইভ ফার্মাসিস্ট চ্যাট', labelEn: 'Live Chat Support Center', icon: MessageSquare },
-        { id: 'users', labelBn: 'নিবন্ধিত কাস্টমার ডিরেক্টরি', labelEn: 'Customer Accounts Directory', icon: Users },
+        { id: 'orders', labelBn: 'অর্ডার', labelEn: 'Orders', icon: ShoppingBag },
+        { id: 'chat', labelBn: 'সাপোর্ট চ্যাট', labelEn: 'Support Chat', icon: MessageSquare },
+        { id: 'users', labelBn: 'কাস্টমার', labelEn: 'Customers', icon: Users },
       ],
     },
     {
       key: 'marketing',
-      titleBn: 'মার্কেটিং, কুপন ও স্লাইডার',
-      titleEn: 'Marketing & Hero Sliders',
+      titleBn: 'মার্কেটিং',
+      titleEn: 'Marketing',
       icon: Megaphone,
       items: [
         { id: 'coupons', labelBn: 'প্রমোশনাল কুপন ও ডিসকাউন্ট', labelEn: 'Coupons & Promo Codes', icon: Ticket },
@@ -169,8 +169,8 @@ export function RbacSidebar({
     },
     {
       key: 'analytics',
-      titleBn: 'ব্যবসা এ্যানালিটিক্স ও রিপোর্ট',
-      titleEn: 'Business Reports & Finance',
+      titleBn: 'রিপোর্টস',
+      titleEn: 'Reports',
       icon: BarChart3,
       items: [
         { id: 'reports', labelBn: 'সেলস রিপোর্ট ও সম্পদ ভ্যালু', labelEn: 'Sales & Asset Valuation', icon: BarChart3 },
@@ -178,12 +178,12 @@ export function RbacSidebar({
     },
     {
       key: 'system',
-      titleBn: 'সাইট ব্র্যান্ডিং ও এক্সেস কন্ট্রোল',
-      titleEn: 'Branding & Access Control',
+      titleBn: 'সিস্টেম',
+      titleEn: 'System',
       icon: ShieldCheck,
       items: [
-        { id: 'staff', labelBn: 'ফার্মেসি স্টাফ ও পারমিশন ম্যাট্রিক্স', labelEn: 'Staff & Access Roles', icon: ShieldCheck },
-        { id: 'settings', labelBn: 'সাইট ব্র্যান্ডিং ও গ্লোবাল সেটিংস', labelEn: 'Site Branding & Dynamic Settings', icon: Settings },
+        { id: 'staff', labelBn: 'স্টাফ ও পারমিশন', labelEn: 'Staff & Roles', icon: ShieldCheck },
+        { id: 'settings', labelBn: 'সেটিংস', labelEn: 'Settings', icon: Settings },
       ],
     },
   ];
@@ -221,7 +221,7 @@ export function RbacSidebar({
             <span className="font-serif-title text-xl font-extrabold tracking-tight text-primary leading-none">
               {siteName}
             </span>
-            <span className="text-[10px] font-bold tracking-wider uppercase text-muted-foreground mt-0.5">
+            <span className="hidden lg:block text-[10px] font-bold tracking-wider uppercase text-muted-foreground mt-0.5">
               {isBn ? roleConfig.titleBn : roleConfig.titleEn}
             </span>
           </div>
@@ -302,7 +302,7 @@ export function RbacSidebar({
       </div>
 
       {/* Sidebar Footer */}
-      <div className="p-4 border-t border-border bg-muted/20 text-center shrink-0">
+      <div className="hidden lg:block p-4 border-t border-border bg-muted/20 text-center shrink-0">
         <p className="text-xs font-bold text-foreground">{siteName} BD</p>
         <p className="text-[11px] text-muted-foreground">DGDA License #10294 • Version 2.0</p>
       </div>

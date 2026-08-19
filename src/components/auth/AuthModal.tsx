@@ -243,10 +243,6 @@ export function AuthModal() {
                 </AnimatePresence>
               </div>
 
-              {/* Bottom Security Footer */}
-              <div className="pt-3 text-[10px] text-center text-white/70 border-t border-white/10 mt-auto">
-                {isBn ? '🔒 ২৫৬-বিট এনক্রিপশনের মাধ্যমে সুরক্ষিত' : '🔒 Secured with 256-Bit SSL Encryption'}
-              </div>
             </div>
           </motion.div>
         </div>

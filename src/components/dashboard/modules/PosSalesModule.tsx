@@ -41,6 +41,8 @@ import { useCategories } from '@/hooks/useCategories';
 import { useBrands } from '@/hooks/useBrands';
 import { CustomSelect } from '@/components/ui/CustomSelect';
 import { useBranding } from '@/context/BrandingContext';
+import { settingsService, DynamicPaymentMethod } from '@/services/settings.service';
+import { PaymentBrandIcon } from '@/components/common/PaymentBrandIcon';
 import { formatNumber } from '@/utils/cart';
 
 interface PosSalesModuleProps {
@@ -104,7 +106,9 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
 
   // POS Cart State
   const [cartItems, setCartItems] = useState<CartPosItem[]>([]);
+  const [posStep, setPosStep] = useState<'products' | 'sale'>('products');
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'bkash' | 'nagad'>('cash');
+  const [paymentMethods, setPaymentMethods] = useState<DynamicPaymentMethod[]>([]);
   const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [paidAmount, setPaidAmount] = useState<number>(0);
   const [saleNote, setSaleNote] = useState('');
@@ -135,6 +139,29 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [posSalesHistory, setPosSalesHistory] = useState<PosSaleRecord[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    settingsService.getPublicSettings().then((siteSettings) => {
+      if (!mounted) return;
+      const configured = (siteSettings.payment?.methods || []).filter((method) => method.isActive);
+      const codes = configured.length > 0
+        ? configured
+        : (siteSettings.payment?.enabledGateways || []).map((code) => ({
+            id: code,
+            code,
+            nameBn: code,
+            nameEn: code,
+            isActive: true,
+          }));
+      setPaymentMethods(codes);
+      if (codes.length > 0 && !codes.some((method) => (method.code || method.id) === paymentMethod)) {
+        const firstCode = (codes[0].code || codes[0].id) === 'cod' ? 'cash' : (codes[0].code || codes[0].id);
+        if (['cash', 'card', 'bkash', 'nagad'].includes(firstCode)) setPaymentMethod(firstCode as typeof paymentMethod);
+      }
+    }).catch(() => setPaymentMethods([]));
+    return () => { mounted = false; };
+  }, []);
 
   // Available packaging units for a product
   const getProductUnitOptions = useCallback((p: Product) => {
@@ -338,6 +365,32 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
     setCartItems((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleUpdateUnit = (index: number, unit: string) => {
+    setCartItems((prev) => {
+      const updated = [...prev];
+      const target = updated[index];
+      const option = getProductUnitOptions(target.product).find((item) => item.unit === unit);
+      if (!option) return prev;
+
+      const existingBaseQty = target.quantity * target.unitMultiplier;
+      const nextQty = Math.max(1, Math.ceil(existingBaseQty / option.multiplier));
+      if (target.product.stock < nextQty * option.multiplier) {
+        toast.error(isBn ? 'নির্বাচিত ইউনিটের জন্য পর্যাপ্ত স্টক নেই' : 'Not enough stock for the selected unit');
+        return prev;
+      }
+
+      updated[index] = {
+        ...target,
+        selectedUnit: option.unit,
+        unitMultiplier: option.multiplier,
+        quantity: nextQty,
+        unitPrice: option.price,
+        totalPrice: nextQty * option.price,
+      };
+      return updated;
+    });
+  };
+
   // Cart Calculations
   const subtotal = useMemo(() => {
     return cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
@@ -376,7 +429,7 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
         return;
       }
       custName = selectedCustomer.name;
-      custPhone = selectedCustomer.phone || selectedCustomer.email || '';
+      custPhone = selectedCustomer.phone || '';
       custEmail = selectedCustomer.email || '';
       customerUserId = selectedCustomer._id;
       if (selectedCustomer.addresses && selectedCustomer.addresses.length > 0) {
@@ -403,6 +456,7 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
       const itemsPayload = cartItems.map((ci) => ({
         productId: ci.product.id,
         quantity: ci.quantity * ci.unitMultiplier,
+        unit: ci.selectedUnit,
         unitPrice: ci.unitMultiplier > 0 ? Number((ci.unitPrice / ci.unitMultiplier).toFixed(2)) : ci.product.price,
       }));
 
@@ -491,6 +545,20 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
     }
   };
 
+  const handleDownloadReceipt = async (invoiceNumber: string) => {
+    try {
+      const blob = await posService.downloadInvoice(invoiceNumber);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `receipt-${invoiceNumber}.pdf`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Receipt download failed');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* 1. Header Toolbar (Same Design as Admin Product Management) */}
@@ -524,7 +592,7 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
       {/* 2. Main POS Workspace Grid: Left 7 Cols (Product Table), Right 5 Cols (Billing Cart) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Product Filter Bar, Table & Pagination (7 Cols) */}
-        <div className="lg:col-span-7 space-y-4">
+        <div className={`${posStep === 'products' ? 'block' : 'hidden'} lg:col-span-12 space-y-4`}>
           {/* Filter and Search Toolbar (Exact Same Design as Admin Product Manager) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             {/* Search */}
@@ -825,10 +893,20 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
               </div>
             </div>
           </div>
+          <div className="flex justify-end pt-2">
+            <button
+              type="button"
+              disabled={cartItems.length === 0}
+              onClick={() => setPosStep('sale')}
+              className="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-xs font-black text-white shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isBn ? 'সেল স্ক্রিনে যান' : 'Continue to Sale'} <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Right Column: POS Billing Terminal Cart (5 Cols) */}
-        <div className="lg:col-span-5 rounded-3xl border border-border bg-background p-5 shadow-xs flex flex-col justify-between space-y-4">
+        <div className={`${posStep === 'sale' ? 'block' : 'hidden'} lg:col-span-12 rounded-3xl border border-border bg-background p-5 shadow-xs flex flex-col justify-between space-y-4`}>
           <div className="space-y-4">
             {/* Terminal Cart Header */}
             <div className="flex items-center justify-between pb-3 border-b border-border">
@@ -1010,13 +1088,22 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
                 cartItems.map((item, idx) => (
                   <div
                     key={`${item.product.id}-${item.selectedUnit}-${idx}`}
-                    className="flex items-center justify-between p-2.5 rounded-2xl border border-border bg-muted/20 text-xs"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-2xl border border-border bg-muted/20 text-xs"
                   >
                     <div className="min-w-0 flex-1 pr-2">
                       <p className="font-bold text-foreground truncate">{item.product.name}</p>
-                      <span className="text-[10px] text-muted-foreground capitalize">
-                        {item.selectedUnit} • ৳{item.unitPrice.toFixed(2)}
-                      </span>
+                      <div className="mt-1 flex items-center gap-2">
+                        <select
+                          value={item.selectedUnit}
+                          onChange={(event) => handleUpdateUnit(idx, event.target.value)}
+                          className="max-w-[135px] rounded-lg border border-border bg-background px-1.5 py-1 text-[10px] font-bold text-foreground focus:border-primary focus:outline-none"
+                        >
+                          {getProductUnitOptions(item.product).map((option) => (
+                            <option key={option.unit} value={option.unit}>{option.unit}</option>
+                          ))}
+                        </select>
+                        <span className="text-[10px] text-muted-foreground">৳{item.unitPrice.toFixed(2)} / unit</span>
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -1059,6 +1146,13 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
 
           {/* Cart Pricing, Payment & Checkout */}
           <div className="pt-3 border-t border-border space-y-3">
+            <button
+              type="button"
+              onClick={() => setPosStep('products')}
+              className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-foreground"
+            >
+              <ChevronLeft className="h-4 w-4" /> {isBn ? 'পণ্য বাছাইয়ে ফিরুন' : 'Back to products'}
+            </button>
             {/* Pricing Summary */}
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between text-muted-foreground font-semibold">
@@ -1085,27 +1179,23 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
             </div>
 
             {/* Payment Method Selector */}
-            <div className="grid grid-cols-4 gap-1.5 pt-1 text-[10px] font-black">
-              {[
-                { id: 'cash', label: 'Cash', icon: Banknote },
-                { id: 'bkash', label: 'bKash', icon: DollarSign },
-                { id: 'nagad', label: 'Nagad', icon: DollarSign },
-                { id: 'card', label: 'Card', icon: CreditCard },
-              ].map((pm) => {
-                const Icon = pm.icon;
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1 text-[10px] font-black">
+              {paymentMethods.map((pm) => {
+                const rawCode = (pm.code || pm.id).toLowerCase();
+                const code = rawCode === 'cod' ? 'cash' : rawCode;
                 return (
                   <button
-                    key={pm.id}
+                    key={pm.id || code}
                     type="button"
-                    onClick={() => setPaymentMethod(pm.id as any)}
+                    onClick={() => ['cash', 'card', 'bkash', 'nagad'].includes(code) && setPaymentMethod(code as typeof paymentMethod)}
                     className={`py-2 rounded-xl flex flex-col items-center gap-1 border transition-all cursor-pointer ${
-                      paymentMethod === pm.id
+                      paymentMethod === code
                         ? 'border-primary bg-primary/10 text-primary shadow-xs'
                         : 'border-border bg-background text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    <Icon className="h-3.5 w-3.5" />
-                    <span>{pm.label}</span>
+                    <PaymentBrandIcon code={code} logo={pm.logo || pm.icon} className="gap-0" isBn={isBn} />
+                    <span>{isBn ? pm.nameBn : pm.nameEn}</span>
                   </button>
                 );
               })}
@@ -1189,6 +1279,9 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
                   <strong>Invoice:</strong> {completedInvoice.invoiceNumber}
                 </p>
                 <p>
+                  <strong>Cashier:</strong> {completedInvoice.sellerName || 'Staff'}
+                </p>
+                <p>
                   <strong>Date:</strong> {new Date(completedInvoice.createdAt).toLocaleString()}
                 </p>
 
@@ -1228,7 +1321,8 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
                 <thead>
                   <tr className="border-b border-slate-300">
                     <th className="py-1">Item</th>
-                    <th className="py-1 text-center">Qty</th>
+                    <th className="py-1 text-center">Unit / Qty</th>
+                    <th className="py-1 text-right">Unit Price</th>
                     <th className="py-1 text-right">Total</th>
                   </tr>
                 </thead>
@@ -1236,7 +1330,8 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
                   {completedInvoice.items?.map((item, idx) => (
                     <tr key={idx}>
                       <td className="py-1 font-semibold">{item.productName}</td>
-                      <td className="py-1 text-center">{item.quantity}</td>
+                      <td className="py-1 text-center">{item.unit || 'pcs'} / {item.quantity}</td>
+                      <td className="py-1 text-right">৳{item.unitPrice.toFixed(2)}</td>
                       <td className="py-1 text-right">৳{item.totalPrice.toFixed(2)}</td>
                     </tr>
                   ))}
@@ -1246,6 +1341,8 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
               <div className="border-t border-dashed border-slate-300 pt-2 space-y-0.5 text-right font-semibold">
                 <p>Subtotal: ৳{completedInvoice.subtotal?.toFixed(2)}</p>
                 {completedInvoice.discountAmount > 0 && <p>Discount: -৳{completedInvoice.discountAmount?.toFixed(2)}</p>}
+                <p>Paid: ৳{completedInvoice.paidAmount?.toFixed(2)}</p>
+                <p>Change / Due: ৳{Math.max(0, completedInvoice.changeAmount || 0).toFixed(2)}</p>
                 <p className="text-sm font-black text-slate-900 pt-1 border-t border-slate-200">
                   Grand Total: ৳{completedInvoice.grandTotal?.toFixed(2)}
                 </p>
@@ -1265,6 +1362,9 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
               <button
                 type="button"
                 onClick={() => {
+                  if (!completedInvoice) return;
+                  void handleDownloadReceipt(completedInvoice.invoiceNumber);
+                  if (Boolean(false)) {
                   const printWin = window.open('', '_blank');
                   if (!printWin) {
                     window.print();
@@ -1337,6 +1437,7 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
                   `;
                   printWin.document.write(html);
                   printWin.document.close();
+                  }
                 }}
                 className="rounded-2xl bg-primary py-3 font-extrabold text-white shadow-md hover:bg-primary-dark flex items-center justify-center gap-1.5 cursor-pointer text-xs"
               >
@@ -1350,8 +1451,8 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
 
       {/* POS Sales History Drawer / Modal */}
       {isHistoryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="w-full max-w-2xl rounded-3xl border border-border bg-background p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-2xl rounded-t-3xl sm:rounded-3xl border border-border bg-background p-4 sm:p-6 shadow-2xl space-y-4 max-h-[92vh] h-[92vh] sm:h-auto sm:max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <div className="flex items-center gap-2">
                 <History className="h-5 w-5 text-primary" />
@@ -1382,9 +1483,9 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
                   {posSalesHistory.map((sale, idx) => (
                     <div
                       key={sale._id || sale.id || sale.invoiceNumber || idx}
-                      className="p-3.5 rounded-2xl border border-border bg-muted/20 flex items-center justify-between text-xs"
+                      className="p-3.5 rounded-2xl border border-border bg-muted/20 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between text-xs"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-black text-xs shrink-0 border border-primary/20">
                           {sale.customerUser?.avatar ? (
                             <img
@@ -1410,8 +1511,9 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
                             )}
                           </div>
                           <p className="font-bold text-foreground">
-                            {sale.customerName || 'Walk-in Customer'} •{' '}
-                            <span className="font-normal text-muted-foreground">{sale.customerPhone || sale.customerEmail || ''}</span>
+                            {sale.customerName || 'Walk-in Customer'}
+                            {sale.customerPhone && <span className="ml-2 font-normal text-muted-foreground">Phone: {sale.customerPhone}</span>}
+                            {!sale.customerPhone && sale.customerEmail && <span className="ml-2 font-normal text-muted-foreground">Email: {sale.customerEmail}</span>}
                           </p>
                           {(sale.customerAddress || (sale.customerUser?.addresses && sale.customerUser.addresses.length > 0)) && (
                             <p className="text-[10px] text-muted-foreground/80 truncate max-w-[280px]">
@@ -1421,7 +1523,7 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-between gap-3 w-full sm:w-auto sm:justify-end">
                         <div className="text-right">
                           <span className="font-black text-foreground text-sm block">৳{sale.grandTotal.toFixed(2)}</span>
                           <span className="text-[10px] text-muted-foreground">{new Date(sale.createdAt).toLocaleTimeString()}</span>

@@ -17,7 +17,6 @@ import {
   Trash2,
   Power,
   Upload,
-  RefreshCw,
   Sparkles,
   Edit3,
   Image as ImageIcon,
@@ -478,15 +477,6 @@ export function SettingsManager() {
         </div>
 
         <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            onClick={fetchSettings}
-            className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-xs font-bold text-foreground hover:bg-muted cursor-pointer transition-colors"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            <span>{isBn ? 'রিলোড' : 'Reload'}</span>
-          </button>
-
           <button
             type="button"
             onClick={handleSave}

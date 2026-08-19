@@ -73,6 +73,7 @@ export function InventoryProductsModule({ isBn = true }: InventoryProductsModule
   const [expiryDate, setExpiryDate] = useState('');
   const [batchQty, setBatchQty] = useState<number>(100);
   const [costPrice, setCostPrice] = useState<number>(0);
+  const [batchUnit, setBatchUnit] = useState('pcs');
   const [purchaseRef, setPurchaseRef] = useState('');
   const [submittingBatch, setSubmittingBatch] = useState(false);
 
@@ -204,7 +205,8 @@ export function InventoryProductsModule({ isBn = true }: InventoryProductsModule
   // Open Receive Batch Modal
   const handleOpenReceiveModal = (product?: Product) => {
     if (product) {
-      setReceiveBatchProduct(product);
+    setReceiveBatchProduct(product);
+    setBatchUnit(product.unitType || 'pcs');
       setCostPrice(product.price ? Number((product.price * 0.75).toFixed(2)) : 0);
     } else {
       setReceiveBatchProduct(products[0] || null);
@@ -239,6 +241,7 @@ export function InventoryProductsModule({ isBn = true }: InventoryProductsModule
         expiryDate,
         quantity: Number(batchQty),
         costPrice: Number(costPrice) || 0,
+        unit: batchUnit,
         purchaseReferenceId: purchaseRef.trim() || undefined,
       });
 
@@ -921,7 +924,10 @@ export function InventoryProductsModule({ isBn = true }: InventoryProductsModule
                   value={receiveBatchProduct?.id || ''}
                   onChange={(e) => {
                     const found = products.find((p) => p.id === e.target.value);
-                    if (found) setReceiveBatchProduct(found);
+                    if (found) {
+                      setReceiveBatchProduct(found);
+                      setBatchUnit(found.unitType || found.unit || 'pcs');
+                    }
                   }}
                   required
                   className="w-full rounded-2xl border border-border bg-background p-3 font-bold text-foreground shadow-2xs focus:border-primary focus:outline-hidden cursor-pointer"
@@ -934,7 +940,7 @@ export function InventoryProductsModule({ isBn = true }: InventoryProductsModule
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block font-bold text-muted-foreground mb-1">
                     {isBn ? 'ব্যাচ নম্বর:' : 'Batch Number:'}
@@ -980,7 +986,7 @@ export function InventoryProductsModule({ isBn = true }: InventoryProductsModule
 
                 <div>
                   <label className="block font-bold text-muted-foreground mb-1">
-                    {isBn ? 'ক্রয়মূল্য (৳ Per Base Unit):' : 'Cost Price (৳ per base unit):'}
+                    {isBn ? 'ক্রয়মূল্য (নির্বাচিত ইউনিট):' : 'Buying Price (৳ per selected unit):'}
                   </label>
                   <input
                     type="number"
@@ -989,6 +995,24 @@ export function InventoryProductsModule({ isBn = true }: InventoryProductsModule
                     onChange={(e) => setCostPrice(Number(e.target.value))}
                     className="w-full rounded-xl border border-border bg-background p-2.5 font-bold text-foreground focus:border-primary focus:outline-hidden"
                   />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-muted-foreground mb-1">
+                    {isBn ? 'ক্রয় ইউনিট:' : 'Buying Unit:'}
+                  </label>
+                  <select
+                    value={batchUnit}
+                    onChange={(e) => setBatchUnit(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-background p-2.5 font-bold text-foreground focus:border-primary focus:outline-hidden"
+                  >
+                    {Array.from(new Set([
+                      receiveBatchProduct?.unitType || receiveBatchProduct?.unit || 'pcs',
+                      ...(receiveBatchProduct?.unitPrices || []).map((unit) => unit.unit),
+                    ])).map((unit) => (
+                      <option key={unit} value={unit}>{unit}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -999,7 +1023,7 @@ export function InventoryProductsModule({ isBn = true }: InventoryProductsModule
                     <span className="text-primary font-black">
                       {isBn ? 'প্যাকেজিং ইউনিট ক্রয়মূল্য হিসাব:' : 'Packaging Units Buying Price Scaling:'}
                     </span>
-                    <span className="font-mono text-xs">Total Batch Cost: ৳{(costPrice * batchQty).toFixed(2)}</span>
+                    <span className="font-mono text-xs">Total Batch Cost: ৳{(costPrice * batchQty / Math.max(1, receiveBatchProduct.unitPrices.find((unit) => unit.unit === batchUnit)?.multiplier || 1)).toFixed(2)}</span>
                   </div>
 
                   {(() => {

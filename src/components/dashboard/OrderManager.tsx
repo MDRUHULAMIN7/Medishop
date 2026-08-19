@@ -427,15 +427,6 @@ export function OrderManager() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={fetchOrders}
-          disabled={loading}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3.5 py-2 text-xs font-bold text-foreground shadow-2xs hover:bg-muted transition-colors cursor-pointer disabled:opacity-50"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 text-primary ${loading ? 'animate-spin' : ''}`} />
-          <span>{isBn ? 'রিফ্রেশ' : 'Refresh Orders'}</span>
-        </button>
       </div>
 
       {/* Filter and Search Bar */}

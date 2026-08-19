@@ -20,6 +20,7 @@ export interface ReceiveBatchPayload {
   expiryDate: string;
   quantity: number;
   costPrice: number;
+  unit?: string;
   supplier?: string;
   purchaseReferenceId?: string;
 }

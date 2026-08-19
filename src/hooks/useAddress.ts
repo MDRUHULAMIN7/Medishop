@@ -16,11 +16,17 @@ export function useAddress() {
   const customAddress = useAppSelector(selectCustomAddress);
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
 
   const [addresses, setAddresses] = useState<ShippingAddress[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchAddresses = useCallback(async () => {
+    if (!isAuthenticated) {
+      setAddresses([]);
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     try {
       const data = await addressService.getAddresses();
@@ -36,13 +42,14 @@ export function useAddress() {
     } finally {
       setIsLoading(false);
     }
-  }, [dispatch, selectedAddressId, customAddress]);
+  }, [dispatch, selectedAddressId, customAddress, isAuthenticated]);
 
   useEffect(() => {
     fetchAddresses();
   }, [fetchAddresses]);
 
   const selectedAddress: ShippingAddress | null =
+    !isAuthenticated ? customAddress :
     customAddress ||
     addresses.find((a) => a.id === selectedAddressId) ||
     addresses.find((a) => a.isDefault) ||

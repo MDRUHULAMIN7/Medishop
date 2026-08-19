@@ -470,7 +470,8 @@ export function PreOrderModal({
                     onClose={handleClose}
                     onTrack={() => {
                       handleClose();
-                      router.push('/dashboard/orders');
+                      const orderId = createdOrders.length === 1 ? (createdOrders[0]?.id || createdOrders[0]?._id) : null;
+                      router.push(orderId ? `/orders/${orderId}` : '/orders');
                     }}
                   />
                 )}
@@ -485,7 +486,7 @@ export function PreOrderModal({
 
 function buildInitialSections(deliveryCode: string, paymentCode: string, user?: any, selectedAddressId?: string): Record<SectionKey, SectionState> {
   const baseAddress: AddressDraft = {
-    mode: selectedAddressId ? 'saved' : 'custom',
+    mode: user && selectedAddressId ? 'saved' : 'custom',
     selectedAddressId,
     name: user?.name || '',
     phone: user?.phone || '',

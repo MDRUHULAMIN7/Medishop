@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   FileSpreadsheet,
-  RefreshCw,
   Search,
   CheckCircle2,
   AlertTriangle,
@@ -188,15 +187,6 @@ export function StockLedgerManager() {
             <span>{isBn ? 'স্টক রি-ক্যালকুলেট টুল' : 'Recalculate Stock'}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={fetchLedger}
-            disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-3.5 py-2.5 text-xs font-bold text-foreground shadow-2xs hover:bg-muted transition-colors cursor-pointer disabled:opacity-50"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            <span>{isBn ? 'রিফ্রেশ' : 'Refresh'}</span>
-          </button>
         </div>
       </div>
 

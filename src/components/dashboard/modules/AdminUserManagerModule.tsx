@@ -9,7 +9,6 @@ import {
   UserCheck,
   Loader2,
   AlertTriangle,
-  RefreshCw,
   Filter,
 } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
@@ -152,14 +151,6 @@ export function AdminUserManagerModule({ isBn = true }: AdminUserManagerModulePr
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={fetchUsers}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-muted/30 px-4 py-2.5 text-xs font-bold text-foreground hover:bg-muted cursor-pointer"
-        >
-          <RefreshCw className="h-4 w-4" />
-          <span>{isBn ? 'রিফ্রেশ ডাটা' : 'Refresh Data'}</span>
-        </button>
       </div>
 
       {/* Filter Bar */}

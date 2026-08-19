@@ -13,7 +13,6 @@ import {
   AlertCircle,
   FileText,
   Loader2,
-  RefreshCw,
   AlertTriangle,
 } from 'lucide-react';
 import { useAppSelector } from '@/store';
@@ -125,15 +124,6 @@ export function OverviewTab() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={fetchDashboardData}
-          disabled={loading}
-          className="hidden sm:inline-flex items-center gap-2 rounded-2xl bg-white/20 px-4 py-2 text-xs font-bold text-white backdrop-blur-md hover:bg-white/30 transition-all cursor-pointer disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          <span>{isBn ? 'রিফ্রেশ' : 'Sync Live KPIs'}</span>
-        </button>
       </div>
 
       {/* KPI Cards Grid */}
