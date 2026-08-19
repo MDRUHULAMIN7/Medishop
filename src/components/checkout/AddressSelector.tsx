@@ -6,6 +6,7 @@ import { useAddress } from '@/hooks/useAddress';
 import { AddressCard } from './AddressCard';
 import { ShippingAddressForm } from './ShippingAddressForm';
 import { ShippingAddress } from '@/types/address';
+import { useAppSelector } from '@/store';
 import { CascadingAddressSelector, AddressCascadeValue } from '@/components/common/CascadingAddressSelector';
 
 interface AddressSelectorProps {
@@ -23,6 +24,7 @@ export function AddressSelector({ isBn = true }: AddressSelectorProps) {
     deleteAddress,
     isLoading,
   } = useAddress();
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<ShippingAddress | null>(null);
@@ -142,17 +144,17 @@ export function AddressSelector({ isBn = true }: AddressSelectorProps) {
         </div>
 
         {/* Add New Address Button matching Screenshot */}
-        <button
+        {isAuthenticated && <button
           type="button"
           onClick={handleOpenAdd}
           className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
         >
           <Plus className="h-4 w-4" />
           <span>{isBn ? 'নতুন ঠিকানা যোগ করুন' : 'Add New Address'}</span>
-        </button>
+        </button>}
       </div>
 
-      {addressMode === 'saved' ? (
+      {isAuthenticated && addressMode === 'saved' ? (
         /* Saved Addresses Grid */
         <div className="space-y-3">
           {isLoading ? (

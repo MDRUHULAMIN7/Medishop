@@ -2,14 +2,12 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  FileText,
   TrendingUp,
   DollarSign,
   Package,
   Download,
   Calendar,
   Loader2,
-  RefreshCw,
   AlertTriangle,
 } from 'lucide-react';
 import { useAppSelector } from '@/store';
@@ -58,10 +56,6 @@ export function ReportsManager() {
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border pb-4 gap-4">
         <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-bold text-purple-700 border border-purple-200">
-            <FileText className="h-3.5 w-3.5" />
-            <span>{isBn ? 'বিজনেস এ্যানালিটিক্স ও রিপোর্টস' : 'Business Reports & Analytics'}</span>
-          </span>
           <h2 className="text-xl font-extrabold text-foreground mt-1">
             {isBn ? 'ফার্মেসি আর্থিক ও ইনভেন্টরি রিপোর্ট' : 'Pharmacy Financial & Inventory Reports'}
           </h2>
@@ -72,15 +66,6 @@ export function ReportsManager() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={fetchReports}
-          disabled={loading}
-          className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-3.5 py-2 text-xs font-bold text-foreground shadow-2xs hover:bg-muted transition-colors cursor-pointer disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          <span>{isBn ? 'রিফ্রেশ ডাটা' : 'Refresh Reports'}</span>
-        </button>
       </div>
 
       {/* Reports Grid */}
@@ -131,6 +116,26 @@ export function ReportsManager() {
                 {formatBDT(salesSummary?.combinedRevenue || 0)}
               </span>
             </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-xl border border-border bg-muted/20 p-2.5">
+                <span className="block text-muted-foreground">Cost of Goods Sold</span>
+                <span className="font-black text-foreground">{formatBDT(salesSummary?.totalCost || 0)}</span>
+              </div>
+              <div className="rounded-xl border border-border bg-muted/20 p-2.5">
+                <span className="block text-muted-foreground">Gross Margin</span>
+                <span className="font-black text-emerald-700">{(salesSummary?.marginPercent || 0).toFixed(1)}%</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-2.5">
+                <span className="block text-emerald-800">Gross Profit</span>
+                <span className="font-black text-emerald-700">{formatBDT(salesSummary?.grossProfit || 0)}</span>
+              </div>
+              <div className="rounded-xl border border-rose-200 bg-rose-50 p-2.5">
+                <span className="block text-rose-800">Gross Loss</span>
+                <span className="font-black text-rose-700">{formatBDT(salesSummary?.grossLoss || 0)}</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -171,10 +176,8 @@ export function ReportsManager() {
             </div>
 
             <div className="flex justify-between p-2.5 rounded-xl bg-blue-50 border border-blue-200">
-              <span className="font-bold text-blue-900">Estimated Total Stock Value:</span>
-              <span className="font-black text-blue-700 text-sm">
-                {formatBDT((salesSummary?.combinedRevenue || 500000) * 1.4)}
-              </span>
+              <span className="font-bold text-blue-900">Recorded Cost Basis of Sales:</span>
+              <span className="font-black text-blue-700 text-sm">{formatBDT(salesSummary?.totalCost || 0)}</span>
             </div>
           </div>
         </div>

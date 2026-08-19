@@ -66,6 +66,8 @@ export function useProductFilters(categorySlug?: string) {
       ProductService.getProducts(
         {
           ...filterState,
+          inStockOnly,
+          prescriptionReq,
           page,
           limit,
         },

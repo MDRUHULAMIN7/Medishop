@@ -48,6 +48,22 @@ export function CustomerPosPurchasesSection({ isBn = true }: CustomerPosPurchase
     fetchPurchases();
   }, [fetchPurchases]);
 
+  const handleDownloadReceipt = async (invoiceNumber: string) => {
+    try {
+      const blob = await posService.downloadInvoice(invoiceNumber);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `receipt-${invoiceNumber}.pdf`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Receipt download failed');
+    }
+  };
+
   const filteredPurchases = purchases.filter((sale) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase().trim();
@@ -144,8 +160,36 @@ export function CustomerPosPurchasesSection({ isBn = true }: CustomerPosPurchase
           {isBn ? 'সার্চের সাথে মিল রেখে কোনো ইনভয়েস পাওয়া যায়নি' : 'No counter invoices matching your search.'}
         </div>
       ) : (
-        /* 4. Purchases List Cards */
-        <div className="space-y-4">
+        <>
+        <div className="hidden sm:block overflow-x-auto rounded-3xl border border-border bg-background shadow-2xs">
+          <table className="w-full min-w-[720px] text-left text-xs">
+            <thead className="border-b border-border bg-muted/40 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3">{isBn ? 'অর্ডার / সেল আইডি' : 'Order / Sale ID'}</th>
+                <th className="px-4 py-3">{isBn ? 'তারিখ' : 'Date'}</th>
+                <th className="px-4 py-3">{isBn ? 'আইটেম' : 'Items'}</th>
+                <th className="px-4 py-3">{isBn ? 'পেমেন্ট' : 'Payment'}</th>
+                <th className="px-4 py-3">{isBn ? 'মোট' : 'Total'}</th>
+                <th className="px-4 py-3">{isBn ? 'স্ট্যাটাস' : 'Status'}</th>
+                <th className="px-4 py-3 text-right">{isBn ? 'অ্যাকশন' : 'Action'}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/60">
+              {filteredPurchases.map((sale) => (
+                <tr key={sale._id || sale.id || sale.invoiceNumber} className="hover:bg-muted/20">
+                  <td className="px-4 py-3 font-mono font-black text-foreground">#{sale.invoiceNumber}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{new Date(sale.createdAt).toLocaleString()}</td>
+                  <td className="px-4 py-3 font-semibold text-foreground">{sale.items.length}</td>
+                  <td className="px-4 py-3 uppercase font-bold text-primary">{sale.paymentMethod}</td>
+                  <td className="px-4 py-3 font-black text-primary">৳{sale.grandTotal.toFixed(2)}</td>
+                  <td className="px-4 py-3"><span className={sale.status === 'completed' ? 'text-emerald-600 font-bold' : 'text-rose-600 font-bold'}>{sale.status === 'completed' ? 'Completed' : 'Voided'}</span></td>
+                  <td className="px-4 py-3 text-right"><button type="button" onClick={() => setSelectedInvoice(sale)} className="inline-flex items-center gap-1 rounded-xl border border-border px-3 py-1.5 font-bold hover:bg-muted"><Printer className="h-3.5 w-3.5 text-primary" /> {isBn ? 'মেমো' : 'Receipt'}</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="sm:hidden space-y-4">
           {filteredPurchases.map((sale) => (
             <div
               key={sale._id || sale.id || sale.invoiceNumber}
@@ -230,6 +274,7 @@ export function CustomerPosPurchasesSection({ isBn = true }: CustomerPosPurchase
             </div>
           ))}
         </div>
+        </>
       )}
 
       {/* Printable Thermal Cash Receipt Modal */}
@@ -256,6 +301,9 @@ export function CustomerPosPurchasesSection({ isBn = true }: CustomerPosPurchase
               <div className="border-t border-b border-dashed border-slate-300 py-2 text-[11px] space-y-0.5">
                 <p>
                   <strong>Invoice:</strong> {selectedInvoice.invoiceNumber}
+                </p>
+                <p>
+                  <strong>Cashier:</strong> {selectedInvoice.sellerName || 'Staff'}
                 </p>
                 <p>
                   <strong>Date:</strong> {new Date(selectedInvoice.createdAt).toLocaleString()}
@@ -291,7 +339,8 @@ export function CustomerPosPurchasesSection({ isBn = true }: CustomerPosPurchase
                 <thead>
                   <tr className="border-b border-slate-300">
                     <th className="py-1">Item</th>
-                    <th className="py-1 text-center">Qty</th>
+                    <th className="py-1 text-center">Unit / Qty</th>
+                    <th className="py-1 text-right">Unit Price</th>
                     <th className="py-1 text-right">Total</th>
                   </tr>
                 </thead>
@@ -299,7 +348,8 @@ export function CustomerPosPurchasesSection({ isBn = true }: CustomerPosPurchase
                   {selectedInvoice.items?.map((item, idx) => (
                     <tr key={idx}>
                       <td className="py-1 font-semibold">{item.productName}</td>
-                      <td className="py-1 text-center">{item.quantity}</td>
+                      <td className="py-1 text-center">{item.unit || 'pcs'} / {item.quantity}</td>
+                      <td className="py-1 text-right">৳{item.unitPrice.toFixed(2)}</td>
                       <td className="py-1 text-right">৳{item.totalPrice.toFixed(2)}</td>
                     </tr>
                   ))}
@@ -309,6 +359,8 @@ export function CustomerPosPurchasesSection({ isBn = true }: CustomerPosPurchase
               <div className="border-t border-dashed border-slate-300 pt-2 space-y-0.5 text-right font-semibold">
                 <p>Subtotal: ৳{selectedInvoice.subtotal?.toFixed(2)}</p>
                 {selectedInvoice.discountAmount > 0 && <p>Discount: -৳{selectedInvoice.discountAmount?.toFixed(2)}</p>}
+                <p>Paid: ৳{selectedInvoice.paidAmount?.toFixed(2)}</p>
+                <p>Change / Due: ৳{Math.max(0, selectedInvoice.changeAmount || 0).toFixed(2)}</p>
                 <p className="text-sm font-black text-slate-900 pt-1 border-t border-slate-200">
                   Grand Total: ৳{selectedInvoice.grandTotal?.toFixed(2)}
                 </p>
@@ -328,6 +380,8 @@ export function CustomerPosPurchasesSection({ isBn = true }: CustomerPosPurchase
               <button
                 type="button"
                 onClick={() => {
+                  void handleDownloadReceipt(selectedInvoice.invoiceNumber);
+                  if (Boolean(false)) {
                   const printWin = window.open('', '_blank');
                   if (!printWin) {
                     window.print();
@@ -400,6 +454,7 @@ export function CustomerPosPurchasesSection({ isBn = true }: CustomerPosPurchase
                   `;
                   printWin.document.write(html);
                   printWin.document.close();
+                  }
                 }}
                 className="rounded-2xl bg-primary py-3 font-extrabold text-white shadow-md hover:bg-primary-dark flex items-center justify-center gap-1.5 cursor-pointer text-xs"
               >

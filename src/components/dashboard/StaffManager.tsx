@@ -10,7 +10,6 @@ import {
   Check,
   X,
   KeyRound,
-  RefreshCw,
   Clock,
   Send,
   Loader2,
@@ -182,15 +181,6 @@ export function StaffManager() {
             <span>{isBn ? 'গ্রাহককে স্টাফ ইনভাইট দিন' : 'Invite / Promote Customer'}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={fetchStaffAndInvitations}
-            disabled={loading}
-            className="inline-flex items-center gap-2 rounded-2xl border border-border bg-background px-3.5 py-2.5 text-xs font-bold text-foreground shadow-2xs hover:bg-muted transition-colors cursor-pointer disabled:opacity-50"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            <span>{isBn ? 'রিফ্রেশ' : 'Refresh'}</span>
-          </button>
         </div>
       </div>
 

@@ -1,8 +1,9 @@
-import { apiClient } from '@/lib/apiClient';
+import { apiClient, getAccessToken } from '@/lib/apiClient';
 
 export interface PosItemInput {
   productId: string;
   quantity: number;
+  unit?: string;
   unitPrice?: number;
 }
 
@@ -51,6 +52,7 @@ export interface PosSaleItem {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
+  unit?: string;
 }
 
 export interface PosSaleRecord {
@@ -96,6 +98,25 @@ export interface PosTodayStats {
 }
 
 export const PosService = {
+  formatSale(raw: any): PosSaleRecord {
+    return {
+      ...raw,
+      id: raw.id || raw._id,
+      sellerName: raw.sellerName || raw.soldBy?.name || raw.seller?.name || 'Staff',
+      customerName: raw.customerName || raw.customerUser?.name || 'Walk-in Customer',
+      customerPhone: raw.customerPhone || raw.customerUser?.phone || '',
+      customerEmail: raw.customerEmail || raw.customerUser?.email || '',
+      discountAmount: Number(raw.discountAmount ?? raw.discountTotal ?? 0),
+      items: Array.isArray(raw.items) ? raw.items.map((item: any) => ({
+        ...item,
+        productName: item.productName || item.name || item.product?.name || 'Medicine Item',
+        unit: item.unit || item.unitType,
+        unitPrice: Number(item.unitPrice || 0),
+        quantity: Number(item.quantity || 0),
+        totalPrice: Number(item.totalPrice || 0),
+      })) : [],
+    } as PosSaleRecord;
+  },
   async getInventory(): Promise<any[]> {
     return apiClient<any[]>('/pos/inventory', { method: 'GET' });
   },
@@ -117,26 +138,41 @@ export const PosService = {
   },
 
   async processPosSale(payload: ProcessPosSalePayload): Promise<PosSaleRecord> {
-    return apiClient<PosSaleRecord>('/pos/checkout', {
+    const sale = await apiClient<any>('/pos/checkout', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
+    return PosService.formatSale(sale);
   },
 
   async getPosSales(): Promise<PosSaleRecord[]> {
-    return apiClient<PosSaleRecord[]>('/pos/sales', { method: 'GET' });
+    const sales = await apiClient<any[]>('/pos/sales', { method: 'GET' });
+    return (sales || []).map(PosService.formatSale);
   },
 
   async getInvoice(invoiceNumber: string): Promise<PosSaleRecord> {
-    return apiClient<PosSaleRecord>(`/pos/sales/invoice/${invoiceNumber}`, { method: 'GET' });
+    const sale = await apiClient<any>(`/pos/sales/invoice/${invoiceNumber}`, { method: 'GET' });
+    return PosService.formatSale(sale);
   },
 
   async voidPosSale(invoiceNumber: string): Promise<PosSaleRecord> {
-    return apiClient<PosSaleRecord>(`/pos/sales/invoice/${invoiceNumber}/void`, { method: 'POST' });
+    const sale = await apiClient<any>(`/pos/sales/invoice/${invoiceNumber}/void`, { method: 'POST' });
+    return PosService.formatSale(sale);
   },
 
   async getMyPurchases(): Promise<PosSaleRecord[]> {
-    return apiClient<PosSaleRecord[]>('/pos/my-purchases', { method: 'GET' });
+    const sales = await apiClient<any[]>('/pos/my-purchases', { method: 'GET' });
+    return (sales || []).map(PosService.formatSale);
+  },
+
+  async downloadInvoice(invoiceNumber: string): Promise<Blob> {
+    const token = getAccessToken();
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/pos/sales/invoice/${encodeURIComponent(invoiceNumber)}/download`, {
+      credentials: 'include',
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    if (!response.ok) throw new Error('Receipt download failed');
+    return response.blob();
   },
 };
 

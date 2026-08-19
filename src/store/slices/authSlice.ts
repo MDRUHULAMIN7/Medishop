@@ -144,6 +144,7 @@ export const authSlice = createSlice({
       state.verificationToken = null;
       state.serverError = null;
       state.fieldErrors = {};
+      state.isAuthModalOpen = false;
     },
     updatePersistFormState: (
       state,

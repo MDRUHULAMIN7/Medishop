@@ -30,7 +30,7 @@ const ROLE_ALLOWED_TABS: Record<UserRole, RbacTabId[]> = {
     'overview', 'prescriptions', 'orders', 'chat'
   ],
   sales_staff: [
-    'overview', 'pos_sales', 'orders', 'chat', 'products'
+    'overview', 'pos_sales', 'orders', 'chat', 'products', 'users'
   ],
   order_manager: [
     'overview', 'orders', 'chat', 'users', 'prescriptions', 'pos_sales'

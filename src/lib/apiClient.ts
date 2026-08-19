@@ -205,6 +205,12 @@ export async function apiClient<T = any>(
     const errorCode = data?.errorCode || (response.status === 401 ? 'UNAUTHORIZED' : 'API_ERROR');
     const rawErrors = data?.errors || null;
 
+    if (errorCode === 'ACCOUNT_BLOCKED' && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('medishop:account-blocked', {
+        detail: { message: errorMessage },
+      }));
+    }
+
     throw new ApiError(errorMessage, response.status, errorCode, rawErrors);
   }
 

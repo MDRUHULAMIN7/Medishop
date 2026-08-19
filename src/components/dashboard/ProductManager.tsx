@@ -290,6 +290,7 @@ export function ProductManager() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
+  const [isLoadingViewingProduct, setIsLoadingViewingProduct] = useState(false);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [localSearch, setLocalSearch] = useState(searchQuery);
@@ -695,6 +696,20 @@ export function ProductManager() {
     }
   };
 
+  const openViewModal = async (summaryProduct: Product) => {
+    setViewingProduct(null);
+    setIsLoadingViewingProduct(true);
+    try {
+      const fullProduct = await ProductService.getProductByIdOrSlug(summaryProduct.id, true);
+      setViewingProduct(fullProduct || summaryProduct);
+    } catch {
+      setViewingProduct(summaryProduct);
+      toast.error(isBn ? 'বিস্তারিত তথ্য লোড করা যায়নি' : 'Unable to load the latest product details');
+    } finally {
+      setIsLoadingViewingProduct(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header Toolbar */}
@@ -932,7 +947,7 @@ export function ProductManager() {
                           <ProductActionsMenu
                             product={p}
                             isBn={isBn}
-                            onView={() => setViewingProduct(p)}
+                            onView={() => openViewModal(p)}
                             onAudit={() => openAuditModal(p)}
                             onEdit={() => openEditModal(p)}
                             onDuplicate={() => {
@@ -1629,7 +1644,7 @@ export function ProductManager() {
 
       {/* Product Details View Modal */}
       <AnimatePresence>
-        {viewingProduct && (
+        {(isLoadingViewingProduct || viewingProduct) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1644,6 +1659,11 @@ export function ProductManager() {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-3xl border border-border bg-background p-6 shadow-2xl space-y-5"
             >
+              {isLoadingViewingProduct ? (
+                <div className="flex min-h-48 items-center justify-center text-sm font-bold text-muted-foreground">
+                  {isBn ? 'ডাটা লোড হচ্ছে...' : 'Loading latest medicine details...'}
+                </div>
+              ) : viewingProduct ? <>
               {/* Modal Header */}
               <div className="flex items-center justify-between border-b border-border pb-3">
                 <div className="flex items-center gap-2">
@@ -1764,6 +1784,7 @@ export function ProductManager() {
                   Close Preview
                 </button>
               </div>
+              </> : null}
             </motion.div>
           </motion.div>
         )}

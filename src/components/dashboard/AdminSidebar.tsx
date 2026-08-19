@@ -72,35 +72,35 @@ export function AdminSidebar({
   const menuItems = [
     {
       id: 'overview' as DashboardTab,
-      labelBn: 'ওভারভিউ ও অ্যানালিটিক্স',
-      labelEn: 'Overview & Stats',
+      labelBn: 'ওভারভিউ',
+      labelEn: 'Overview',
       icon: LayoutDashboard,
       badge: 'Live',
     },
     {
       id: 'pos_sales' as DashboardTab,
-      labelBn: 'কাউন্টার সেলস টার্মিনাল (POS)',
-      labelEn: 'In-Store POS Terminal',
+      labelBn: 'পিওএস সেলস',
+      labelEn: 'POS Sales',
       icon: Store,
       badge: 'POS',
       badgeColor: 'bg-emerald-600 text-white font-bold',
     },
     {
       id: 'inventory' as DashboardTab,
-      labelBn: 'ইনভেন্টরি ও ব্যাচ ট্র্যাকিং',
-      labelEn: 'Inventory & Batches',
+      labelBn: 'ইনভেন্টরি',
+      labelEn: 'Inventory',
       icon: Boxes,
     },
     {
       id: 'ledger' as DashboardTab,
-      labelBn: 'স্টক মুভমেন্ট অডিট লেজার',
-      labelEn: 'Stock Audit Ledger',
+      labelBn: 'স্টক লেজার',
+      labelEn: 'Stock Ledger',
       icon: History,
     },
     {
       id: 'products' as DashboardTab,
-      labelBn: 'ওষুধ ও প্রডাক্ট ক্যাটালগ',
-      labelEn: 'Medicine & Products',
+      labelBn: 'প্রোডাক্টস',
+      labelEn: 'Products',
       icon: Package,
     },
     {
@@ -117,46 +117,46 @@ export function AdminSidebar({
     },
     {
       id: 'prescriptions' as DashboardTab,
-      labelBn: 'প্রেসক্রিপশন ভেরিফিকেশন কিউ',
-      labelEn: 'Prescription Queue',
+      labelBn: 'প্রেসক্রিপশন',
+      labelEn: 'Prescriptions',
       icon: FileText,
       badge: 'Rx',
       badgeColor: 'bg-amber-500 text-white font-bold',
     },
     {
       id: 'orders' as DashboardTab,
-      labelBn: 'অর্ডার ও ডেলিভারি',
-      labelEn: 'Orders & Logistics',
+      labelBn: 'অর্ডার',
+      labelEn: 'Orders',
       icon: ShoppingBag,
     },
     {
       id: 'coupons' as DashboardTab,
-      labelBn: 'কুপন ম্যানেজমেন্ট',
-      labelEn: 'Coupons & Offers',
+      labelBn: 'কুপন',
+      labelEn: 'Coupons',
       icon: Tag,
     },
     {
       id: 'banners' as DashboardTab,
-      labelBn: 'ব্যানার ও স্লাইডার',
-      labelEn: 'Banners & Hero',
+      labelBn: 'ব্যানার',
+      labelEn: 'Banners',
       icon: ImageIcon,
     },
     {
       id: 'reviews' as DashboardTab,
-      labelBn: 'রিভিউ ও রেটিং',
-      labelEn: 'Reviews & Rating',
+      labelBn: 'রিভিউ',
+      labelEn: 'Reviews',
       icon: Star,
     },
     {
       id: 'reports' as DashboardTab,
-      labelBn: 'রিপোর্টস ও এ্যানালিটিক্স',
-      labelEn: 'Reports & Analytics',
+      labelBn: 'রিপোর্টস',
+      labelEn: 'Reports',
       icon: BarChart3,
     },
     {
       id: 'staff' as DashboardTab,
-      labelBn: 'স্টাফ ও পারমিশন (RBAC)',
-      labelEn: 'Staff & Roles (RBAC)',
+      labelBn: 'স্টাফ ও রোলস',
+      labelEn: 'Staff & Roles',
       icon: ShieldCheck,
     },
     {
@@ -167,8 +167,8 @@ export function AdminSidebar({
     },
     {
       id: 'settings' as DashboardTab,
-      labelBn: 'সাইট সেটিংস ও ব্র্যান্ডিং',
-      labelEn: 'Settings & Branding',
+      labelBn: 'সেটিংস',
+      labelEn: 'Settings',
       icon: Settings,
     },
   ];
@@ -201,7 +201,7 @@ export function AdminSidebar({
               <span className="font-serif-title text-2xl font-extrabold tracking-tight text-primary leading-none">
                 {siteName}
               </span>
-              <span className="text-[10px] font-bold tracking-wider uppercase text-muted-foreground mt-0.5">
+              <span className="hidden md:block text-[10px] font-bold tracking-wider uppercase text-muted-foreground mt-0.5">
                 {isBn ? 'এডমিন প্যানেল v2.0' : 'Admin Panel v2.0'}
               </span>
             </div>
@@ -227,7 +227,7 @@ export function AdminSidebar({
             <span className="text-xs font-bold text-foreground truncate">
               {user?.name || (isBn ? 'সুপার এডমিন' : 'Super Admin')}
             </span>
-            <span className="text-[11px] font-medium text-success flex items-center gap-1">
+            <span className="hidden md:flex text-[11px] font-medium text-success items-center gap-1">
               <span className="h-2 w-2 rounded-full bg-success animate-pulse inline-block" />
               <span>{isBn ? 'সক্রিয় এডমিন' : 'System Active'}</span>
             </span>
@@ -291,7 +291,7 @@ export function AdminSidebar({
       </div>
 
       {/* Bottom Footer Action */}
-      <div className="border-t border-border pt-3 mt-2 flex items-center justify-between text-xs">
+      <div className="hidden md:flex border-t border-border pt-3 mt-2 items-center justify-between text-xs">
         <Link
           href="/"
           className="flex items-center gap-2 font-bold text-primary hover:underline"

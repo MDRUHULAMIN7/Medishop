@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { setLanguage } from '@/store/slices/uiSlice';
-import { logout } from '@/store/slices/authSlice';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { notificationService } from '@/services/notification.service';
 import { NotificationDrawer } from '../notifications/NotificationDrawer';
@@ -35,6 +35,7 @@ export function AdminTopbar({
   const user = useAppSelector((state) => state.auth.user);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const isBn = language === 'bn';
+  const { logout: logoutUser } = useAuth();
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -172,7 +173,7 @@ export function AdminTopbar({
 
               <button
                 onClick={() => {
-                  dispatch(logout());
+                  void logoutUser();
                   setIsProfileOpen(false);
                   toast.success(isBn ? 'এডমিন লগআউট হয়েছে' : 'Admin logged out');
                 }}

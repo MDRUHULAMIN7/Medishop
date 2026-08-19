@@ -53,15 +53,6 @@ export function ReviewManager() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={fetchReviews}
-          disabled={loading}
-          className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-3.5 py-2 text-xs font-bold text-foreground shadow-2xs hover:bg-muted transition-colors cursor-pointer disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          <span>{isBn ? 'রিফ্রেশ ডাটা' : 'Refresh Feed'}</span>
-        </button>
       </div>
 
       {/* Reviews List */}
