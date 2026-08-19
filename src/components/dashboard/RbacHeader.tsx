@@ -66,8 +66,10 @@ export function RbacHeader({
 
   useEffect(() => {
     setMounted(true);
-    fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000);
+    void fetchUnreadCount().catch(() => undefined);
+    const interval = setInterval(() => {
+      void fetchUnreadCount().catch(() => undefined);
+    }, 30000);
     return () => clearInterval(interval);
   }, [fetchUnreadCount]);
 

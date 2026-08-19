@@ -44,6 +44,7 @@ import { useBranding } from '@/context/BrandingContext';
 import { settingsService, DynamicPaymentMethod } from '@/services/settings.service';
 import { PaymentBrandIcon } from '@/components/common/PaymentBrandIcon';
 import { formatNumber } from '@/utils/cart';
+import { ProductRecognitionScanner } from '@/components/dashboard/pos/ProductRecognitionScanner';
 
 interface PosSalesModuleProps {
   isBn?: boolean;
@@ -284,18 +285,20 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
   }, [customerSearchQuery, customerMode]);
 
   // Add Item to POS Cart
-  const handleAddToCart = (product: Product, unitOption?: { unit: string; multiplier: number; price: number }) => {
+  const handleAddToCart = (product: Product, unitOption?: { unit: string; multiplier: number; price: number }, quantityToAdd = 1) => {
     const activeUnit = unitOption || selectedUnits[product.id] || getProductUnitOptions(product)[0];
+    const existing = cartItems.find((item) => item.product.id === product.id && item.selectedUnit === activeUnit.unit);
+    const requestedQuantity = (existing?.quantity || 0) + quantityToAdd;
 
     // Check central stock
-    const requiredPieces = activeUnit.multiplier;
+    const requiredPieces = requestedQuantity * activeUnit.multiplier;
     if (product.stock < requiredPieces) {
       toast.error(
         isBn
           ? `দুঃখিত! ${product.name} ওষুধটির প্রয়োজনীয় স্টক (${requiredPieces} pcs) নেই`
           : `Insufficient stock for ${product.name} (Requires ${requiredPieces} pcs)`
       );
-      return;
+      return false;
     }
 
     setCartItems((prev) => {
@@ -305,7 +308,7 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
 
       if (existingIdx > -1) {
         const updated = [...prev];
-        const nextQty = updated[existingIdx].quantity + 1;
+        const nextQty = updated[existingIdx].quantity + quantityToAdd;
         const totalPieces = nextQty * activeUnit.multiplier;
 
         if (product.stock < totalPieces) {
@@ -324,9 +327,9 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
           product,
           selectedUnit: activeUnit.unit,
           unitMultiplier: activeUnit.multiplier,
-          quantity: 1,
+          quantity: quantityToAdd,
           unitPrice: activeUnit.price,
-          totalPrice: activeUnit.price,
+          totalPrice: quantityToAdd * activeUnit.price,
         },
       ];
     });
@@ -334,8 +337,9 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
     toast.success(
       isBn
         ? `${product.name} (${activeUnit.unit}) কার্টে যুক্ত হয়েছে`
-        : `Added ${product.name} (${activeUnit.unit}) to cart`
+      : `Added ${product.name} (${activeUnit.unit}) to cart`
     );
+    return true;
   };
 
   // Modify Cart Item Qty
@@ -587,6 +591,18 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
           <History className="h-4 w-4 text-primary" />
           <span>{isBn ? 'আজকের বিক্রয় হিস্ট্রি' : 'Sales Receipts Log'}</span>
         </button>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-end gap-2">
+          <ProductRecognitionScanner
+          isBn={isBn}
+          getUnitOptions={getProductUnitOptions}
+          onAddToCart={(product, unit, quantity) => handleAddToCart(product, unit, quantity)}
+          onManualSearch={() => {
+            setPosStep('products');
+            setPage(1);
+          }}
+        />
       </div>
 
       {/* 2. Main POS Workspace Grid: Left 7 Cols (Product Table), Right 5 Cols (Billing Cart) */}

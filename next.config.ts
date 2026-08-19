@@ -2,6 +2,8 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Permit the Next dev server to be opened from another device on the LAN.
+  allowedDevOrigins: ['192.168.0.100'],
   images: {
     remotePatterns: [
       {

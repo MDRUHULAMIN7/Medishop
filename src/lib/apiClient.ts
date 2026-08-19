@@ -100,8 +100,9 @@ export async function apiClient<T = any>(
   const { skipAuth = false, skipRefresh = false, headers: customHeaders, ...restOptions } = options;
 
   const token = getAccessToken();
+  const isFormDataBody = typeof FormData !== 'undefined' && restOptions.body instanceof FormData;
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(isFormDataBody ? {} : { 'Content-Type': 'application/json' }),
     ...(customHeaders as Record<string, string>),
   };
 
