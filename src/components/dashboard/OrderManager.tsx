@@ -23,6 +23,8 @@ import { useAppSelector } from '@/store';
 import { formatBDT } from '@/lib/utils';
 import { orderService } from '@/services/order.service';
 import { toast } from 'sonner';
+import { exportRowsToExcel } from '@/lib/excelExport';
+import { ExportExcelButton } from '@/components/dashboard/ExportExcelButton';
 
 interface StatusOption {
   value: string;
@@ -412,6 +414,22 @@ export function OrderManager() {
     return matchOrderNum || matchName || matchPhone || matchEmail || matchDistrict;
   });
 
+  const handleExport = () => {
+    exportRowsToExcel({ filename: `medishop-orders-${new Date().toISOString().slice(0, 10)}`, sheets: [{ name: 'Orders', rows: filteredOrders.map((order) => ({
+      Order: order.orderNumber,
+      Date: order.createdAt ? new Date(order.createdAt) : '',
+      Customer: order.shippingAddress?.recipientName || order.user?.name || '',
+      Phone: order.shippingAddress?.phone || order.user?.phone || '',
+      Payment: order.paymentMethod,
+      'Payment Status': order.paymentStatus,
+      'Order Status': order.orderStatus,
+      Subtotal: order.subtotal,
+      Discount: order.discountTotal,
+      Total: order.grandTotal,
+    })) }] });
+    toast.success('Orders exported to Excel');
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -426,6 +444,7 @@ export function OrderManager() {
               : 'Track all customer online orders, advance lifecycle status, and verify payments.'}
           </p>
         </div>
+        <ExportExcelButton onClick={handleExport} />
 
       </div>
 

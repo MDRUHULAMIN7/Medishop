@@ -122,6 +122,7 @@ export async function apiClient<T = any>(
   try {
     response = await fetch(url, config);
   } catch (err: any) {
+    if (err?.name === 'AbortError') throw err;
     throw new ApiError(
       err?.message || 'Network request failed. Please check your internet connection.',
       0,

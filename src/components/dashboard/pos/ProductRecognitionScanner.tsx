@@ -32,6 +32,7 @@ interface ProductRecognitionScannerProps {
   onAddToCart: (product: Product, unit: UnitOption, quantity: number) => boolean;
   onManualSearch: () => void;
   onProductRecognized?: (product: Product, candidates: RecognitionCandidate[]) => void;
+  onCandidateSelected?: (candidate: RecognitionCandidate) => void;
 }
 
 const socketBaseUrl = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
@@ -42,6 +43,7 @@ export function ProductRecognitionScanner({
   onAddToCart,
   onManualSearch,
   onProductRecognized,
+  onCandidateSelected,
 }: ProductRecognitionScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -250,6 +252,7 @@ export function ProductRecognitionScanner({
     setSelectedCandidate(candidate);
     setSelectedUnit(options[0] || null);
     setQuantity(1);
+    onCandidateSelected?.(candidate);
   };
 
   const confirmAndAdd = () => {

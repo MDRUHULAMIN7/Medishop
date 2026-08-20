@@ -593,7 +593,7 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
         </button>
       </div>
 
-      <div className="flex flex-wrap items-center justify-end gap-2">
+      {posStep === 'products' && <div className="flex flex-wrap items-center justify-end gap-2">
           <ProductRecognitionScanner
           isBn={isBn}
           getUnitOptions={getProductUnitOptions}
@@ -608,12 +608,12 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
             setPage(1);
           }}
         />
-      </div>
+      </div>}
 
       {/* 2. Main POS Workspace Grid: Left 7 Cols (Product Table), Right 5 Cols (Billing Cart) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Product Filter Bar, Table & Pagination (7 Cols) */}
-        <div className={`${posStep === 'products' ? 'block' : 'hidden'} lg:col-span-12 space-y-4`}>
+        <div className={`${posStep === 'products' ? 'block' : 'hidden'} lg:col-span-12 space-y-4 pb-24`}>
           {/* Filter and Search Toolbar (Exact Same Design as Admin Product Manager) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             {/* Search */}
@@ -914,12 +914,13 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
               </div>
             </div>
           </div>
-          <div className="flex justify-end pt-2">
+          <div className="sticky bottom-3 z-20 flex items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-background/95 p-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-background/80">
+            <div className="min-w-0"><p className="truncate text-xs font-black text-foreground">{cartItems.length} {isBn ? 'টি পণ্য নির্বাচিত' : cartItems.length === 1 ? 'product selected' : 'products selected'}</p><p className="text-[11px] text-muted-foreground">{isBn ? 'সেল সম্পন্ন করতে এগিয়ে যান' : 'Review units, customer and payment next'}</p></div>
             <button
               type="button"
               disabled={cartItems.length === 0}
               onClick={() => setPosStep('sale')}
-              className="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-2.5 text-xs font-black text-white shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-xs font-black text-white shadow-md transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 sm:px-5"
             >
               {isBn ? 'সেল স্ক্রিনে যান' : 'Continue to Sale'} <ChevronRight className="h-4 w-4" />
             </button>

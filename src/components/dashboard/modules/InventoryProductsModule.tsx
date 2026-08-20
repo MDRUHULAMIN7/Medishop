@@ -31,6 +31,8 @@ import {
   BatchSummaryData,
 } from '@/services/inventory.service';
 import { posService } from '@/services/pos.service';
+import { exportRowsToExcel } from '@/lib/excelExport';
+import { ExportExcelButton } from '@/components/dashboard/ExportExcelButton';
 
 interface InventoryProductsModuleProps {
   isBn?: boolean;
@@ -348,6 +350,22 @@ export function InventoryProductsModule({ isBn = true }: InventoryProductsModule
     return true;
   });
 
+  const handleExport = async () => {
+    try {
+      const result = await ProductService.getProducts({ page: 1, limit: 10000, search: search.trim() || undefined, dosageForm: dosageFilter !== 'all' ? dosageFilter : undefined, includeInactive: true, isAdmin: true });
+      const filtered = (result.products || []).filter((product) => {
+        if (filterType === 'in_stock') return product.stock > 10;
+        if (filterType === 'low_stock') return product.stock > 0 && product.stock <= 10;
+        if (filterType === 'out_of_stock') return product.stock <= 0;
+        return true;
+      });
+      exportRowsToExcel({ filename: `medishop-inventory-${new Date().toISOString().slice(0, 10)}`, sheets: [{ name: 'Stock', rows: filtered.map((product) => ({ Product: product.name, Unit: product.unitType, Stock: product.stock, SellingPrice: product.price, Status: product.stock <= 0 ? 'Out of stock' : product.stock <= 10 ? 'Low stock' : 'In stock' })) }] });
+      toast.success('Inventory exported to Excel');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Inventory export failed');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header & Global Action Tools */}
@@ -369,6 +387,7 @@ export function InventoryProductsModule({ isBn = true }: InventoryProductsModule
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
+          <ExportExcelButton onClick={handleExport} />
           <button
             type="button"
             onClick={handleRecalculateAll}

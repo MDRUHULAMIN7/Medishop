@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { ProductService } from '@/services/product.service';
 import { ProductFilterState, SortOption } from '@/types/product';
 import { useCallback } from 'react';
@@ -62,7 +62,7 @@ export function useProductFilters(categorySlug?: string) {
   // Query Products with Page and Limit
   const queryResult = useQuery({
     queryKey: ['products-listing', categorySlug, searchParams.toString(), page, limit],
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       ProductService.getProducts(
         {
           ...filterState,
@@ -72,9 +72,11 @@ export function useProductFilters(categorySlug?: string) {
           limit,
         },
         sort,
-        searchQuery
+        searchQuery,
+        signal
       ),
-    staleTime: 5 * 1000,
+    staleTime: 30 * 1000,
+    placeholderData: keepPreviousData,
   });
 
   // URL Sync Helper

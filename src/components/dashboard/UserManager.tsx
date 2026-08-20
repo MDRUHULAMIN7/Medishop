@@ -6,6 +6,8 @@ import { useAppSelector } from '@/store';
 import { adminService, AdminUserListItem } from '@/services/admin.service';
 import { DataTable, Column } from './DataTable';
 import { toast } from 'sonner';
+import { exportRowsToExcel } from '@/lib/excelExport';
+import { ExportExcelButton } from '@/components/dashboard/ExportExcelButton';
 
 export function UserManager() {
   const language = useAppSelector((state) => state.ui.language);
@@ -56,6 +58,28 @@ export function UserManager() {
       fetchUsers();
     } catch (err: any) {
       toast.error(err?.message || 'Failed to update user status');
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const params = new URLSearchParams({ page: '1', limit: '10000' });
+      if (search.trim()) params.set('search', search.trim());
+      const result = await adminService.listUsers(params.toString());
+      exportRowsToExcel({
+        filename: `medishop-customers-${new Date().toISOString().slice(0, 10)}`,
+        sheets: [{ name: 'Customers', rows: result.users.filter((user) => user.role === 'customer').map((user) => ({
+          'Customer Name': user.name,
+          Phone: user.phone || '',
+          Email: user.email || '',
+          Status: user.status,
+          Role: user.role,
+          'Registration Date': user.createdAt ? new Date(user.createdAt) : '',
+        })) }],
+      });
+      toast.success('Customers exported to Excel');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Customer export failed');
     }
   };
 
@@ -170,6 +194,7 @@ export function UserManager() {
               : 'View live registered accounts and control active/blocked status.'}
           </p>
         </div>
+        <ExportExcelButton onClick={handleExport} />
 
       </div>
 

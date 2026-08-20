@@ -11,9 +11,10 @@ import { useAppSelector } from '@/store';
 interface HeroSlideProps {
   slide: HeroSlideType;
   isActive: boolean;
+  isPriority?: boolean;
 }
 
-export function HeroSlideItem({ slide, isActive }: HeroSlideProps) {
+export function HeroSlideItem({ slide, isActive, isPriority = false }: HeroSlideProps) {
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
 
@@ -26,7 +27,8 @@ export function HeroSlideItem({ slide, isActive }: HeroSlideProps) {
         src={slide.image}
         alt={isBn ? slide.titleBn : slide.titleEn}
         fill
-        priority
+        priority={isPriority}
+        loading={isPriority ? 'eager' : 'lazy'}
         className="object-cover object-center transition-transform duration-700 hover:scale-105"
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1000px"
       />

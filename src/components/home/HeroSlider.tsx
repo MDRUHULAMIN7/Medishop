@@ -74,7 +74,7 @@ export function HeroSlider() {
     >
       <AnimatePresence mode="wait">
         {slides.map((slide, idx) => (
-          <HeroSlideItem key={slide.id} slide={slide} isActive={idx === currentIndex} />
+          <HeroSlideItem key={slide.id} slide={slide} isActive={idx === currentIndex} isPriority={idx === 0 && currentIndex === 0} />
         ))}
       </AnimatePresence>
 

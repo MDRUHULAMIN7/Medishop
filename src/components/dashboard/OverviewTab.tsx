@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   TrendingUp,
   ShoppingBag,
@@ -21,8 +22,11 @@ import { adminService, DashboardSummaryResponse } from '@/services/admin.service
 import { orderService } from '@/services/order.service';
 import { useBranding } from '@/context/BrandingContext';
 import { toast } from 'sonner';
+import { ProductInsightsScannerPanel } from '@/components/dashboard/ProductInsightsScannerPanel';
+import { OverviewAnalyticsCharts } from '@/components/dashboard/OverviewAnalyticsCharts';
 
 export function OverviewTab() {
+  const router = useRouter();
   const language = useAppSelector((state) => state.ui.language);
   const isBn = language === 'bn';
   const { settings } = useBranding();
@@ -125,6 +129,9 @@ export function OverviewTab() {
         </div>
 
       </div>
+
+      <ProductInsightsScannerPanel isBn={isBn} onManualSearch={() => router.push('/dashboard/admin?tab=products')} />
+      <OverviewAnalyticsCharts />
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

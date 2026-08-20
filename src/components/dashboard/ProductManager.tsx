@@ -40,6 +40,8 @@ import { formatNumber } from '@/utils/cart';
 import { toast } from 'sonner';
 import { CustomSelect } from '@/components/ui/CustomSelect';
 import { apiClient } from '@/lib/apiClient';
+import { exportRowsToExcel } from '@/lib/excelExport';
+import { ExportExcelButton } from '@/components/dashboard/ExportExcelButton';
 
 import { createPortal } from 'react-dom';
 
@@ -359,6 +361,26 @@ export function ProductManager() {
       params.delete('search');
     }
     router.push(`/dashboard/admin?${params.toString()}`);
+  };
+
+  const handleExport = async () => {
+    try {
+      const result = await ProductService.getProducts({ page: 1, limit: 10000, search: searchQuery || undefined, category: categoryQuery || undefined, brand: brandQuery || undefined, dosageForm: dosageQuery || undefined, isAdmin: true });
+      exportRowsToExcel({ filename: `medishop-products-${new Date().toISOString().slice(0, 10)}`, sheets: [{ name: 'Products', rows: result.products.map((product) => ({
+        'Product Name': product.name,
+        'Generic Name': product.genericName || '',
+        Category: typeof product.category === 'string' ? product.category : '',
+        Brand: product.brandName || '',
+        Unit: product.unitType,
+        Price: product.price,
+        Stock: product.stock,
+        'Prescription Required': product.requiresRx ? 'Yes' : 'No',
+        Status: product.inStock ? 'In stock' : 'Out of stock',
+      })) }] });
+      toast.success('Products exported to Excel');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Product export failed');
+    }
   };
 
   const handleFilterChange = (key: string, value: string) => {
@@ -725,6 +747,8 @@ export function ProductManager() {
           </p>
         </div>
 
+        <div className="flex flex-wrap items-center gap-2">
+        <ExportExcelButton onClick={handleExport} />
         <button
           onClick={openAddModal}
           className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-primary-dark transition-all cursor-pointer active:scale-95 shrink-0"
@@ -732,6 +756,7 @@ export function ProductManager() {
           <Plus className="h-4 w-4" />
           <span>{isBn ? 'নতুন ওষুধ যোগ করুন' : 'Add New Medicine'}</span>
         </button>
+        </div>
       </div>
 
       {/* Filter and Search Toolbar */}

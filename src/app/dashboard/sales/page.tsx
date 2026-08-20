@@ -38,6 +38,10 @@ import {
   Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ProductInsightsScannerPanel } from '@/components/dashboard/ProductInsightsScannerPanel';
+import { OverviewAnalyticsCharts } from '@/components/dashboard/OverviewAnalyticsCharts';
+import { exportRowsToExcel } from '@/lib/excelExport';
+import { ExportExcelButton } from '@/components/dashboard/ExportExcelButton';
 
 type SalesSectionTab = 'pos_sales' | 'overview' | 'orders' | 'chat' | 'products' | 'customers';
 
@@ -188,6 +192,21 @@ function SalesDashboardContent() {
     );
   });
 
+  const handleExportInvoices = () => {
+    exportRowsToExcel({ filename: `medishop-pos-sales-${new Date().toISOString().slice(0, 10)}`, sheets: [{ name: 'POS Sales', rows: filteredInvoices.map((invoice) => ({
+      Invoice: invoice.invoiceNumber,
+      Date: new Date(invoice.createdAt),
+      Customer: invoice.customerName || 'Walk-in Customer',
+      Phone: invoice.customerPhone || '',
+      Payment: invoice.paymentMethod,
+      Subtotal: invoice.subtotal,
+      Discount: invoice.discountAmount,
+      Total: invoice.grandTotal,
+      Status: invoice.status,
+    })) }] });
+    toast.success('POS sales exported to Excel');
+  };
+
   return (
     <div className="space-y-6 pb-12">
       {/* 1. Header Banner */}
@@ -219,6 +238,8 @@ function SalesDashboardContent() {
       {/* TAB B: Shift Overview & KPI Cards */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
+          <ProductInsightsScannerPanel isBn={isBn} onManualSearch={() => router.push('/dashboard/sales?tab=products')} />
+          <OverviewAnalyticsCharts channel="pos" />
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-emerald-600" />
@@ -278,7 +299,7 @@ function SalesDashboardContent() {
                 </h2>
               </div>
 
-              <div className="relative max-w-xs w-full">
+              <div className="flex w-full max-w-md items-center gap-2"><ExportExcelButton onClick={handleExportInvoices} /><div className="relative min-w-0 flex-1">
                 <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                 <input
                   type="text"
@@ -287,7 +308,7 @@ function SalesDashboardContent() {
                   placeholder={isBn ? 'ইনভয়েস # বা গ্রাহকের নাম দিয়ে খুঁজুন...' : 'Search invoice # or customer...'}
                   className="w-full rounded-2xl border border-border bg-background py-1.5 pl-8 pr-3 text-xs font-semibold text-foreground focus:border-primary focus:outline-hidden"
                 />
-              </div>
+              </div></div>
             </div>
 
             <div className="rounded-3xl border border-border bg-background shadow-xs overflow-hidden">

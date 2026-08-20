@@ -238,7 +238,8 @@ export const ProductService = {
   async getProducts(
     params: ProductQueryParams | any = {},
     sortArg?: string,
-    searchArg?: string
+    searchArg?: string,
+    signal?: AbortSignal
   ): Promise<ProductListResponse> {
     const query = new URLSearchParams();
 
@@ -279,6 +280,7 @@ export const ProductService = {
 
     const response = await apiClient<any>(endpoint, {
       method: 'GET',
+      signal,
     });
 
     let rawProducts: any[] = [];

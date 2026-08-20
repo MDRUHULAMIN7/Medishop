@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ProductService,
   ProductQueryParams,
@@ -18,8 +18,9 @@ export function useProducts(params: ProductQueryParams = {}) {
     refetch,
   } = useQuery({
     queryKey: ['products', params],
-    queryFn: () => ProductService.getProducts(params),
-    staleTime: 0,
+    queryFn: ({ signal }) => ProductService.getProducts(params, undefined, undefined, signal),
+    staleTime: 30 * 1000,
+    placeholderData: keepPreviousData,
   });
 
   const createProductMutation = useMutation({

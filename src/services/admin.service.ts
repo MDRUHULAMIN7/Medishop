@@ -47,6 +47,81 @@ export interface DashboardSummaryResponse {
   lowStockItemsCount: number;
 }
 
+export interface AdminAnalyticsFilters {
+  dateFrom?: string;
+  dateTo?: string;
+  channel?: 'all' | 'online' | 'pos';
+  productId?: string;
+  categoryId?: string;
+  staffId?: string;
+}
+
+export interface AdminAnalyticsResponse {
+  filters: AdminAnalyticsFilters;
+  summary: {
+    totalSales: number;
+    revenue: number;
+    grossProfit: number;
+    loss: number;
+    productSales: number;
+    stockValue: number;
+    lowStock: number;
+    outOfStock: number;
+    purchaseCost: number;
+    sellingValue: number;
+    profitMargin: number;
+    onlineSales: number;
+    posSales: number;
+    refundCount: number;
+    refundAmount: number;
+    auditActivity: number;
+  };
+  trend: Array<{ date: string; revenue: number; buyingCost: number; profit: number }>;
+  channels: Array<{ name: string; value: number }>;
+  topProducts: Array<{ name: string; quantity: number; revenue: number; profit: number }>;
+  lowSellingProducts: Array<{ name: string; quantity: number; revenue: number; profit: number }>;
+  stockStatus: Array<{ name: string; value: number }>;
+  rows?: Array<{
+    date: string;
+    channel: string;
+    reference: string;
+    product: string;
+    quantity: number;
+    unitPrice: number;
+    buyingCost: number;
+    revenue: number;
+    profit: number;
+  }>;
+}
+
+export interface ProductInsightsResponse {
+  product: {
+    id: string;
+    name: string;
+    genericName?: string;
+    category?: string;
+    brand?: string;
+    stock: number;
+    lowStockThreshold: number;
+    price: number;
+    buyingPrice: number;
+    unit: string;
+    image?: string;
+    expiryDate?: string;
+  };
+  sales: {
+    onlineQuantity: number;
+    onlineRevenue: number;
+    posQuantity: number;
+    posRevenue: number;
+    totalQuantity: number;
+    totalRevenue: number;
+    profit: number;
+    lastSaleAt?: string;
+  };
+  stockMovements: number;
+}
+
 export interface AdminUserListItem {
   id: string;
   _id?: string;
@@ -86,6 +161,18 @@ export const adminService = {
   async getLowStockReport(threshold = 10): Promise<LowStockItemData[]> {
     const res = await apiClient<LowStockItemData[]>(`/admin/dashboard/low-stock?threshold=${threshold}`);
     return res || [];
+  },
+
+  async getAnalytics(filters: AdminAnalyticsFilters = {}, includeRows = false): Promise<AdminAnalyticsResponse> {
+    const query = new URLSearchParams({ includeRows: String(includeRows) });
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) query.set(key, value);
+    });
+    return apiClient<AdminAnalyticsResponse>(`/admin/reports/analytics?${query.toString()}`);
+  },
+
+  async getProductInsights(productId: string): Promise<ProductInsightsResponse> {
+    return apiClient<ProductInsightsResponse>(`/admin/products/${productId}/insights`);
   },
 
   /**
