@@ -20,6 +20,8 @@ import { useAppSelector } from '@/store';
 import { inventoryService, AuditLedgerRow } from '@/services/inventory.service';
 import { posService, StockLedgerEntry } from '@/services/pos.service';
 import { toast } from 'sonner';
+import { exportRowsToExcel } from '@/lib/excelExport';
+import { ExportExcelButton } from '@/components/dashboard/ExportExcelButton';
 
 export function StockLedgerManager() {
   const language = useAppSelector((state) => state.ui.language);
@@ -155,6 +157,11 @@ export function StockLedgerManager() {
   const stockInCount = ledgerData.filter((r) => r.quantityChange > 0).length;
   const stockOutCount = ledgerData.filter((r) => r.quantityChange < 0).length;
 
+  const handleExport = () => {
+    exportRowsToExcel({ filename: `medishop-stock-ledger-${new Date().toISOString().slice(0, 10)}`, sheets: [{ name: 'Stock Ledger', rows: filteredData.map((row) => ({ Product: row.productName, Batch: row.batchNumber || '', Reason: row.reason, 'Quantity Change': row.quantityChange, 'Previous Stock': row.previousStock, 'New Stock': row.newStock, Reference: row.referenceId || '', 'Performed By': row.performedByName, Date: new Date(row.createdAt) })) }] });
+    toast.success('Stock ledger exported to Excel');
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header Banner */}
@@ -175,7 +182,7 @@ export function StockLedgerManager() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-2.5 flex-wrap"><ExportExcelButton onClick={handleExport} />
           <button
             type="button"
             onClick={handleRecalculateStock}

@@ -5,6 +5,8 @@ import { CreditCard, CheckCircle2, RefreshCw, AlertCircle, ShieldCheck } from 'l
 import { useAppSelector } from '@/store';
 import { formatBDT } from '@/lib/utils';
 import { toast } from 'sonner';
+import { exportRowsToExcel } from '@/lib/excelExport';
+import { ExportExcelButton } from '@/components/dashboard/ExportExcelButton';
 
 interface TransactionItem {
   id: string;
@@ -65,6 +67,11 @@ export function PaymentManager() {
     );
   };
 
+  const handleExport = () => {
+    exportRowsToExcel({ filename: `medishop-payment-logs-${new Date().toISOString().slice(0, 10)}`, sheets: [{ name: 'Payments', rows: transactions.map((transaction) => ({ Transaction: transaction.trxId, Order: transaction.orderId, Customer: transaction.customerName, Amount: transaction.amount, Method: transaction.method, Status: transaction.status, Date: transaction.date })) }] });
+    toast.success('Payment logs exported to Excel');
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -79,7 +86,7 @@ export function PaymentManager() {
               : 'Monitor bKash, Nagad, Rocket, Card transactions and issue refunds'}
           </p>
         </div>
-      </div>
+      </div><ExportExcelButton onClick={handleExport} />
 
       {/* Transactions Table */}
       <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-2xs">

@@ -16,6 +16,8 @@ import {
 import { useAppSelector } from '@/store';
 import { prescriptionService, PrescriptionItem } from '@/services/prescription.service';
 import { toast } from 'sonner';
+import { exportRowsToExcel } from '@/lib/excelExport';
+import { ExportExcelButton } from '@/components/dashboard/ExportExcelButton';
 
 export function PrescriptionQueue() {
   const language = useAppSelector((state) => state.ui.language);
@@ -81,6 +83,11 @@ export function PrescriptionQueue() {
     }
   };
 
+  const handleExport = () => {
+    exportRowsToExcel({ filename: `medishop-prescriptions-${new Date().toISOString().slice(0, 10)}`, sheets: [{ name: 'Prescriptions', rows: queue.map((prescription) => ({ Customer: prescription.user?.name || '', Phone: prescription.user?.phone || '', Status: prescription.status, Date: new Date(prescription.createdAt), 'Rejection Reason': prescription.rejectionReason || '' })) }] });
+    toast.success('Prescriptions exported to Excel');
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Top Header Banner */}
@@ -100,7 +107,7 @@ export function PrescriptionQueue() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3"><ExportExcelButton onClick={handleExport} />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
