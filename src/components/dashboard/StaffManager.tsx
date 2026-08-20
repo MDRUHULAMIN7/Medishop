@@ -21,6 +21,8 @@ import { useAppSelector } from '@/store';
 import { adminService, AdminUserListItem } from '@/services/admin.service';
 import { staffInvitationService, StaffInvitation, SearchedCustomer } from '@/services/staffInvitation.service';
 import { toast } from 'sonner';
+import { exportRowsToExcel } from '@/lib/excelExport';
+import { ExportExcelButton } from '@/components/dashboard/ExportExcelButton';
 
 export function StaffManager() {
   const language = useAppSelector((state) => state.ui.language);
@@ -148,6 +150,11 @@ export function StaffManager() {
 
   const pendingInvitations = invitations.filter((i) => i.status === 'pending');
 
+  const handleExport = () => {
+    exportRowsToExcel({ filename: `medishop-staff-${new Date().toISOString().slice(0, 10)}`, sheets: [{ name: 'Staff', rows: staffList.map((staff) => ({ Name: staff.name, Email: staff.email || '', Phone: staff.phone || '', Role: staff.role, Status: staff.status, 'Joined Date': staff.createdAt ? new Date(staff.createdAt) : '' })) }, { name: 'Invitations', rows: invitations.map((invitation) => ({ Recipient: invitation.recipientName || invitation.recipientEmail || invitation.recipientPhone || '', Role: invitation.targetRole, Status: invitation.status, Date: invitation.createdAt ? new Date(invitation.createdAt) : '' })) }] });
+    toast.success('Staff data exported to Excel');
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header Banner */}
@@ -167,7 +174,7 @@ export function StaffManager() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3"><ExportExcelButton onClick={handleExport} />
           <button
             type="button"
             onClick={() => {

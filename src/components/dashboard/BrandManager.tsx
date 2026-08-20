@@ -9,6 +9,8 @@ import { useBrands } from '@/hooks/useBrands';
 import { Brand } from '@/services/brand.service';
 import { formatNumber } from '@/utils/cart';
 import { toast } from 'sonner';
+import { exportRowsToExcel } from '@/lib/excelExport';
+import { ExportExcelButton } from '@/components/dashboard/ExportExcelButton';
 
 export function BrandManager() {
   const router = useRouter();
@@ -160,6 +162,11 @@ export function BrandManager() {
     setIsAddModalOpen(true);
   };
 
+  const handleExport = () => {
+    exportRowsToExcel({ filename: `medishop-brands-${new Date().toISOString().slice(0, 10)}`, sheets: [{ name: 'Brands', rows: brands.map((brand) => ({ Name: brand.name, Slug: brand.slug, Featured: brand.isFeatured ? 'Yes' : 'No', Status: brand.isActive ? 'Active' : 'Disabled' })) }] });
+    toast.success('Brands exported to Excel');
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -175,7 +182,7 @@ export function BrandManager() {
           </p>
         </div>
 
-        <button
+        <div className="flex flex-wrap items-center gap-2"><ExportExcelButton onClick={handleExport} /><button
           type="button"
           onClick={() => {
             setEditingBrand(null);
@@ -186,7 +193,7 @@ export function BrandManager() {
         >
           <Plus className="h-4 w-4" />
           <span>{isBn ? 'নতুন ব্র্যান্ড যোগ' : 'Add New Brand'}</span>
-        </button>
+        </button></div>
       </div>
 
       {/* Loading State */}

@@ -5,6 +5,8 @@ import { Star, CheckCircle, EyeOff, Trash2, RefreshCw, MessageSquare } from 'luc
 import { useAppSelector } from '@/store';
 import { reviewService, ReviewItem } from '@/services/review.service';
 import { toast } from 'sonner';
+import { exportRowsToExcel } from '@/lib/excelExport';
+import { ExportExcelButton } from '@/components/dashboard/ExportExcelButton';
 
 export function ReviewManager() {
   const language = useAppSelector((state) => state.ui.language);
@@ -34,6 +36,11 @@ export function ReviewManager() {
     toast.success(isBn ? 'রিভিউ অনুমোদন স্ট্যাটাস আপডেট হয়েছে' : 'Review approval status updated');
   };
 
+  const handleExport = () => {
+    exportRowsToExcel({ filename: `medishop-reviews-${new Date().toISOString().slice(0, 10)}`, sheets: [{ name: 'Reviews', rows: reviews.map((review) => ({ Product: review.product || '', Customer: review.user?.name || '', Rating: review.rating, Comment: review.comment || '', Date: new Date(review.createdAt) })) }] });
+    toast.success('Reviews exported to Excel');
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -51,7 +58,7 @@ export function ReviewManager() {
               ? 'ভেরিফাইড ক্রেতাদের প্রোডাক্ট রিভিউ ও তারকা রেটিং পর্যবেক্ষণ করুন'
               : 'Moderate customer rating feedback from verified purchase orders.'}
           </p>
-        </div>
+        </div><ExportExcelButton onClick={handleExport} />
 
       </div>
 

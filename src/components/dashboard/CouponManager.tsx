@@ -25,6 +25,8 @@ import { useAppSelector } from '@/store';
 import { formatBDT } from '@/lib/utils';
 import { toast } from 'sonner';
 import { CustomSelect } from '@/components/ui/CustomSelect';
+import { exportRowsToExcel } from '@/lib/excelExport';
+import { ExportExcelButton } from '@/components/dashboard/ExportExcelButton';
 
 export function CouponManager() {
   const queryClient = useQueryClient();
@@ -139,6 +141,11 @@ export function CouponManager() {
     c.code.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleExport = () => {
+    exportRowsToExcel({ filename: `medishop-coupons-${new Date().toISOString().slice(0, 10)}`, sheets: [{ name: 'Coupons', rows: filteredCoupons.map((coupon: any) => ({ Code: coupon.code, Type: coupon.discountType, Value: coupon.discountValue, MinimumOrder: coupon.minOrderAmount, MaxDiscount: coupon.maxDiscountAmount, Used: coupon.usedCount || 0, UsageLimit: coupon.usageLimit || '', StartDate: new Date(coupon.startDate), EndDate: new Date(coupon.endDate), Status: coupon.isActive ? 'Active' : 'Disabled' })) }] });
+    toast.success('Coupons exported to Excel');
+  };
+
   return (
     <div className="space-y-6">
       {/* Header Banner */}
@@ -157,7 +164,7 @@ export function CouponManager() {
           </p>
         </div>
 
-        <button
+        <div className="flex flex-wrap items-center gap-2"><ExportExcelButton onClick={handleExport} /><button
           type="button"
           onClick={() => {
             resetForm();
@@ -167,7 +174,7 @@ export function CouponManager() {
         >
           <Plus className="h-4 w-4" />
           <span>{isBn ? 'নতুন কুপন যোগ করুন' : 'Add New Coupon'}</span>
-        </button>
+        </button></div>
       </div>
 
       {/* Search Toolbar */}

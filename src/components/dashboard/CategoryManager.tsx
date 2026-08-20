@@ -21,6 +21,8 @@ import { useCategories } from '@/hooks/useCategories';
 import { Category } from '@/services/category.service';
 import { formatNumber } from '@/utils/cart';
 import { toast } from 'sonner';
+import { exportRowsToExcel } from '@/lib/excelExport';
+import { ExportExcelButton } from '@/components/dashboard/ExportExcelButton';
 
 export function CategoryManager() {
   const router = useRouter();
@@ -172,6 +174,11 @@ export function CategoryManager() {
     setIsAddModalOpen(true);
   };
 
+  const handleExport = () => {
+    exportRowsToExcel({ filename: `medishop-categories-${new Date().toISOString().slice(0, 10)}`, sheets: [{ name: 'Categories', rows: categories.map((category) => ({ Name: category.name, Slug: category.slug, Featured: category.isFeatured ? 'Yes' : 'No', Status: category.isActive ? 'Active' : 'Disabled' })) }] });
+    toast.success('Categories exported to Excel');
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -187,7 +194,7 @@ export function CategoryManager() {
           </p>
         </div>
 
-        <button
+        <div className="flex flex-wrap items-center gap-2"><ExportExcelButton onClick={handleExport} /><button
           type="button"
           onClick={() => {
             setEditingCategory(null);
@@ -198,7 +205,7 @@ export function CategoryManager() {
         >
           <Plus className="h-4 w-4" />
           <span>{isBn ? 'নতুন ক্যাটাগরি যোগ' : 'Add New Category'}</span>
-        </button>
+        </button></div>
       </div>
 
       {/* Loading state */}
