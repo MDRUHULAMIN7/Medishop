@@ -602,6 +602,11 @@ export function PosSalesModule({ isBn = true }: PosSalesModuleProps) {
             setPosStep('products');
             setPage(1);
           }}
+          onProductRecognized={(product) => {
+            setPosStep('products');
+            setSearch(product.name || product.genericName || '');
+            setPage(1);
+          }}
         />
       </div>
 
